@@ -1,0 +1,25 @@
+name:                Bib2Html
+version:             0.1.0.0
+synopsis:            The solution for the Bib2Html mini-project of the Compiler Construction course (2013).
+license:             GPL-3
+license-file:        LICENSE
+author:              Philipp Hausmann, Marco Vassena
+maintainer:          <philipp.hausmann@314.ch>, <m.vassena@students.uu.nl>
+category:            Text
+build-type:          Simple
+cabal-version:       >=1.8
+
+executable parse-bib
+  main-is:           ParseBib.hs
+  hs-source-dirs:    src
+  build-depends:       base >=4.5.0
+
+executable bib2html
+  main-is:           BibHtml.hs
+  hs-source-dirs:    src
+  build-depends:       base >=4.5.0
+
+executable pp-html
+  main-is:           PpHtml.hs
+  hs-source-dirs:    src
+  build-depends:       base >=4.5.0
