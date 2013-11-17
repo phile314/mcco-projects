@@ -1,14 +1,17 @@
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
 
+-- | Data types to represent a HTML tree.
 module HtmlTree where
 
 import CCO.Tree
+
 
 type ElemName = String
 
 type AttrName = String
 type AttrVal = String
 
+-- | A HTML node.
 data Node
     = Text String
     | Elem ElemName [Node] [(AttrName, AttrVal)]

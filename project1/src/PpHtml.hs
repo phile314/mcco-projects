@@ -1,4 +1,8 @@
-module Main (main) where
+-- | Produces a html string from a html tree representation.
+module Main
+    ( main
+    , flattenHtmlTree )
+where
 
 import HtmlTree
 import CCO.Component hiding (parser)
@@ -6,12 +10,14 @@ import CCO.Printing
 import Control.Arrow
 import CCO.Tree
 
--- | Indentation spaces.
+-- | Indentation spacing.
 ind = 4
 
 main = ioWrap (parser >>> component toTree >>> flattenHtmlTree)
 
-
+-- | Converts a `Node` to a string. No validation of the tree
+--   structure takes place. Special characters are escaped properly
+--   by this function (TODO).
 flattenHtmlTree :: Component Node String
 flattenHtmlTree = component (\n -> do
     let doc = toDoc n
@@ -19,6 +25,8 @@ flattenHtmlTree = component (\n -> do
 
 
 --TODO escaping
+
+-- | Converts a `Node` to a `Doc`.
 toDoc (Text s) = text s
 toDoc (Elem t [] attrs) = do
     enclose langle (text "/" >|< rangle) (text t >|< toDocA attrs)
