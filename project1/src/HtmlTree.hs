@@ -4,7 +4,7 @@
 module HtmlTree where
 
 import CCO.Tree
-
+import Control.Monad
 
 type ElemName = String
 
@@ -17,12 +17,9 @@ data Node
     | Elem ElemName [Node] [(AttrName, AttrVal)]
 
 instance Tree Node where
-    fromTree (Text s) = App "Text" [fromTree s]
-    fromTree (Elem e ns attrs) = App "Elem" [fromTree e, fromTree ns, fromTree attrs]
-    toTree (App "Text" [s]) = toTree s >>= return . Text
-    toTree (App "Elem" [e, ns, attrs]) = do
-        e' <- toTree e
-        ns' <- toTree ns
-        attrs' <- toTree attrs
-        return $ Elem e' ns' attrs'
+    fromTree (Text s)                   = App "Text" [fromTree s]
+    fromTree (Elem e ns attrs)          = App "Elem" [fromTree e, fromTree ns, fromTree attrs]
+
+    toTree (App "Text" [s])             = liftM Text (toTree s)
+    toTree (App "Elem" [e, ns, attrs])  = liftM3 Elem (toTree e) (toTree ns) (toTree attrs)
 
