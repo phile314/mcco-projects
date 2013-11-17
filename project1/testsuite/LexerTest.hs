@@ -13,15 +13,22 @@ import Prelude hiding (lex)
 tests :: Test
 tests = TestList [testSimpleLexers]
 
+-- | @'testLexer' (lexer, input, token)@ tests that @token@ 
+-- is the single token obtained lexing @input@ using @lexer@
 testLexer :: (Lexer Token, String, Token) -> Test
 testLexer (lexer, input, expected) = TestLabel ("Simple" ++ show expected) $
-  expected ~=? actual
-    where Symbols _ [Token actual _ _ _] = lex lexer Stdin input
+  let Symbols _ r = lex lexer Stdin input in
+    case r of
+    [Token actual _ _ _] -> expected ~=? actual
+    _                    -> error "lexer failure"
 
 testSimpleLexers :: Test
-testSimpleLexers = TestList xs
-  where xs = map testLexer [(atSign, "@", AtSign),
-                            (lBracket, "{", LBracket)]
+testSimpleLexers = TestList $ map testLexer simple
+  where simple = [(atSign, "@", AtSign), (lBracket, "{", LBracket), 
+                  (rBracket, "}", RBracket), (comma, ",", Comma),
+                  (equal, "=", EqualSign), (value, "\"foo\"", Value "foo"),
+                  (value, "{foo}", Value "foo"),
+                  (value, "123", Value "123")]
 
 -- | The entry point of the test suite
 main :: IO ()
