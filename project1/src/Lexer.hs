@@ -4,6 +4,7 @@ module Lexer where
 
 import CCO.Lexing
 import Control.Applicative
+import Data.List
 
 -- | The token recognized by the lexer
 data Token 
@@ -19,6 +20,13 @@ data Token
 ------------------------------------------------------------------------------
 -- Lexer
 ------------------------------------------------------------------------------
+
+-- | A lexer for a bibtex file
+lexer :: Lexer Token
+lexer = choice lexers 
+  where choice = foldr1 (<|>)
+        lexers = [whitespace, atSign, lBracket, rBracket, 
+                  comma, equal, value, identifier]
 
 -- | A lexer that recognizes and consumes (ignores) whitespace
 whitespace :: Lexer Token
@@ -50,3 +58,7 @@ value = Value <$> (inQuotes <|> inBrackets <|> number) -- TODO special latex syn
   where inQuotes   = char '"' *> some (anyCharBut "\"") <* char '"'
         inBrackets = char '{' *> some (anyCharBut "}") <* char '}'
         number     = some digit
+
+-- | A lexer that tokenize an identifier (field name or key)
+identifier = Identifier <$> iden
+  where iden = (:) <$> alpha <*> many alphaNum
