@@ -11,16 +11,22 @@ cabal-version:       >=1.8
 
 executable parse-bib
   main-is:           ParseBib.hs
-  other-modules:     Bibtex
+  other-modules:     Bibtex, Lexer
   hs-source-dirs:    src
-  build-depends:       base >=4.5.0
+  build-depends:     base >=4.5.0, cco ==0.0.4
 
 executable bib2html
   main-is:           BibHtml.hs
   hs-source-dirs:    src
-  build-depends:       base >=4.5.0
+  build-depends:     base >=4.5.0
 
 executable pp-html
   main-is:           PpHtml.hs
   hs-source-dirs:    src
-  build-depends:       base >=4.5.0
+  build-depends:     base >=4.5.0
+
+test-suite lexer
+  type:              exitcode-stdio-1.0
+  main-is:           LexerTest.hs
+  hs-source-dirs:    testsuite, src
+  build-depends:     base >=4.5.0, HUnit ==1.2.*, cco ==0.0.4
