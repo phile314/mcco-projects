@@ -9,6 +9,9 @@ build: dist/setup-config
 dist/setup-config:
 	$(RUN) configure $(CONFIGURE_FLAG)
 
+configure:
+	$(RUN) configure $(CONFIGURE_FLAG)
+
 clean:
 	$(RUN) clean
 

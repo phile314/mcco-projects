@@ -2,7 +2,8 @@
 
 module Lexer where
 
-import CCO.Lexing
+import CCO.Lexing hiding (satisfy)
+import CCO.Parsing
 import Control.Applicative
 import Data.List
 
@@ -17,6 +18,25 @@ data Token
   | Value String        -- ^ The content of a field
   deriving (Show, Eq)
 
+instance Symbol Token where
+  describe AtSign = ("@ " ++)
+  describe LBracket = ("{ " ++)
+  describe RBracket = ("} " ++)
+  describe Comma = (", " ++)
+  describe EqualSign = ("= " ++)
+  describe (Identifier _) = ("identifier " ++)
+  describe (Value _) = ("value " ++)
+
+-- | Tests whether a token is an identifier
+isIdentifier :: Token -> Bool
+isIdentifier (Identifier _) = True
+isIdentifier  _             = False
+
+-- | Tests whether a token is a value
+isValue :: Token -> Bool
+isValue (Value _) = True
+isValue  _        = False
+
 ------------------------------------------------------------------------------
 -- Lexer
 ------------------------------------------------------------------------------
@@ -28,6 +48,7 @@ lexer = choice lexers
         lexers = [whitespace, atSign, lBracket, rBracket, 
                   comma, equal, value, identifier]
 
+-- | TODO use space
 -- | A lexer that recognizes and consumes (ignores) whitespace
 whitespace :: Lexer Token
 whitespace = ignore (some (anyCharFrom " \n\t"))
@@ -62,3 +83,19 @@ value = Value <$> (inQuotes <|> inBrackets <|> number) -- TODO special latex syn
 -- | A lexer that tokenize an identifier (field name or key)
 identifier = Identifier <$> iden
   where iden = (:) <$> alpha <*> many alphaNum
+
+-------------------------------------------------------------------------------
+-- Utility Parser
+-------------------------------------------------------------------------------
+
+-- | Parses a given token and returns it
+pToken :: Token -> Parser Token Token
+pToken t = satisfy (t ==)
+
+-- | Parses a value token and returns the string content
+pValue :: Parser Token String
+pValue = (\(Value s) -> s) <$> satisfy isValue 
+
+-- | Parses an identifier token and returns the string content
+pIdentifier :: Parser Token String
+pIdentifier = (\(Identifier s) -> s) <$> satisfy isIdentifier 
