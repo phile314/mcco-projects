@@ -6,7 +6,7 @@ import Test.HUnit
 import System.Exit (exitFailure)
 import CCO.Lexing
 import CCO.SourcePos
-import Lexer
+import Lexer.Internal
 import Prelude hiding (lex)
 
 -- | The single tests that will be run
