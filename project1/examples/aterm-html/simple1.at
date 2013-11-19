@@ -1,1 +1,1 @@
-Elem("html", [Elem("body", [Elem("h1", [Text("test")], [("class", "test")]), Elem("img", [], [("src", "http://test.ch")])], [])], [])
+Elem("html", [Elem("body", [Elem("h1", [Text("1testo\\246\\128\152")], [("class", "2test\\246\\228\\252")]), Elem("img", [], [("src", "http://test.ch")])], [])], [])
