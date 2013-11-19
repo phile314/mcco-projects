@@ -43,7 +43,7 @@ lexer :: Lexer Token
 lexer = choice lexers 
   where choice = foldr1 (<|>)
         lexers = [whitespace, atSign, lBracket, rBracket, 
-                  comma, equal, value, identifier]
+                  comma, equal, identifier, value]
 
 -------------------------------------------------------------------------------
 -- Utility Parser
@@ -55,7 +55,10 @@ pToken t = satisfy (t ==) <!> describe t ""
 
 -- | Parses a value token and returns the string content
 pValue :: Parser Token String
-pValue = (\(Value s) -> s) <$> satisfy isValue <!> describe (Value "") "(the content of a field)"
+pValue = (\(Value s) -> s) <$> (inBrackets <|> plainValue)
+                           <!> describe (Value "") "(the content of a field)"
+  where plainValue = satisfy isValue
+        inBrackets = pToken LBracket *> plainValue <* pToken RBracket
 
 -- | Parses an identifier token and returns the string content
 pIdentifier :: Parser Token String

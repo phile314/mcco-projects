@@ -43,13 +43,11 @@ equal = char '=' *> pure EqualSign
 
 -- | A lexer that tokenizes the value of a field
 value :: Lexer Token
-value = Value <$> (inQuotes <|> inBrackets <|> number) -- TODO special latex syntax not handled
-  where inQuotes   = char '"' *> some (anyCharBut "\"") <* char '"'
-        inBrackets = char '{' *> some (anyCharBut "}") <* char '}'
-        number     = some digit
+value = Value <$> (inQuotes <|> number <|> plainString) -- TODO special latex syntax not handled
+  where inQuotes    = char '"' *> some (anyCharBut "\"") <* char '"'
+        plainString = some (anyCharBut "\"}{")
+        number      = some digit
 
 -- | A lexer that tokenize an identifier (field name or key)
 identifier = Identifier <$> iden
   where iden = (:) <$> alpha <*> many alphaNum
-
-
