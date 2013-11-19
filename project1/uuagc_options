@@ -1,2 +1,2 @@
 file :      "src/Bibtex.ag"
-options:    data, module "Bibtex"
+options:    data, haskellsyntax, module "Bibtex"
