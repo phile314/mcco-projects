@@ -15,6 +15,7 @@ type AttrVal = String
 data Node
     = Text String
     | Elem ElemName [Node] [(AttrName, AttrVal)]
+    deriving (Show)
 
 instance Tree Node where
     fromTree (Text s)                   = App "Text" [fromTree s]
