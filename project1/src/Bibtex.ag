@@ -1,0 +1,14 @@
+
+data BibtexDb
+    | BibtexDb entries :: {[BibtexEntry]}
+
+data BibtexEntry
+    | Entry etype :: String key :: String emap :: KVList
+
+type KVList = [ {(String, String)} ]
+
+{-attr BibtexDb
+    syn html :: HtmlTree
+
+sem BibtexEntry
+  -}  

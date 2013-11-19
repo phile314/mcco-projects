@@ -11,7 +11,7 @@ cabal-version:       >=1.8
 
 executable parse-bib
   main-is:           ParseBib.hs
-  other-modules:     Bibtex, Lexer, Parser, Lexer.Internal
+  other-modules:     Lexer, Parser, Lexer.Internal
   hs-source-dirs:    src
   build-depends:     base >=4.5.0, cco ==0.0.4
 
