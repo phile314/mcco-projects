@@ -27,7 +27,6 @@ testSimpleLexers = TestList $ map testLexer simple
   where simple = [(atSign, "@", AtSign), (lBracket, "{", LBracket), 
                   (rBracket, "}", RBracket), (comma, ",", Comma),
                   (equal, "=", EqualSign), (value, "\"foo\"", Value "foo"),
-                  (value, "{foo}", Value "foo"),
                   (value, "123", Value "123"),
                   (identifier, "f00b4r", Identifier "f00b4r")]
 
