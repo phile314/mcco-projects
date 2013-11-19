@@ -22,12 +22,9 @@ pDb = many pEntry
 
 -- | Parses a bibtex entry
 pEntry :: TokenParser BibtexEntry
-pEntry = Entry <$> (pAt *> pIdentifier) <*> pData
-
--- | Parses the data of an entry
-pData :: TokenParser Data
-pData = Data <$> pKey <*> (manySepBy pComma pFieldValue) <* pRBracket
+pEntry = Entry <$> (pAt *> pIdentifier) <*> pKey <*> pData
   where pKey = pLBracket *> pIdentifier <* pComma
+        pData = (manySepBy pComma pFieldValue) <* pRBracket
         pFieldValue = (,) <$> (pIdentifier <* pEq) <*> pValue
 
 -------------------------------------------------------------------------------

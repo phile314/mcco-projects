@@ -34,15 +34,15 @@ simpleParseTest input p expected = TestCase $ do
             then return $ expected == actual
             else error $ "The tokens " ++ show xs ++ " have not been consumed"
     
--- | Tests the data parser 'pData'.
-testDataParser :: Test
-testDataParser = TestLabel "DataParser" $ simpleParseTest input pData expected
-  where input = C.lex lexer Stdin "{key,foo=\"bar\"}"
-        expected = Data "key" [("foo", "bar")]
+-- | Tests the entry parser 'pEntry'.
+testEntryParser:: Test
+testEntryParser = TestLabel "DataParser" $ simpleParseTest input pEntry expected
+  where input = C.lex lexer Stdin "@entry{key,foo=\"bar\"}"
+        expected = Entry "type" "key" [("foo", "bar")]
 
 -- | The tests that will be run
 tests :: Test
-tests = TestList [testDataParser]
+tests = TestList [testEntryParser]
 
 -- | The entry point of the test suite
 main :: IO ()
