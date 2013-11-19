@@ -55,7 +55,7 @@ pToken t = satisfy (t ==) <!> describe t ""
 
 -- | Parses a value token and returns the string content
 pValue :: Parser Token String
-pValue = (\(Value s) -> s) <$> satisfy isValue <!> describe (Value "") ""
+pValue = (\(Value s) -> s) <$> satisfy isValue <!> describe (Value "") "(the content of a field)"
 
 -- | Parses an identifier token and returns the string content
 pIdentifier :: Parser Token String
