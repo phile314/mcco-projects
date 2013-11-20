@@ -1,9 +1,14 @@
 -- | This module defines some utility feature needed for testing purposes
 
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, OverlappingInstances #-}
+
 module Utility where
 
+import Bibtex
+import Control.Monad (liftM3)
 import CCO.Lexing (LexicalUnit(..), Symbols(..))
 import Lexer
+import Test.QuickCheck
 
 instance Show a => Show (LexicalUnit a) where
   show (Token a p s1 s2) = unwords [show a, show p, s1, s2]
@@ -12,3 +17,27 @@ instance Show a => Show (LexicalUnit a) where
 
 instance Show a => Show (Symbols a) where
   show (Symbols s xs) = unwords ["Symbols", show s, show xs]
+
+instance Arbitrary BibtexEntry where
+  arbitrary = liftM3 Entry arbitrary arbitrary (listOf1 arbitrary)
+
+instance Arbitrary Key where
+  arbitrary = identifier 
+
+{-
+instance Arbitrary Field where
+  arbitrary = identifier    -- TODO a more specific generator should be used
+
+instance Arbitrary Type where
+  arbitrary = identifier    -- TODO a more specific generator should be used
+
+instance Arbitrary Value where
+  arbitrary = listOf1 . (suchThat arbitrary (/= "\""))
+-}
+
+-- | Generator for identifier ([a-z][a-zA-Z0-9]*)
+identifier :: Gen String
+identifier = do
+    c1 <- choose ('a','z')
+    cn <- listOf . elements $ ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9']
+    return (c1:cn)
