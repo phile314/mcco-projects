@@ -1,9 +1,14 @@
 
+
+{
+type Key = String
+}
+
 data BibtexDb
     | BibtexDb entries :: {[BibtexEntry]}
 
 data BibtexEntry
-    | Entry etype :: String key :: String emap :: KVList
+    | Entry etype :: String key :: Key emap :: KVList
 
 type KVList = [ {(String, String)} ]
 
