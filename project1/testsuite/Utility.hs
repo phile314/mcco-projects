@@ -7,6 +7,7 @@ module Utility where
 import Bibtex
 import Control.Monad (liftM3)
 import CCO.Lexing (LexicalUnit(..), Symbols(..))
+import CCO.Tree (ATerm, fromTree)
 import Lexer
 import Test.QuickCheck
 
@@ -41,3 +42,11 @@ identifier = do
     c1 <- choose ('a','z')
     cn <- listOf . elements $ ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9']
     return (c1:cn)
+
+-- | A generator of ATerm representing 'BibtexEntry' items.
+bibtexEntryATerm :: Gen ATerm
+bibtexEntryATerm = (arbitrary :: Gen BibtexEntry) >>= return . fromTree
+
+-- | A generator of ATerm representing 'BibtexDb'.
+bibtexDbATerm :: Gen ATerm
+bibtexDbATerm = listOf (arbitrary :: Gen BibtexEntry) >>= return . fromTree
