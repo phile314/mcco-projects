@@ -31,16 +31,21 @@ test-suite lexer
   main-is:           LexerTest.hs
   hs-source-dirs:    testsuite, src
   build-depends:     base >=4.5.0, HUnit ==1.2.*, cco ==0.0.4, QuickCheck >=2.6
+  other-modules:     Bibtex
 
 test-suite parser
   type:              exitcode-stdio-1.0
   main-is:           ParserTest.hs
   hs-source-dirs:    testsuite, src
   build-depends:     base >=4.5.0, HUnit ==1.2.*, cco ==0.0.4, QuickCheck >=2.6
+  other-modules:     Bibtex
+-- there seems to be some bug when using the uuagc precompiler with cabal
+-- this is an ugly work around...
+-- TODO open bug
+  ghc-options:       -idist/build/
 
 test-suite tree
   type:              exitcode-stdio-1.0
   main-is:           TreeTest.hs
   hs-source-dirs:    testsuite, src
   build-depends:     base >=4.5.0, cco ==0.0.4, QuickCheck >=2.6
-

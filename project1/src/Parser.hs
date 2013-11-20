@@ -18,7 +18,7 @@ parser = C.parser lexer (pDb <* eof)
 
 -- | Parses a bibtex database composed by zero or more entries
 pDb :: TokenParser BibtexDb
-pDb = many pEntry
+pDb = BibtexDb <$> many pEntry
 
 -- | Parses a bibtex entry
 pEntry :: TokenParser BibtexEntry

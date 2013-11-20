@@ -7,7 +7,9 @@ module Main (main) where
 import Control.Arrow ((>>>))
 import CCO.Component (ioWrap)
 import Parser (parser)
+import Lexer
 
 main :: IO ()
 main = undefined 
   -- ioWrap (parser >>> show)
+

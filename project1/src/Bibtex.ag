@@ -7,6 +7,9 @@ data BibtexEntry
 
 type KVList = [ {(String, String)} ]
 
+set Every = BibtexDb BibtexEntry
+deriving Every : Show, Eq
+
 {-attr BibtexDb
     syn html :: HtmlTree
 
