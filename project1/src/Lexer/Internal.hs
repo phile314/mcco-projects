@@ -16,10 +16,9 @@ data Token
   | Value String        -- ^ The content of a field
   deriving (Show, Eq)
 
--- | TODO use space
 -- | A lexer that recognizes and consumes (ignores) whitespace
 whitespace :: Lexer Token
-whitespace = ignore (some (anyCharFrom " \n\t"))
+whitespace = ignore (some space)
 
 -- | A lexer that recognizes '@'
 atSign :: Lexer Token
