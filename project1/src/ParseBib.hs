@@ -4,10 +4,11 @@
 
 module Main (main) where
 
-import Control.Arrow ((>>>))
+import Control.Arrow
 import CCO.Component (ioWrap)
+import CCO.Printing (pp, render_)
+import CCO.Tree (fromTree)
 import Parser (parser)
 
 main :: IO ()
-main = undefined 
-  -- ioWrap (parser >>> show)
+main = ioWrap (parser >>> arr fromTree >>> arr pp >>> arr (render_ 70))
