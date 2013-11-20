@@ -5,7 +5,7 @@
 module Utility where
 
 import Bibtex
-import Control.Monad (liftM3)
+import Control.Monad (liftM3, liftM)
 import CCO.Lexing (LexicalUnit(..), Symbols(..))
 import CCO.Tree (ATerm, fromTree)
 import Lexer
@@ -18,6 +18,9 @@ instance Show a => Show (LexicalUnit a) where
 
 instance Show a => Show (Symbols a) where
   show (Symbols s xs) = unwords ["Symbols", show s, show xs]
+
+instance Arbitrary BibtexDb where
+  arbitrary = liftM BibtexDb arbitrary
 
 instance Arbitrary BibtexEntry where
   arbitrary = liftM3 Entry arbitrary arbitrary (listOf1 arbitrary)
@@ -49,4 +52,4 @@ bibtexEntryATerm = (arbitrary :: Gen BibtexEntry) >>= return . fromTree
 
 -- | A generator of ATerm representing 'BibtexDb'.
 bibtexDbATerm :: Gen ATerm
-bibtexDbATerm = listOf (arbitrary :: Gen BibtexEntry) >>= return . fromTree
+bibtexDbATerm = (arbitrary :: Gen BibtexDb) >>= return . fromTree
