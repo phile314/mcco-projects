@@ -16,9 +16,11 @@ data Token
   | Value String        -- ^ The content of a field
   deriving (Show, Eq)
 
--- | A lexer that recognizes and consumes (ignores) whitespace
+-- | A lexer that recognizes and consumes (ignores) whitespace and comments.
+-- (Latex) comments start with the char '%' until the eol.
 whitespace :: Lexer Token
-whitespace = ignore (some space)
+whitespace = ignore (comment <|> some space)
+  where comment = char '%' *> many (anyCharBut "\n\r")
 
 -- | A lexer that recognizes '@'
 atSign :: Lexer Token
