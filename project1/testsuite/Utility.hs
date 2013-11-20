@@ -1,11 +1,9 @@
 -- | This module defines some utility feature needed for testing purposes
 
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, OverlappingInstances #-}
-
 module Utility where
 
 import Bibtex
-import Control.Monad (liftM3, liftM)
+import Control.Monad (liftM, liftM2, liftM3)
 import CCO.Lexing (LexicalUnit(..), Symbols(..))
 import CCO.Tree (ATerm, fromTree)
 import Lexer
@@ -23,21 +21,27 @@ instance Arbitrary BibtexDb where
   arbitrary = liftM BibtexDb arbitrary
 
 instance Arbitrary BibtexEntry where
-  arbitrary = liftM3 Entry arbitrary arbitrary (listOf1 arbitrary)
+  -- TODO produced fields should be valid for the chosen type
+  arbitrary = liftM3 Entry types arbitrary (listOf1 fieldValues)
+    where fieldValues = liftM2 (,) fields values
 
-instance Arbitrary Key where
-  arbitrary = identifier 
+-- | A generator of Bibtex entry types
+types :: Gen String
+types = elements ["article", "book", "booklet", "conference", "inbook",
+                  "incollection", "inproceedings", "manual", "masterthesis",
+                  "misc", "phdthesis", "techreport", "unpublished"]
 
-{-
-instance Arbitrary Field where
-  arbitrary = identifier    -- TODO a more specific generator should be used
+-- | A generator of Bibtex fields
+fields :: Gen String 
+fields = elements [ "address", "annote", "author", "booktitle", "chapter",
+                    "crossref", "edition", "editor", "howpublished", 
+                    "institution", "journal", "key", "month", "note", "number",
+                    "organization", "pages", "publisher", "school", "series",
+                    "title", "type", "volume", "year"]
 
-instance Arbitrary Type where
-  arbitrary = identifier    -- TODO a more specific generator should be used
-
-instance Arbitrary Value where
-  arbitrary = listOf1 . (suchThat arbitrary (/= "\""))
--}
+-- | A generator for values associated with a field
+values :: Gen String
+values = listOf1 $ suchThat arbitrary (/= '"')
 
 -- | Generator for identifier ([a-z][a-zA-Z0-9]*)
 identifier :: Gen String
@@ -53,3 +57,11 @@ bibtexEntryATerm = (arbitrary :: Gen BibtexEntry) >>= return . fromTree
 -- | A generator of ATerm representing 'BibtexDb'.
 bibtexDbATerm :: Gen ATerm
 bibtexDbATerm = (arbitrary :: Gen BibtexDb) >>= return . fromTree
+
+-- | A comment is a string line starting with '%'
+newtype Comment = C String 
+  deriving (Show, Eq)
+
+instance Arbitrary Comment where
+  arbitrary = listOf (suchThat arbitrary noLineFeed) >>= return . C . ('%':)
+    where noLineFeed c = c /= '\n' && c /= '\r'
