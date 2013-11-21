@@ -5,11 +5,11 @@
 module Main (main) where
 
 import Control.Arrow
-import CCO.Component (ioWrap)
+import CCO.Component (ioWrap, printer)
 import CCO.Printing (pp, render_)
 import CCO.Tree (fromTree)
 import Parser (parser)
 import Lexer
 
 main :: IO ()
-main = ioWrap (parser >>> arr fromTree >>> arr pp >>> arr (render_ 70))
+main = ioWrap (parser >>> arr fromTree >>> printer)
