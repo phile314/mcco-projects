@@ -25,7 +25,10 @@ pEntry :: TokenParser BibtexEntry
 pEntry = Entry <$> (pAt *> pIdentifier) <*> pKey <*> pData
   where pKey = pLBracket *> pIdentifier <* pComma
         pData = (manySepBy pComma pFieldValue) <* pRBracket
-        pFieldValue = (,) <$> (pIdentifier <* pEq) <*> pValue
+        pFieldValue = (,) <$> (pField <* pEq) <*> pValue
+
+-- TODO we should really parse the field name
+pField = Author <$ pIdentifier
 
 -------------------------------------------------------------------------------
 -- Basic Parsers

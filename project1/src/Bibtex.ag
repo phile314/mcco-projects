@@ -9,6 +9,7 @@ import Control.Applicative
 
 {
 type Key = String
+
 }
 
 data BibtexDb
@@ -17,10 +18,38 @@ data BibtexDb
 data BibtexEntry
     | Entry etype :: String key :: Key emap :: KVList
 
-type KVList = [ {(String, String)} ]
+type KVList = [ {(Field, String)} ]
 
-set Every = BibtexDb BibtexEntry
+data Field
+    | Address
+    | Annote
+    | Author
+    | Booktitle
+    | Chapter
+    | Crossref
+    | Edition
+    | Editor
+    | HowPublished
+    | Institution
+    | Journal
+    | Key
+    | Month
+    | Note
+    | Number
+    | Organization
+    | Pages
+    | Publisher
+    | School
+    | Series
+    | Title
+    | Type
+    | Volume
+    | Year
+--    | Unknown fieldName :: String
+
+set Every = BibtexDb BibtexEntry Field
 deriving Every : Show, Eq
+deriving Field : Bounded, Read
 
 {-attr BibtexDb
     syn html :: HtmlTree
@@ -38,10 +67,15 @@ sem BibtexEntry
 --------------------------------------------------------------------------------
 
 instance Tree BibtexDb where
-  fromTree (BibtexDb es) = App "BibtexDb" [fromTree es]
-  toTree = parseTree [app "BibtexDb" (BibtexDb <$> arg)]
+    fromTree (BibtexDb es) = App "BibtexDb" [fromTree es]
+    toTree = parseTree [app "BibtexDb" (BibtexDb <$> arg)]
 
 instance Tree BibtexEntry where
-  fromTree (Entry t k fv) = App "Entry" [fromTree t, fromTree k, fromTree fv]
-  toTree = parseTree [app "Entry" (Entry <$> arg <*> arg <*> arg)]
+    fromTree (Entry t k fv) = App "Entry" [fromTree t, fromTree k, fromTree fv]
+    toTree = parseTree [app "Entry" (Entry <$> arg <*> arg <*> arg)]
+
+instance Tree Field where
+    fromTree f = App (show f) []
+    -- should we use the parser stuff here too?
+    toTree (App s [])= return $ read s
 }  

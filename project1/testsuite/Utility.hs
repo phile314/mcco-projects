@@ -9,6 +9,7 @@ import CCO.Tree (ATerm, fromTree)
 import Lexer
 import Test.QuickCheck
 
+
 instance Show a => Show (LexicalUnit a) where
   show (Token a p s1 s2) = unwords [show a, show p, s1, s2]
   show (Error p s1 s2)   = unwords ["Error", show p, s1, s2]
@@ -23,7 +24,8 @@ instance Arbitrary BibtexDb where
 instance Arbitrary BibtexEntry where
   -- TODO produced fields should be valid for the chosen type
   arbitrary = liftM3 Entry types arbitrary (listOf1 fieldValues)
-    where fieldValues = liftM2 (,) fields values
+    where fieldValues = liftM2 (,) arbitrary values
+
 
 -- | A generator of Bibtex entry types
 types :: Gen String
@@ -32,12 +34,12 @@ types = elements ["article", "book", "booklet", "conference", "inbook",
                   "misc", "phdthesis", "techreport", "unpublished"]
 
 -- | A generator of Bibtex fields
-fields :: Gen String 
-fields = elements [ "address", "annote", "author", "booktitle", "chapter",
-                    "crossref", "edition", "editor", "howpublished", 
-                    "institution", "journal", "key", "month", "note", "number",
-                    "organization", "pages", "publisher", "school", "series",
-                    "title", "type", "volume", "year"]
+instance Arbitrary Field where
+    arbitrary = elements [ Address, Annote, Author, Booktitle, Chapter,
+                    Crossref, Edition, Editor, HowPublished,
+                    Institution, Journal, Key, Month, Note, Number,
+                    Organization, Pages, Publisher, School, Series,
+                    Title, Type, Volume, Year]
 
 -- | A generator for values associated with a field
 values :: Gen String

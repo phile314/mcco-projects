@@ -37,8 +37,8 @@ simpleParseTest input p expected = TestCase $ do
 -- | Tests the entry parser 'pEntry'.
 testEntryParser:: Test
 testEntryParser = TestLabel "DataParser" $ simpleParseTest input pEntry expected
-  where input = C.lex lexer Stdin "@type{key,foo=\"bar\"}"
-        expected = Entry "type" "key" [("foo", "bar")]
+  where input = C.lex lexer Stdin "@type{key,author=\"bar\"}"
+        expected = Entry "type" "key" [(Author, "bar")]
 
 -- | Tests the value parser 'pValue'.
 testValueParser :: Test
