@@ -13,6 +13,7 @@ import CCO.Component (ioWrap, component, printer)
 import CCO.Feedback (Feedback)
 import CCO.Tree (parser, toTree, fromTree, ATerm)
 import Control.Arrow ((>>>), arr)
+import Data.List (sortBy)
 import HtmlTree (Node)
 
 -- | The entry point of the program
@@ -21,8 +22,12 @@ main = ioWrap $
   parser >>> component toTree >>> arr sorter >>> component toHtml >>> arr fromTree >>> printer
 
 -- | Return the given 'BibtexDb' sorted first by author and then by year and title.
+-- If the considered field is missing in some entry, such entry will come after 
+-- those that who have that field.
 sorter :: BibtexDb -> BibtexDb
-sorter = undefined
+sorter (BibtexDb d) = BibtexDb $ sortBy criteria d
+  where criteria (Entry _ _ xs) (Entry _ _ ys) = compare (ayt xs) (ayt ys)
+        ayt xs = (lookup Author xs, lookup Year xs, lookup Title xs)
 
 -- | Converts a 'BibtexDb' in an html 'Node.
 toHtml :: BibtexDb -> Feedback Node
