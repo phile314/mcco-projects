@@ -28,11 +28,11 @@ instance Arbitrary BibtexEntry where
 
 -- | A generator of Bibtex entry types
 instance Arbitrary Type where
-  arbitrary = elements (enumFrom Article)
+  arbitrary = elements types
 
 -- | A generator of Bibtex fields
 instance Arbitrary Field where
-    arbitrary = elements (enumFrom Address)
+    arbitrary = elements fields
 
 -- | A generator for values associated with a field
 values :: Gen String

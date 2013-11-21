@@ -62,9 +62,18 @@ data Type
 
 set Every = BibtexDb BibtexEntry Field
 deriving Every : Show, Eq
-deriving Field : Show, Eq, Enum
-deriving Type : Show, Eq, Enum
+deriving Field : Show, Eq, Enum, Bounded
+deriving Type : Show, Eq, Enum, Bounded
 
+{
+-- | A list containing all the 'Field' constructors
+fields :: [Field]
+fields = enumFromTo minBound maxBound
+
+-- | A list containing all the 'Type' constructors
+types :: [Type]
+types = enumFromTo minBound maxBound
+}
 {-attr BibtexDb
     syn html :: HtmlTree
 
@@ -92,12 +101,12 @@ instance Tree Field where
     fromTree f = App (show f) []
     -- should we use the parser stuff here too?
     toTree = parseTree ps
-      where ps = map pCons (enumFrom Address)
+      where ps = map pCons (fields)
 
 instance Tree Type where
   fromTree t = App (show t) []
   toTree = parseTree ps
-      where ps = map pCons (enumFrom Article)
+      where ps = map pCons (types)
 
 -- | A 'TreeParser' for single showable constructors.
 pCons :: (Show a, Tree a) => a -> TreeParser a
