@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 -- | Produces a html string from a html tree representation.
 module Main
     ( main
@@ -20,32 +21,33 @@ main = ioWrap (parser >>> component toTree >>> flattenHtmlTree)
 --   by this function (TODO).
 flattenHtmlTree :: Component Node String
 flattenHtmlTree = component (\n -> do
-    let doc = toDoc n
+    let doc = pp n
     return $ render_ 200 doc)
 
 
 --TODO escaping
 
 -- | Converts a `Node` to a `Doc`.
-toDoc (Text s) = escapedAll s
-toDoc (Elem t [] attrs) = do
-    enclose langle (text "/" >|< rangle) (text t >|< toDocA attrs)
-toDoc (Elem t es attrs) = do
-    angles (text t >|< toDocA attrs)
-        >-< (indent ind $ toDocE es)
-        >-< (enclose (langle >|< text "/") rangle (text t))
+instance Printable Node where
+    pp (Text s) = escapedAll s
+    pp (Elem t [] attrs) = do
+        enclose langle (text "/" >|< rangle) (text t >|< pp attrs)
+    pp (Elem t es attrs) = do
+        angles (text t >|< pp attrs)
+            >-< (indent ind $ pp es)
+            >-< (enclose (langle >|< text "/") rangle (text t))
 
 
 -- I'm not really sure what are valid characters in xml names, hence we do not escape them for the time being...
-toDocA :: [(AttrName, AttrVal)] -> Doc
-toDocA [] = empty
-toDocA ((an, av):as) = space >|< text an >|< text "=" >|< (quoted $ escaped (=='\"') av) >|< toDocA as
+instance Printable [(AttrName, AttrVal)] where
+    pp [] = empty
+    pp ((an, av):as) = space >|< text an >|< text "=" >|< (quoted $ escaped (=='\"') av) >|< pp as
 
 quoted d = enclose q q d
     where q = text "\""
 
-toDocE :: [Node] -> Doc
-toDocE es = foldl (\a c -> a >|< (toDoc c)) empty es
+instance Printable [Node] where
+    pp es = foldl (\a c -> a >|< (pp c)) empty es
 
 escaped :: (Char -> Bool) -> String -> Doc
 escaped p str = text (escape p str)
