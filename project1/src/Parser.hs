@@ -22,14 +22,14 @@ pDb = BibtexDb <$> many pEntry
 
 -- | Parses a bibtex entry
 pEntry :: TokenParser BibtexEntry
-pEntry = Entry <$> (pAt *> pIdentifier) <*> pKey <*> pData
+pEntry = Entry <$> (pAt *> pType) <*> pKey <*> pData
   where pKey = pLBracket *> pIdentifier <* pComma
         pData = (manySepBy pComma pFieldValue) <* pRBracket
         pFieldValue = (,) <$> (pField <* pEq) <*> pValue
 
--- TODO we should really parse the field name
+-- TODO we should really parse the field name and the entry type
 pField = Author <$ pIdentifier
-
+pType = Article <$ pIdentifier
 -------------------------------------------------------------------------------
 -- Basic Parsers
 -------------------------------------------------------------------------------

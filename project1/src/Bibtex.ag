@@ -1,22 +1,19 @@
-
-
 imports
 {
 import CCO.Tree (ATerm (App), Tree (fromTree, toTree))
-import CCO.Tree.Parser (parseTree, app, arg, list)
+import CCO.Tree.Parser (parseTree, app, arg, list, TreeParser)
 import Control.Applicative
 }
 
-{
+{ 
 type Key = String
-
 }
 
 data BibtexDb
     | BibtexDb entries :: {[BibtexEntry]}
 
 data BibtexEntry
-    | Entry etype :: String key :: Key emap :: KVList
+    | Entry etype :: Type key :: Key emap :: KVList
 
 type KVList = [ {(Field, String)} ]
 
@@ -47,15 +44,32 @@ data Field
     | Year
 --    | Unknown fieldName :: String
 
+data Type
+  | Article
+  | Book
+  | Booklet
+  | Conference
+  | Inbook
+  | Incollection
+  | Inproceedings
+  | Manual
+  | Masterthesis
+  | Misc
+  | Phdthesis
+  | Proceedings
+  | Techreport
+  | Unpublished
+
 set Every = BibtexDb BibtexEntry Field
 deriving Every : Show, Eq
-deriving Field : Bounded, Read
+deriving Field : Show, Eq, Enum
+deriving Type : Show, Eq, Enum
 
 {-attr BibtexDb
     syn html :: HtmlTree
 
 sem BibtexEntry
-  -}
+-}
 
 
 
@@ -77,5 +91,15 @@ instance Tree BibtexEntry where
 instance Tree Field where
     fromTree f = App (show f) []
     -- should we use the parser stuff here too?
-    toTree (App s [])= return $ read s
-}  
+    toTree = parseTree ps
+      where ps = map pCons (enumFrom Address)
+
+instance Tree Type where
+  fromTree t = App (show t) []
+  toTree = parseTree ps
+      where ps = map pCons (enumFrom Article)
+
+-- | A 'TreeParser' for single showable constructors.
+pCons :: (Show a, Tree a) => a -> TreeParser a
+pCons c = app (show c) (pure c) 
+}

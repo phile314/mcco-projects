@@ -23,23 +23,16 @@ instance Arbitrary BibtexDb where
 
 instance Arbitrary BibtexEntry where
   -- TODO produced fields should be valid for the chosen type
-  arbitrary = liftM3 Entry types arbitrary (listOf1 fieldValues)
+  arbitrary = liftM3 Entry arbitrary arbitrary (listOf1 fieldValues)
     where fieldValues = liftM2 (,) arbitrary values
 
-
 -- | A generator of Bibtex entry types
-types :: Gen String
-types = elements ["article", "book", "booklet", "conference", "inbook",
-                  "incollection", "inproceedings", "manual", "masterthesis",
-                  "misc", "phdthesis", "techreport", "unpublished"]
+instance Arbitrary Type where
+  arbitrary = elements (enumFrom Article)
 
 -- | A generator of Bibtex fields
 instance Arbitrary Field where
-    arbitrary = elements [ Address, Annote, Author, Booktitle, Chapter,
-                    Crossref, Edition, Editor, HowPublished,
-                    Institution, Journal, Key, Month, Note, Number,
-                    Organization, Pages, Publisher, School, Series,
-                    Title, Type, Volume, Year]
+    arbitrary = elements (enumFrom Address)
 
 -- | A generator for values associated with a field
 values :: Gen String
