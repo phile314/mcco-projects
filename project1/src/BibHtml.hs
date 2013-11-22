@@ -14,7 +14,7 @@ import CCO.Feedback (Feedback)
 import CCO.Tree (parser, toTree, fromTree, ATerm)
 import Control.Arrow ((>>>), arr)
 import Data.List (sortBy)
-import HtmlTree (Node, HtmlTree)
+import Html.Tree (Node, HtmlTree)
 
 -- | The entry point of the program
 main :: IO ()
@@ -37,4 +37,4 @@ toHtml db = do
 
 
 toHtml1 :: BibtexDb -> HtmlTree
-toHtml1 db = head $ htmlAttr $ walkTree db
+toHtml1 = head . htmlAttr . walkTree  -- TODO Why htmlTree returns a list of HtmlTree?

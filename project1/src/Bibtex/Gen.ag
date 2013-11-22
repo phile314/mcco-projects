@@ -5,7 +5,7 @@ imports
 import CCO.Tree (ATerm (App), Tree (fromTree, toTree))
 import CCO.Tree.Parser (parseTree, app, arg, list, TreeParser)
 import Control.Applicative
-import HtmlTree
+import Html.Tree
 import CCO.Feedback
 import Bibtex.Basic
 }
