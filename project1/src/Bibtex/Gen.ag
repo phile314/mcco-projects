@@ -1,3 +1,5 @@
+-- | The attribute grammar used for converting a 'BibtexDb' in 'Html'.
+
 imports
 {
 import CCO.Tree (ATerm (App), Tree (fromTree, toTree))
@@ -8,12 +10,12 @@ import CCO.Feedback
 import Bibtex.Basic
 }
 
+-- | A bibtex database is a list of 
 data BibtexDb
     | BibtexDb entries :: BibtexEntryS
 
 data BibtexEntry
     | Entry etype :: Type key :: Key emap :: { [(Field, String)] }
-
 
 type BibtexEntryS = [BibtexEntry]
 

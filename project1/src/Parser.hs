@@ -30,6 +30,7 @@ pEntry = Entry <$> (pAt *> pType) <*> pKey <*> pData
 -- TODO we should really parse the field name and the entry type
 pField = Author <$ pIdentifier
 pType = Article <$ pIdentifier
+
 -------------------------------------------------------------------------------
 -- Basic Parsers
 -------------------------------------------------------------------------------
