@@ -14,7 +14,7 @@ import CCO.Feedback (Feedback)
 import CCO.Tree (parser, toTree, fromTree, ATerm)
 import Control.Arrow ((>>>), arr)
 import Data.List (sortBy)
-import HtmlTree (Node)
+import HtmlTree (Node, HtmlTree)
 
 -- | The entry point of the program
 main :: IO ()
@@ -31,4 +31,10 @@ sorter (BibtexDb d) = BibtexDb $ sortBy criteria d
 
 -- | Converts a 'BibtexDb' in an html 'Node.
 toHtml :: BibtexDb -> Feedback Node
-toHtml = undefined
+toHtml db = do
+    -- TODO validation
+    return $ toHtml1 db
+
+
+toHtml1 :: BibtexDb -> HtmlTree
+toHtml1 db = head $ htmlAttr $ walkTree db

@@ -9,32 +9,44 @@ import Bibtex.Basic
 }
 
 data BibtexDb
-    | BibtexDb entries :: {[BibtexEntry]}
+    | BibtexDb entries :: BibtexEntryS
 
 data BibtexEntry
     | Entry etype :: Type key :: Key emap :: { [(Field, String)] }
 
 
+type BibtexEntryS = [BibtexEntry]
 
-set Every = BibtexDb BibtexEntry
+set Every = BibtexDb BibtexEntryS BibtexEntry
 deriving Every : Show, Eq
 
-
 attr Every
-    syn html :: HtmlTree
+    syn html use {++} {[]} :: {[HtmlTree]}
     syn msgs use {++} {[]} :: {[Message]}
 
 sem BibtexDb
-    | BibtexDb lhs.html = { undefined @entries }
+    | BibtexDb lhs.html = { [Elem "db" @entries.html [] ]}
 
 sem BibtexEntry
-    | Entry lhs.html = { toHtml2 @etype @emap }
+    | Entry lhs.html = { entryToHtml @etype @emap }
             lhs.msgs = { validateFields @etype @emap }
 
 {
 
-toHtml2 = undefined
-validateFields = undefined
+htmlAttr = html_Syn_BibtexDb
+msgsAttr = msgs_Syn_BibtexDb
+
+-- | Walks the tree and returns the computed attributes.
+walkTree :: BibtexDb -> Syn_BibtexDb
+walkTree db = wrap_BibtexDb (sem_BibtexDb db) Inh_BibtexDb
+
+
+validateFields :: Type -> [(Field, String)] -> [Message]
+validateFields _ _ = []
+
+
+entryToHtml :: Type -> [(Field, String)] -> [Node]
+entryToHtml _ fs = [Elem "entry" (map (Text . show) fs) []]
 
 }
 

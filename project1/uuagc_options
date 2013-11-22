@@ -1,2 +1,2 @@
 file :      "src/Bibtex/Gen.ag"
-options:    module "Bibtex.Gen", haskellsyntax, data, catas, semfuns, signatures, wrappers
+options:    module "Bibtex.Gen", haskellsyntax, data, catas, semfuns, signatures, wrappers, pretty
