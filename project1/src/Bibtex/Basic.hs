@@ -1,24 +1,19 @@
-imports
-{
-import CCO.Tree (ATerm (App), Tree (fromTree, toTree))
-import CCO.Tree.Parser (parseTree, app, arg, list, TreeParser)
+module Bibtex.Basic
+    ( Key
+    , Field (..)
+    , Type (..)
+    , fields
+    , types )
+where
+
+import CCO.Tree
+import CCO.Tree.Parser
 import Control.Applicative
-}
 
-{ 
 type Key = String
-}
-
-data BibtexDb
-    | BibtexDb entries :: {[BibtexEntry]}
-
-data BibtexEntry
-    | Entry etype :: Type key :: Key emap :: KVList
-
-type KVList = [ {(Field, String)} ]
 
 data Field
-    | Address
+    = Address
     | Annote
     | Author
     | Booktitle
@@ -43,9 +38,10 @@ data Field
     | Volume
     | Year
 --    | Unknown fieldName :: String
+    deriving (Show, Eq, Enum, Bounded)
 
 data Type
-  | Article
+  = Article
   | Book
   | Booklet
   | Conference
@@ -59,13 +55,8 @@ data Type
   | Proceedings
   | Techreport
   | Unpublished
+    deriving (Show, Eq, Enum, Bounded)
 
-set Every = BibtexDb BibtexEntry Field
-deriving Every : Show, Eq
-deriving Field : Show, Eq, Enum, Bounded
-deriving Type : Show, Eq, Enum, Bounded
-
-{
 -- | A list containing all the 'Field' constructors
 fields :: [Field]
 fields = enumFromTo minBound maxBound
@@ -73,42 +64,24 @@ fields = enumFromTo minBound maxBound
 -- | A list containing all the 'Type' constructors
 types :: [Type]
 types = enumFromTo minBound maxBound
-}
-{-attr BibtexDb
-    syn html :: HtmlTree
-
-sem BibtexEntry
--}
 
 
-
-
-
-{
 --------------------------------------------------------------------------------
---- ATerm
---------------------------------------------------------------------------------
-
-instance Tree BibtexDb where
-    fromTree (BibtexDb es) = App "BibtexDb" [fromTree es]
-    toTree = parseTree [app "BibtexDb" (BibtexDb <$> arg)]
-
-instance Tree BibtexEntry where
-    fromTree (Entry t k fv) = App "Entry" [fromTree t, fromTree k, fromTree fv]
-    toTree = parseTree [app "Entry" (Entry <$> arg <*> arg <*> arg)]
+----- ATerm
+----------------------------------------------------------------------------------
 
 instance Tree Field where
     fromTree f = App (show f) []
     -- should we use the parser stuff here too?
     toTree = parseTree ps
-      where ps = map pCons (fields)
+        where ps = map pCons (fields)
+
 
 instance Tree Type where
-  fromTree t = App (show t) []
-  toTree = parseTree ps
-      where ps = map pCons (types)
+    fromTree t = App (show t) []
+    toTree = parseTree ps
+        where ps = map pCons (types)
 
 -- | A 'TreeParser' for single showable constructors.
 pCons :: (Show a, Tree a) => a -> TreeParser a
-pCons c = app (show c) (pure c) 
-}
+pCons c = app (show c) (pure c)

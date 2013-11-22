@@ -6,6 +6,8 @@ module HtmlTree where
 import CCO.Tree
 import Control.Monad
 
+type HtmlTree = Node
+
 type ElemName = String
 
 type AttrName = String
