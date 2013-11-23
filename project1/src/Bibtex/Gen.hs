@@ -1,3 +1,4 @@
+-- TODO should probably be merged with Basic.hs again
 -- | The attribute grammar used for converting a 'BibtexDb' in 'Html'.
 module Bibtex.Gen where
 
