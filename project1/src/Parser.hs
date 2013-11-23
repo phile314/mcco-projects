@@ -7,6 +7,7 @@ import CCO.Component
 import qualified CCO.Component as C (parser)
 import CCO.Parsing
 import Control.Applicative
+import Data.CaseInsensitive (mk)
 import Lexer
 
 -- | A parser for streams of tokens
@@ -27,9 +28,18 @@ pEntry = Entry <$> (pAt *> pType) <*> pKey <*> pData
         pData = (manySepBy pComma pFieldValue) <* pRBracket
         pFieldValue = (,) <$> (pField <* pEq) <*> pValue
 
--- TODO we should really parse the field name and the entry type
-pField = Author <$ pIdentifier
-pType = Article <$ pIdentifier
+-- | Parses a field 
+pField :: TokenParser Field
+pField = choice $ map pConstructor fields
+
+-- | Parses an entry Type
+pType :: TokenParser Type
+pType = choice $ map pConstructor types
+
+-- | Parses an identifier, whose showable constructor is given.
+pConstructor :: Show a => a -> TokenParser a
+pConstructor c = satisfy (\t -> isIdentifier t && match t) *> pure c
+  where match (Identifier s) = mk s == (mk . show) c
 
 -------------------------------------------------------------------------------
 -- Basic Parsers
