@@ -50,7 +50,8 @@ validateFields _ _ = []
 
 
 entryToHtml :: Type -> [(Field, String)] -> [Node]
-entryToHtml t fs = [Elem "entry" (map (f2Str t) $ sortBy (\(x,_) (y,_) -> fieldOrd t x y) fs) []]
+--entryToHtml t fs = [Elem "entry" (map (f2Str t) $ sortBy (\(x,_) (y,_) -> fieldOrd t x y) fs) []]
+entryToHtml t fs = map (f2Str t) fs
 --entryToHtml _ _  = error "Unknown entry type"
 
 

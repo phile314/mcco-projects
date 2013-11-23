@@ -1,0 +1,16 @@
+\documentclass[11pt]{article}
+\usepackage{cite}
+
+\begin{document}
+
+\title{My Article}
+\author{Nobody Jr.}
+\date{Today}
+\maketitle
+
+dsfgdfgladfl ~\cite{article}
+Blablabla said Nobody ~\cite{book}.
+
+\bibliography{all_types_fields_example}{}
+\bibliographystyle{plain}
+\end{document}
