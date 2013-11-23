@@ -13,12 +13,12 @@ executable parse-bib
   main-is:           ParseBib.hs
   other-modules:     Bibtex, Bibtex.Gen, Lexer, Parser, Lexer.Internal
   hs-source-dirs:    src
-  build-depends:     base >=4.5.0, cco ==0.0.4
+  build-depends:     base >=4.5.0, cco ==0.0.4, containers >=0.4
 
 executable bib2html
   main-is:           BibHtml.hs
   hs-source-dirs:    src
-  build-depends:     base >=4.5.0, cco == 0.0.4
+  build-depends:     base >=4.5.0, cco ==0.0.4, containers >=0.4
   other-modules:     Bibtex, Bibtex.Gen
 
 executable pp-html
@@ -30,7 +30,7 @@ test-suite lexer
   type:              exitcode-stdio-1.0
   main-is:           LexerTest.hs
   hs-source-dirs:    testsuite, src
-  build-depends:     base >=4.5.0, HUnit ==1.2.*, cco ==0.0.4, QuickCheck >=2.6
+  build-depends:     base >=4.5.0, HUnit ==1.2.*, cco ==0.0.4, QuickCheck >=2.6, containers >=0.4
   other-modules:     Bibtex, Bibtex.Gen
 -- there seems to be some bug when using the uuagc precompiler with cabal
 -- this is an ugly work around...
@@ -41,7 +41,7 @@ test-suite parser
   type:              exitcode-stdio-1.0
   main-is:           ParserTest.hs
   hs-source-dirs:    testsuite, src
-  build-depends:     base >=4.5.0, HUnit ==1.2.*, cco ==0.0.4, QuickCheck >=2.6
+  build-depends:     base >=4.5.0, HUnit ==1.2.*, cco ==0.0.4, QuickCheck >=2.6, containers >=0.4
   other-modules:     Bibtex, Bibtex.Gen
 -- there seems to be some bug when using the uuagc precompiler with cabal
 -- this is an ugly work around...
@@ -52,7 +52,7 @@ test-suite tree
   type:              exitcode-stdio-1.0
   main-is:           TreeTest.hs
   hs-source-dirs:    testsuite, src
-  build-depends:     base >=4.5.0, cco ==0.0.4, QuickCheck >=2.6
+  build-depends:     base >=4.5.0, cco ==0.0.4, QuickCheck >=2.6, containers >=0.4
   other-modules:     Bibtex, Bibtex.Gen
 -- there seems to be some bug when using the uuagc precompiler with cabal
 -- this is an ugly work around...

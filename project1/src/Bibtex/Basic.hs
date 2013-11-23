@@ -1,4 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
+-- | This module defines the data types 'Type' and 'Field' used
+-- inside a 'BibtexEntry'.
 
 module Bibtex.Basic
     ( Key
@@ -17,6 +19,7 @@ import Data.List (elemIndex)
 
 type Key = String
 
+-- | Represents a field that can be possibly used in a 'BibtexEntry'.
 data Field
     = Address
     | Annote
@@ -45,6 +48,7 @@ data Field
 --    | Unknown fieldName :: String
     deriving (Show, Eq, Enum, Bounded)
 
+-- | Represents a 'BibtexEntry' type.
 data Type
   = Article
   | Book
@@ -54,13 +58,13 @@ data Type
   | Incollection
   | Inproceedings
   | Manual
-  | Masterthesis
+  | Mastersthesis
   | Misc
   | Phdthesis
   | Proceedings
   | Techreport
   | Unpublished
-    deriving (Show, Eq, Enum, Bounded)
+    deriving (Show, Eq, Enum, Bounded, Ord)
 
 
 fieldOrd :: Type -> (Field -> Field -> Ordering)
@@ -137,22 +141,20 @@ fields = enumFromTo minBound maxBound
 types :: [Type]
 types = enumFromTo minBound maxBound
 
-
 --------------------------------------------------------------------------------
 ----- ATerm
 ----------------------------------------------------------------------------------
 
 instance Tree Field where
     fromTree f = App (show f) []
-    -- should we use the parser stuff here too?
     toTree = parseTree ps
-        where ps = map pCons (fields)
+        where ps = map pCons fields
 
 
 instance Tree Type where
     fromTree t = App (show t) []
     toTree = parseTree ps
-        where ps = map pCons (types)
+        where ps = map pCons types
 
 -- | A 'TreeParser' for single showable constructors.
 pCons :: (Show a, Tree a) => a -> TreeParser a

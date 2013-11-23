@@ -11,5 +11,6 @@ import CCO.Tree (fromTree)
 import Parser (parser)
 import Lexer
 
+-- | The entry point of the program
 main :: IO ()
 main = ioWrap (parser >>> arr fromTree >>> printer)
