@@ -3,10 +3,10 @@ module Main where
 
 import qualified LexerHUnit as H
 import qualified LexerQuick as Q
+import System.Exit (exitFailure)
 import Test.HUnit
 import Test.QuickCheck
-import Test.QuickCheck.Test
-import System.Exit (exitFailure)
+import Utility (passQ, passH)
 
 -- | The entry point of the test suite
 main :: IO ()
@@ -16,11 +16,3 @@ main = do
   if (successH && successQ)  
     then return ()
     else exitFailure
-
--- | Returns whether some 'HUnit' test failed
-passH :: Counts -> Bool
-passH result = failures result == 0 && errors result == 0
-
--- | Returns whether some 'QuickCheck' test failed
-passQ :: [Result] -> Bool
-passQ = all isSuccess

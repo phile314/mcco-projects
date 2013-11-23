@@ -7,8 +7,9 @@ import Control.Monad (liftM, liftM2, liftM3)
 import CCO.Lexing (LexicalUnit(..), Symbols(..))
 import CCO.Tree (ATerm, fromTree)
 import Lexer
+import Test.HUnit
 import Test.QuickCheck
-
+import Test.QuickCheck.Test
 
 instance Show a => Show (LexicalUnit a) where
   show (Token a p s1 s2) = unwords [show a, show p, s1, s2]
@@ -60,3 +61,11 @@ newtype Comment = C String
 instance Arbitrary Comment where
   arbitrary = listOf (suchThat arbitrary noLineFeed) >>= return . C . ('%':)
     where noLineFeed c = c /= '\n' && c /= '\r'
+
+-- | Returns whether some 'HUnit' test failed
+passH :: Counts -> Bool
+passH result = failures result == 0 && errors result == 0
+
+-- | Returns whether some 'QuickCheck' test failed
+passQ :: [Result] -> Bool
+passQ = all isSuccess
