@@ -10,6 +10,8 @@ import CCO.Feedback
 import Bibtex.Basic
 import Data.List (sortBy)
 import Bibtex.Dependency
+import FieldTransformer
+import Data.Maybe (fromJust)
 }
 
 -- | A bibtex database is a list of 
@@ -32,8 +34,8 @@ sem BibtexDb
     | BibtexDb lhs.html = { [Elem "db" @entries.html [] ]}
 
 sem BibtexEntry
-    | Entry lhs.html = { entryToHtml @etype @emap }
-            lhs.msgs = { validateFields @etype @emap }
+    | Entry lhs.html = { fromJust $ snd $ fieldsToHtml @key @etype @emap }
+            lhs.msgs = { fst $ fieldsToHtml @key @etype @emap }
 
 {
 
@@ -45,18 +47,6 @@ walkTree :: BibtexDb -> Syn_BibtexDb
 walkTree db = wrap_BibtexDb (sem_BibtexDb db) Inh_BibtexDb
 
 
-validateFields :: Type -> [(Field, String)] -> [Message]
-validateFields _ _ = []
-
-
-entryToHtml :: Type -> [(Field, String)] -> [Node]
---entryToHtml t fs = [Elem "entry" (map (f2Str t) $ sortBy (\(x,_) (y,_) -> fieldOrd t x y) fs) []]
-entryToHtml t fs = map (f2Str t) fs
---entryToHtml _ _  = error "Unknown entry type"
-
-
-f2Str :: Type -> (Field, String) -> Node
-f2Str _ (_, str) = Text str
 
 
 }

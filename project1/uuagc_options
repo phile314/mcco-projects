@@ -1,2 +1,5 @@
 file :      "src/Bibtex/Gen.ag"
 options:    module "Bibtex.Gen", haskellsyntax, data, catas, semfuns, signatures, wrappers, pretty
+file :      "src/FieldTransformer.ag"
+options:    module "FieldTransformer", haskellsyntax, data, catas, semfuns, signatures, wrappers, pretty
+

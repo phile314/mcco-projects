@@ -43,7 +43,7 @@ data Field
     | Volume
     | Year
 --    | Unknown fieldName :: String
-    deriving (Show, Eq, Enum, Bounded)
+    deriving (Show, Eq, Enum, Bounded, Ord)
 
 -- | Represents a 'BibtexEntry' type.
 data Type

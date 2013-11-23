@@ -10,11 +10,12 @@ module Main (main) where
 
 import Bibtex
 import CCO.Component (ioWrap, component, printer)
-import CCO.Feedback (Feedback)
+import CCO.Feedback (Feedback, messages)
 import CCO.Tree (parser, toTree, fromTree, ATerm)
 import Control.Arrow ((>>>), arr)
 import Data.List (sortBy)
 import Html.Tree (Node, HtmlTree)
+import FieldTransformer
 
 -- | The entry point of the program
 main :: IO ()
@@ -33,8 +34,12 @@ sorter (BibtexDb d) = BibtexDb $ sortBy criteria d
 toHtml :: BibtexDb -> Feedback Node
 toHtml db = do
     -- TODO validation
-    return $ toHtml1 db
+    toHtml1 db
 
 
-toHtml1 :: BibtexDb -> HtmlTree
-toHtml1 = head . htmlAttr . walkTree  -- TODO Why htmlTree returns a list of HtmlTree?
+toHtml1 :: BibtexDb -> Feedback HtmlTree
+toHtml1 tr = do
+    messages $ msgsAttr res
+    return $ head $ htmlAttr res
+    where
+        res = walkTree tr  -- TODO Why htmlTree returns a list of HtmlTree?
