@@ -14,11 +14,12 @@ import qualified Data.Map as M
 data SpecNode
     | Both left :: SpecNode right :: SpecNode
     | Either left :: Field right :: Field
-    | Optional field :: Field
+    | Optional child :: SpecNode
     | Exactly field  :: Field
 
 
 attr SpecNode
+    syn avail use {&&} {True} :: Bool
     syn html use {++} {[]} :: { [HtmlTree] }
     syn msgs use {++} {[]} :: { [Message] }
     inh etype :: Type
@@ -26,17 +27,18 @@ attr SpecNode
     inh key :: String
 
 sem SpecNode
-    | Either lhs.msgs = { case member' @lhs.fields @left @right of
+    | Either lhs.avail = { @left `member` @lhs.fields || @right `member` @lhs.fields }
+             lhs.msgs = { case member' @lhs.fields @left @right of
                             (True, True)   -> [Warning 1 (text $ "Both " ++ (show @left) ++ " and " ++ (show @right) ++ " are given, but are mutually exclusive in entry " ++ @lhs.key ++ ".")]
                             (False, False) -> [Error (text $ "Neither of " ++ (show @left) ++ " and " ++ (show @right) ++ " is given, but one of them is required in entry " ++ @lhs.key ++ ".")]
                             _              -> []}
              lhs.html = { case member' @lhs.fields @left @right of
                             (True, _)      -> fieldToHtml @lhs.etype (@left, @lhs.fields ! @left)
                             (False, True)  -> fieldToHtml @lhs.etype (@right, @lhs.fields ! @right)}
-    | Optional lhs.html = { case @field `M.lookup` @lhs.fields of
-                            (Just v) -> fieldToHtml @lhs.etype (@field, v)
-                            Nothing  -> [] }
-    | Exactly lhs.msgs = { if not (@field `member` @lhs.fields) then [Error (text $ "Required field " ++ (show @field) ++ " is missing in entry " ++ @lhs.key ++ ".")] else []}
+    | Optional lhs.msgs = { if @child.avail then @child.msgs else [] }
+               lhs.html = { if @child.avail then @child.html else [] }
+    | Exactly lhs.avail = { @field `member` @lhs.fields }
+              lhs.msgs = { if not (@field `member` @lhs.fields) then [Error (text $ "Required field " ++ (show @field) ++ " is missing in entry " ++ @lhs.key ++ ".")] else []}
               lhs.html = { fieldToHtml @lhs.etype (@field, @lhs.fields ! @field) }
 
 {
@@ -46,18 +48,36 @@ member' :: Map Field String -> Field -> Field -> (Bool, Bool)
 member' m f1 f2 = (f1 `member` m, f2 `member` m)
 
 fieldToHtml :: Type -> (Field, String) -> [HtmlTree]
+fieldToHtml Inproceedings (Title, s) = [Text s]
+fieldToHtml Inproceedings (Booktitle, s) = [Elem "em" [Text s] []]
+fieldToHtml _ (Title, s) = [Elem "em" [Text s] []]
+fieldToHtml _ (Editor, s) = [Text $ "In: " ++ s]
 fieldToHtml _ (f, s) = [Text s]
 
 allOf :: [SpecNode] -> SpecNode
 allOf ss = foldr1 (Both) ss
 
 e = Exactly
-o = Optional
+o = Optional . Exactly
 
 sAE = Either Author Editor
 
 spec :: Type -> SpecNode
-spec Article = allOf [sAE, e Title, e Journal, e Year, o Volume, o Number, o Pages, o Month, o Note]
+spec Article    = allOf [sAE, e Title, e Journal, e Year, o Volume, o Number, o Pages, o Month, o Note]
+spec Book       = allOf [sAE, e Title, e Publisher, e Year, Optional (Either Volume Number), o Series, o Address, o Edition, o Month, o Note]
+--spec Booklet
+spec Conference = spec Inproceedings
+{-spec Inbook
+spec Incollection-}
+spec Inproceedings = allOf [e Author, e Title, o Editor, e Booktitle, e Year, Optional (Either Volume Number), o Series, o Pages, o Address, o Month, o Organization, o Publisher, o Note]
+{-spec Manual
+spec Mastersthesis
+spec Misc
+spec Phdthesis
+spec Proceedings
+spec Techreport
+spec Unpublished-}
+spec _ = error "Not implemented"
 
 fieldsToHtml :: String -> Type -> [(Field, String)] -> ([Message], Maybe [HtmlTree])
 fieldsToHtml k t fs = if any isError msgs then (msgs, Nothing) else (msgs, Just $ html_Syn_SpecNode res)

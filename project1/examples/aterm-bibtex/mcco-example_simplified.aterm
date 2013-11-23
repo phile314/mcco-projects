@@ -1,0 +1,20 @@
+BibtexDb(
+  [ Entry(
+      Book
+    , "pierce02types"
+    , [(Author, "Pierce, Benjamin C."), (Title, "Types and Programming Languages"), (Publisher, "The MIT Press"), (Address, "Cambridge, Massachusetts"), (Year, "2002")]
+    )
+  , Entry(
+      Inproceedings
+    , "loeh03dependency"
+    , [ (Author, "Loh, Andres and Clarke, Dave and Jeuring,\n              Johan")
+      , (Title, "Dependency-style {G}eneric {H}askell")
+      , (Editor, "Runciman, Colin and Shivers, Olin")
+      , (Booktitle, "Proceedings of the Eighth ACM SIGPLAN\n    International Conference on Functional\n    Programming, ICFP 2003, Uppsala, Sweden,\n    August 25--29, 2003")
+      , (Pages, "141--152")
+      , (Publisher, "ACM Press")
+      , (Year, "2003")
+      ]
+    )
+  ]
+)
