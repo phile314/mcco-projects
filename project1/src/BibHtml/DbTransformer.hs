@@ -6,7 +6,6 @@ import Bibtex
 import CCO.Feedback
 import Html.Tree
 import Data.Maybe
-import Control.Monad (when)
 import BibHtml.FieldTransformer
 
 el :: String -> [Node] -> Node
@@ -33,8 +32,9 @@ wrapE t = Elem "tr" [("valign", "top")] [t]
 toHtml1 :: [BibtexEntry] -> Feedback [(HtmlTree, HtmlTree)]
 toHtml1 es = do
     let (msgs, htmls) = unzip $ map entryToHtml es
+
+    -- if there is any error, this aborts the conversion.
     messages (concat msgs)
-    when (any isNothing htmls) (fail "Some entries contain errors, aborting...")
     
     return $ map fromJust htmls
     
