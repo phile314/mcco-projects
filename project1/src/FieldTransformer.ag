@@ -1,4 +1,10 @@
--- | The attribute grammar used for converting a 'BibtexDb' in 'Html'.
+-- | The attribute grammar used for converting a 'BibtexEntry' to 'Html'.
+--  
+--   The bibtex field specification is constructed as a tree, and then a tree
+--   fold/walk is performed using the given field names/values as input. The output
+--   is the generated html and warning/error messages. All error/warning messages
+--   are collected even if an error is encountered. Html output is only produced,
+--   if there were no errors.
 
 imports
 {
@@ -87,7 +93,9 @@ fieldToHtml _ (f, s) = Text s
 
 
 -- (At the moment, Bibtex.Gen depends on FieldTransformer, so we cannot depend on Bibtex.Gen (=> cycle), hence we cannot use the BibtexEntry type.)
--- | Converts a bibtex entry to html. 
+-- | Converts a bibtex entry to html. If the first element of the result contains
+--   no error messages, the second element is a html tree. If there are error
+--   messages, `Nothing` will be returned as second element.
 fieldsToHtml :: String -> Type -> [(Field, String)] -> ([Message], Maybe [HtmlTree])
 fieldsToHtml k t fs = if any isError msgs then (msgs, Nothing) else (msgs, Just $ html_Syn_SpecTree res)
     where 
