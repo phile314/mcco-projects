@@ -54,13 +54,13 @@ data Type
   | Incollection
   | Inproceedings
   | Manual
-  | Masterthesis
+  | Mastersthesis
   | Misc
   | Phdthesis
   | Proceedings
   | Techreport
   | Unpublished
-    deriving (Show, Eq, Enum, Bounded)
+    deriving (Show, Eq, Enum, Bounded, Ord)
 
 -- | A list containing all the 'Field' constructors
 fields :: [Field]
