@@ -11,7 +11,7 @@ imports
 import Html.Tree
 import CCO.Feedback
 import CCO.Printing
-import Bibtex.Basic
+import Bibtex
 import Data.Map
 import qualified Data.Map as M
 }
@@ -83,28 +83,38 @@ spec Unpublished-}
 spec _ = error "Not implemented"
 
 
+
 -- | Converts an attribute to a html tree.
 fieldToHtml :: Type -> (Field, String) -> HtmlTree
 fieldToHtml Inproceedings (Title, s) = Text s
-fieldToHtml Inproceedings (Booktitle, s) = Elem "em" [Text s] []
-fieldToHtml _ (Title, s) = Elem "em" [Text s] []
+fieldToHtml Inproceedings (Booktitle, s) = Elem "em" [] [Text s]
+fieldToHtml _ (Title, s) = Elem "em" [] [Text s]
 fieldToHtml _ (Editor, s) = Text $ "In: " ++ s
 fieldToHtml _ (f, s) = Text s
 
 
--- (At the moment, Bibtex.Gen depends on FieldTransformer, so we cannot depend on Bibtex.Gen (=> cycle), hence we cannot use the BibtexEntry type.)
+deriveDispKey :: BibtexEntry -> String
+--TODO derive key correctly
+deriveDispKey (Entry t k fs) = k
+
 -- | Converts a bibtex entry to html. If the first element of the result contains
 --   no error messages, the second element is a html tree. If there are error
 --   messages, `Nothing` will be returned as second element.
-fieldsToHtml :: String -> Type -> [(Field, String)] -> ([Message], Maybe [HtmlTree])
-fieldsToHtml k t fs = if any isError msgs then (msgs, Nothing) else (msgs, Just $ html_Syn_SpecTree res)
+entryToHtml :: BibtexEntry -> ([Message], Maybe (HtmlTree, HtmlTree))
+entryToHtml e@(Entry t k fs) = if any isError msgs then (msgs, Nothing) else (msgs, Just (htmlInd, htmlEnt))
     where 
         inh = Inh_SpecTree { etype_Inh_SpecTree = t, fields_Inh_SpecTree = M.fromList fs, key_Inh_SpecTree = k }
         res = wrap_SpecTree (sem_SpecTree (spec t)) inh
         msgs = msgs_Syn_SpecTree res
+
         isError (Error _) = True
         isError _ = False
-    
+
+        htmlInd = Elem "a" [("href", k)] [dKey]
+        htmlEnt = Elem "tr" [("valign", "top")] [
+                            Elem "td" [] [Elem "a" [("name", k)] [dKey]],
+                            Elem "td" [] (html_Syn_SpecTree res)]
+        dKey = Text $ "[" ++ (deriveDispKey e) ++ "]"
 
 }
 

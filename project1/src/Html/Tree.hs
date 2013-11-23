@@ -21,13 +21,13 @@ type AttrVal = String
 -- | A HTML node.
 data Node
     = Text String
-    | Elem ElemName [Node] [(AttrName, AttrVal)]
+    | Elem ElemName [(AttrName, AttrVal)] [Node]
     deriving (Show)
 
 instance Tree Node where
     fromTree (Text s)                   = App "Text" [fromTree s]
-    fromTree (Elem e ns attrs)          = App "Elem" [fromTree e, fromTree ns, fromTree attrs]
+    fromTree (Elem e attrs ns)          = App "Elem" [fromTree e, fromTree attrs, fromTree ns]
 
     toTree (App "Text" [s])             = liftM Text (toTree s)
-    toTree (App "Elem" [e, ns, attrs])  = liftM3 Elem (toTree e) (toTree ns) (toTree attrs)
+    toTree (App "Elem" [e, attrs, ns])  = liftM3 Elem (toTree e) (toTree attrs) (toTree ns)
 
