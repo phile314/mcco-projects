@@ -6,6 +6,7 @@ module Lexer (
   , pValue
   , pToken
   , Token(..)
+  , isIdentifier
   ) where
 
 import CCO.Lexing hiding (satisfy)
