@@ -6,6 +6,7 @@ import Control.Applicative
 import HtmlTree
 import CCO.Feedback
 import Bibtex.Basic
+import Data.List (sortBy)
 }
 
 data BibtexDb
@@ -46,7 +47,13 @@ validateFields _ _ = []
 
 
 entryToHtml :: Type -> [(Field, String)] -> [Node]
-entryToHtml _ fs = [Elem "entry" (map (Text . show) fs) []]
+entryToHtml t fs = [Elem "entry" (map (f2Str t) $ sortBy (\(x,_) (y,_) -> fieldOrd t x y) fs) []]
+--entryToHtml _ _  = error "Unknown entry type"
+
+
+f2Str :: Type -> (Field, String) -> Node
+f2Str _ (_, str) = Text str
+
 
 }
 
