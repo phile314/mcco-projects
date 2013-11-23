@@ -1,7 +1,7 @@
+-- TODO should probably be merged with Basic.hs again
 -- | The attribute grammar used for converting a 'BibtexDb' in 'Html'.
+module Bibtex.Gen where
 
-imports
-{
 import CCO.Tree (ATerm (App), Tree (fromTree, toTree))
 import CCO.Tree.Parser (parseTree, app, arg, list, TreeParser)
 import Control.Applicative
@@ -9,50 +9,18 @@ import Html.Tree
 import CCO.Feedback
 import Bibtex.Basic
 import Data.List (sortBy)
-import Bibtex.Dependency
-import FieldTransformer
 import Data.Maybe (fromJust)
-}
 
 -- | A bibtex database is a list of 
 data BibtexDb
-    | BibtexDb entries :: BibtexEntryS
+    = BibtexDb [BibtexEntry]
+    deriving (Show, Eq)
 
 data BibtexEntry
-    | Entry etype :: Type key :: Key emap :: { [(Field, String)] }
-
-type BibtexEntryS = [BibtexEntry]
-
-set Every = BibtexDb BibtexEntryS BibtexEntry
-deriving Every : Show, Eq
-
-attr Every
-    syn html use {++} {[]} :: {[HtmlTree]}
-    syn msgs use {++} {[]} :: {[Message]}
-
-sem BibtexDb
-    | BibtexDb lhs.html = { [Elem "db" @entries.html [] ]}
-
-sem BibtexEntry
-    | Entry lhs.html = { fromJust $ snd $ fieldsToHtml @key @etype @emap }
-            lhs.msgs = { fst $ fieldsToHtml @key @etype @emap }
-
-{
-
-htmlAttr = html_Syn_BibtexDb
-msgsAttr = msgs_Syn_BibtexDb
-
--- | Walks the tree and returns the computed attributes.
-walkTree :: BibtexDb -> Syn_BibtexDb
-walkTree db = wrap_BibtexDb (sem_BibtexDb db) Inh_BibtexDb
+    = Entry Type Key [(Field, String)]
+    deriving (Show, Eq)
 
 
-
-
-}
-
-
-{
 --------------------------------------------------------------------------------
 --- ATerm
 --------------------------------------------------------------------------------
@@ -64,5 +32,3 @@ instance Tree BibtexDb where
 instance Tree BibtexEntry where
     fromTree (Entry t k fv) = App "Entry" [fromTree t, fromTree k, fromTree fv]
     toTree = parseTree [app "Entry" (Entry <$> arg <*> arg <*> arg)]
-
-}

@@ -1,0 +1,121 @@
+-- | The attribute grammar used for converting a 'BibtexEntry' to 'Html'.
+--  
+--   The bibtex field specification is constructed as a tree, and then a tree
+--   fold/walk is performed using the given field names/values as input. The output
+--   is the generated html and warning/error messages. All error/warning messages
+--   are collected even if an error is encountered. Html output is only produced,
+--   if there were no errors.
+
+imports
+{
+import Html.Tree
+import CCO.Feedback
+import CCO.Printing
+import Bibtex
+import Data.Map
+import qualified Data.Map as M
+}
+
+-- | A specification tree for the possible fields and combinations thereof in a bibtex entry.
+data SpecTree
+    | Both left :: SpecTree right :: SpecTree
+    | Either left :: Field right :: Field
+    | Optional child :: SpecTree
+    | Exactly field  :: Field
+
+
+attr SpecTree
+    syn avail use {&&} {True} :: Bool
+    syn html use {++} {[]} :: { [HtmlTree] }
+    syn msgs use {++} {[]} :: { [Message] }
+    inh etype :: Type
+    inh fields :: {Map Field String}
+    inh key :: String
+
+sem SpecTree
+    | Either lhs.avail = { @left `member` @lhs.fields || @right `member` @lhs.fields }
+             lhs.msgs = { case member' @lhs.fields @left @right of
+                            (True, True)   -> [Warning 1 (text $ "Both " ++ (show @left) ++ " and " ++ (show @right) ++ " are given, but are mutually exclusive in entry " ++ @lhs.key ++ ".")]
+                            (False, False) -> [Error (text $ "Neither of " ++ (show @left) ++ " and " ++ (show @right) ++ " is given, but one of them is required in entry " ++ @lhs.key ++ ".")]
+                            _              -> []}
+             lhs.html = { case member' @lhs.fields @left @right of
+                            (True, _)      -> [fieldToHtml @lhs.etype (@left, @lhs.fields ! @left)]
+                            (False, True)  -> [fieldToHtml @lhs.etype (@right, @lhs.fields ! @right)]}
+    | Optional lhs.msgs = { if @child.avail then @child.msgs else [] }
+               lhs.html = { if @child.avail then @child.html else [] }
+    | Exactly lhs.avail = { @field `member` @lhs.fields }
+              lhs.msgs = { if not (@field `member` @lhs.fields) then [Error (text $ "Required field " ++ (show @field) ++ " is missing in entry " ++ @lhs.key ++ ".")] else []}
+              lhs.html = { [fieldToHtml @lhs.etype (@field, @lhs.fields ! @field)] }
+
+{
+
+
+member' :: Map Field String -> Field -> Field -> (Bool, Bool)
+member' m f1 f2 = (f1 `member` m, f2 `member` m)
+
+
+
+-- | Combines all given specification trees using `Both`.
+allOf :: [SpecTree] -> SpecTree
+allOf ss = foldr1 (Both) ss
+
+-- local abbrevations
+e = Exactly
+o = Optional . Exactly
+sAE = Either Author Editor
+
+-- | Returns the specification tree for a given entry type.
+spec :: Type -> SpecTree
+spec Article    = allOf [sAE, e Title, e Journal, e Year, o Volume, o Number, o Pages, o Month, o Note]
+spec Book       = allOf [sAE, e Title, e Publisher, e Year, Optional (Either Volume Number), o Series, o Address, o Edition, o Month, o Note]
+--spec Booklet
+spec Conference = spec Inproceedings
+{-spec Inbook
+spec Incollection-}
+spec Inproceedings = allOf [e Author, e Title, o Editor, e Booktitle, e Year, Optional (Either Volume Number), o Series, o Pages, o Address, o Month, o Organization, o Publisher, o Note]
+{-spec Manual
+spec Mastersthesis
+spec Misc
+spec Phdthesis
+spec Proceedings
+spec Techreport
+spec Unpublished-}
+spec _ = error "Not implemented"
+
+
+
+-- | Converts an attribute to a html tree.
+fieldToHtml :: Type -> (Field, String) -> HtmlTree
+fieldToHtml Inproceedings (Title, s) = Text s
+fieldToHtml Inproceedings (Booktitle, s) = Elem "em" [] [Text s]
+fieldToHtml _ (Title, s) = Elem "em" [] [Text s]
+fieldToHtml _ (Editor, s) = Text $ "In: " ++ s
+fieldToHtml _ (f, s) = Text s
+
+
+deriveDispKey :: BibtexEntry -> String
+--TODO derive key correctly
+deriveDispKey (Entry t k fs) = k
+
+-- | Converts a bibtex entry to html. If the first element of the result contains
+--   no error messages, the second element is a html tree. If there are error
+--   messages, `Nothing` will be returned as second element.
+entryToHtml :: BibtexEntry -> ([Message], Maybe (HtmlTree, HtmlTree))
+entryToHtml e@(Entry t k fs) = if any isError msgs then (msgs, Nothing) else (msgs, Just (htmlInd, htmlEnt))
+    where 
+        inh = Inh_SpecTree { etype_Inh_SpecTree = t, fields_Inh_SpecTree = M.fromList fs, key_Inh_SpecTree = k }
+        res = wrap_SpecTree (sem_SpecTree (spec t)) inh
+        msgs = msgs_Syn_SpecTree res
+
+        isError (Error _) = True
+        isError _ = False
+
+        htmlInd = Elem "a" [("href", k)] [dKey]
+        htmlEnt = Elem "tr" [("valign", "top")] [
+                            Elem "td" [] [Elem "a" [("name", k)] [dKey]],
+                            Elem "td" [] (html_Syn_SpecTree res)]
+        dKey = Text $ "[" ++ (deriveDispKey e) ++ "]"
+
+}
+
+

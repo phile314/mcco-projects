@@ -19,9 +19,9 @@ ind = 4
 --   by this function (TODO).
 instance Printable HtmlTree where
     pp (Text s) = escapedAll s
-    pp (Elem t [] attrs) = closedTag $ text t >|< pp attrs
+    pp (Elem t attrs []) = closedTag $ text t >|< pp attrs
       where closedTag = enclose langle (text "/" >|< rangle)
-    pp (Elem t es attrs) = tagOpen >-< content >-< tagClosed
+    pp (Elem t attrs es) = tagOpen >-< content >-< tagClosed
       where tagOpen = angles (text t >|< pp attrs)
             tagClosed = enclose (langle >|< text "/") rangle (text t)
             content = indent ind (pp es)
