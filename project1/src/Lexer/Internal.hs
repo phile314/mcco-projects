@@ -4,6 +4,7 @@ module Lexer.Internal where
 
 import CCO.Lexing hiding (satisfy)
 import Control.Applicative
+import Data.Maybe (fromMaybe)
 
 -- | The tokens defined for a bibtex file
 data Token 
@@ -44,10 +45,22 @@ equal = char '=' *> pure EqualSign
 
 -- | A lexer that tokenizes the value of a field
 value :: Lexer Token
-value = Value <$> (inQuotes <|> number) -- TODO special latex syntax not handled
-  where inQuotes   = char '"' *> some (anyCharBut "\"") <* char '"'
-        number     = some digit
-
+value = Value <$> (inQuotes <|> number)
+  where inQuotes = concat <$> (char '"' *> some content <* char '"')
+        number   = some digit
+        content = special <|> some (anyCharBut "\"")
+        special  = convert <$> (char '{' *> many (anyCharBut "}") <* char '}')
+ 
 -- | A lexer that tokenize an identifier (field name or key)
+identifier :: Lexer Token
 identifier = Identifier <$> iden
   where iden = (:) <$> alpha <*> many alphaNum
+
+-- | Converts a string that contains latex special syntax
+convert :: String -> String
+convert s = fromMaybe s $ lookup s conversionRules
+
+-- | An association list that contains the conversion rules from latex special syntax to 
+-- utf8 characters.
+conversionRules :: [(String, String)]
+conversionRules = [("\\`e", "è"), ("\\\"o", "ö")]
