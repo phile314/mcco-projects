@@ -81,8 +81,8 @@ sem SpecTree
 
 {
 
--- | Expects at least one of the given specifications as input,
---   but uses all of the available fields.
+-- | Expects at least one of the given specifications to hold,
+--   and uses all holding specifications when pretty printing.
 someOf :: SpecTree -> SpecTree -> SpecTree
 someOf s1 s2 = Either (Both s1 (Optional s2)) s2
 
