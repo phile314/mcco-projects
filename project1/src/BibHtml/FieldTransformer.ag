@@ -83,12 +83,8 @@ sem SpecTree
 
 -- | Expects at least one of the given specifications as input,
 --   but uses all of the available fields.
-someOf :: [SpecTree] -> SpecTree
-someOf ss = someOf' [] ss
-    where
-        someOf' ps [s]    = allOf ((mapo ps) ++ [s])
-        someOf' ps (s:ss) = Either (allOf ((mapo ps) ++ [s] ++ (mapo ss))) (someOf' (ps ++ [s]) ss)
-        mapo = map Optional
+someOf :: SpecTree -> SpecTree -> SpecTree
+someOf s1 s2 = Either (Both s1 (Optional s2)) s2
 
 -- | Combines all given specification trees using `Both`.
 allOf :: [SpecTree] -> SpecTree
@@ -110,7 +106,7 @@ spec Article    = allOf [sAE, e Title, e Journal, e Year, o Volume, o Number, o 
 spec Book       = allOf [sAE, e Title, e Publisher, e Year, Optional (either1 Volume Number), o Series, o Address, o Edition, o Month, o Note]
 spec Booklet    = allOf [e Title, o Author, o HowPublished, o Address, o Month, o Year, o Note]
 spec Conference = spec Inproceedings
-spec Inbook     = allOf [sAE, e Title, someOf [e Chapter, e Pages], e Publisher, e Year, o Volume, Optional (either1 Volume Number), o Series, o Type, o Address, o Edition, o Month, o Note]
+spec Inbook     = allOf [sAE, e Title, someOf (e Chapter) (e Pages), e Publisher, e Year, o Volume, Optional (either1 Volume Number), o Series, o Type, o Address, o Edition, o Month, o Note]
 spec Incollection  = allOf [e Author, e Title, e Booktitle, e Year, o Editor, Optional (either1 Volume Number), o Series, o Pages, o Address, o Month, o Organization, o Publisher, o Note]
 spec Inproceedings = allOf [e Author, e Title, o Editor, e Booktitle, e Year, Optional (either1 Volume Number), o Series, o Pages, o Address, o Month, o Organization, o Publisher, o Note]
 spec Manual     = allOf [e Title, o Author, o Organization, o Address, o Edition, o Month, o Year, o Note]
