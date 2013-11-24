@@ -86,8 +86,9 @@ sem SpecTree
 someOf :: SpecTree -> SpecTree -> SpecTree
 someOf s1 s2 = Either (Both s1 (Optional s2)) s2
 
--- | Combines all given specification trees using `Both`.
+-- | Combines all given specification trees using `Both`. Undefined for empty lists.
 allOf :: [SpecTree] -> SpecTree
+allOf [s] = s
 allOf ss = foldr1 (Both) ss
 
 -- local abbrevations
