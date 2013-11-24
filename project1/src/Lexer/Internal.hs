@@ -15,6 +15,7 @@ data Token
   | EqualSign   -- ^ '='
   | Identifier String   -- ^ Field names and entry types
   | Value String        -- ^ The content of a field
+  | Decl String         -- ^ An entry declaration "@EntryType{", the string is the entry type
   deriving (Show, Eq)
 
 -- | A lexer that recognizes and consumes (ignores) whitespace and comments.
@@ -51,10 +52,17 @@ value = Value <$> (inQuotes <|> number)
         content = special <|> some (anyCharBut "\"")
         special  = convert <$> (char '{' *> many (anyCharBut "}") <* char '}')
  
--- | A lexer that tokenize an identifier (field name or key)
+-- | A lexer that tokenizes an identifier (field name or key)
 identifier :: Lexer Token
 identifier = Identifier <$> iden
-  where iden = (:) <$> alpha <*> many alphaNum
+
+-- | A lexer that recognizes an identifier and returns it as a string
+iden :: Lexer String
+iden = (:) <$> alpha <*> many alphaNum
+
+-- | A lexer that recognize an entry declaration
+decl :: Lexer Token
+decl = Decl <$> (char '@' *> iden <* char '{')
 
 -- | Converts a string that contains latex special syntax
 convert :: String -> String
