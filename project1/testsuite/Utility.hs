@@ -2,6 +2,7 @@
 
 module Utility where
 
+import BibHtml.FieldTransformer
 import Bibtex
 import Control.Monad (liftM, liftM2, liftM3)
 import CCO.Lexing (LexicalUnit(..), Symbols(..))
@@ -34,6 +35,17 @@ instance Arbitrary Type where
 -- | A generator of Bibtex fields
 instance Arbitrary Field where
     arbitrary = elements fields
+
+-- | A generator of spec trees.
+instance Arbitrary SpecTree where
+    arbitrary = sized tree
+        where
+            tree 0 = liftM Exactly arbitrary
+            tree n | n > 0 = let sub = tree (n `div` 2) in
+                              oneof [  liftM Exactly arbitrary
+                                    , liftM2 Both sub sub
+                                    , liftM2 Either sub sub
+                                    , liftM Optional sub]
 
 -- | A generator for values associated with a field
 values :: Gen String
@@ -69,3 +81,4 @@ passH result = failures result == 0 && errors result == 0
 -- | Returns whether some 'QuickCheck' test failed
 passQ :: [Result] -> Bool
 passQ = all isSuccess
+

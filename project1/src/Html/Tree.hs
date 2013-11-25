@@ -22,7 +22,7 @@ type AttrVal = String
 data Node
     = Text String
     | Elem ElemName [(AttrName, AttrVal)] [Node]
-    deriving (Show)
+    deriving (Show, Eq)
 
 instance Tree Node where
     fromTree (Text s)                   = App "Text" [fromTree s]
