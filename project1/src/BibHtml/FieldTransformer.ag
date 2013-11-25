@@ -59,25 +59,30 @@ attr SpecTree
     syn reqStr use {++} {""} :: String
     inh etype :: Type
     inh fields :: {Map Field String}
-    inh key :: String
+    inh key :: Key
 
 sem SpecTree
-    | Either lhs.avail = { @left.avail || @right.avail }
-             lhs.msgs = { case (@left.avail, @right.avail) of
-                            (True, True)   -> [Warning 1 (text $ "Both " ++ @left.reqStr ++ " and " ++ @right.reqStr ++ " are given, but are mutually exclusive in entry " ++ @lhs.key ++ ".")]
-                            (False, False) -> [Error (text $ "Neither of " ++ @left.reqStr ++ " and " ++ @right.reqStr ++ " is given, but one of them is required in entry " ++ @lhs.key ++ ".")]
-                            _              -> []}
-             lhs.html = { case (@left.avail, @right.avail) of
+  | Either lhs.avail = { @left.avail || @right.avail }
+           lhs.msgs = { case (@left.avail, @right.avail) of
+                            (True, True)   -> [mutuallyExclusive @left.reqStr @right.reqStr @lhs.key]
+                            (False, False) -> [bothMissing @left.reqStr @right.reqStr @lhs.key]
+                            _              -> [] }
+           lhs.html = { case (@left.avail, @right.avail) of
                             (True, _)      -> @left.html
                             (False, True)  -> @right.html }
-             lhs.reqStr = { "(" ++ @left.reqStr ++ " or " ++ @right.reqStr ++ ")"}
-    | Optional lhs.msgs = { if @child.avail then @child.msgs else [] }
-               lhs.html = { if @child.avail then @child.html else [] }
-    | Exactly lhs.avail = { @field `member` @lhs.fields }
-              lhs.msgs = { if not (@field `member` @lhs.fields) then [Error (text $ "Required field " ++ (show @field) ++ " is missing in entry " ++ @lhs.key ++ ".")] else []}
-              lhs.html = { [fieldToHtml @lhs.etype (@field, @lhs.fields ! @field)] }
-              lhs.reqStr = { show @field }
-    | Both lhs.reqStr = { "(" ++ @left.reqStr ++ " and " ++ @right.reqStr ++ ")" }
+           lhs.reqStr = { "(" ++ @left.reqStr ++ " or " ++ @right.reqStr ++ ")"}
+
+  | Optional lhs.msgs = { if @child.avail then @child.msgs else [] }
+             lhs.html = { if @child.avail then @child.html else [] }
+
+  | Exactly lhs.avail = { @field `member` @lhs.fields }
+            lhs.msgs = { if not (@field `member` @lhs.fields) 
+                            then [missing @field @lhs.key]
+                            else []}
+            lhs.html = { [fieldToHtml @lhs.etype (@field, @lhs.fields ! @field)] }
+            lhs.reqStr = { show @field }
+
+  | Both lhs.reqStr = { "(" ++ @left.reqStr ++ " and " ++ @right.reqStr ++ ")" }
 
 {
 
@@ -94,8 +99,14 @@ allOf ss = foldr1 (Both) ss
 -- local abbrevations
 e = Exactly
 o = Optional . Exactly
-either1 f1 f2 = Either (Exactly f1) (Exactly f2)
-sAE = either1 Author Editor
+
+-- | Either an Author or Editor
+sAE :: SpecTree
+sAE = Author <|> Editor
+
+-- | @f1 <|> f2@ is 'Either' 'Exactly' f1@ or @'Exactly' f2@
+(<|>) :: Field -> Field -> SpecTree
+f1 <|> f2 = Either (Exactly f1) (Exactly f2)
 
 -- | Returns the specification tree for a given entry type. All entry types specified
 --   in http://www.andy-roberts.net/res/writing/latex/bibentries.pdf are implemented as of 24.11.2013.
@@ -104,20 +115,19 @@ sAE = either1 Author Editor
 --   is hard to get by. To rectify the wrong ordering, the fields can just be moved to the proper location below.
 spec :: Type -> SpecTree
 spec Article    = allOf [sAE, e Title, e Journal, e Year, o Volume, o Number, o Pages, o Month, o Note]
-spec Book       = allOf [sAE, e Title, e Publisher, e Year, Optional (either1 Volume Number), o Series, o Address, o Edition, o Month, o Note]
+spec Book       = allOf [sAE, e Title, e Publisher, e Year, Optional (Volume <|> Number), o Series, o Address, o Edition, o Month, o Note]
 spec Booklet    = allOf [e Title, o Author, o HowPublished, o Address, o Month, o Year, o Note]
 spec Conference = spec Inproceedings
-spec Inbook     = allOf [sAE, e Title, someOf (e Chapter) (e Pages), e Publisher, e Year, o Volume, Optional (either1 Volume Number), o Series, o Type, o Address, o Edition, o Month, o Note]
-spec Incollection  = allOf [e Author, e Title, e Booktitle, e Year, o Editor, Optional (either1 Volume Number), o Series, o Pages, o Address, o Month, o Organization, o Publisher, o Note]
-spec Inproceedings = allOf [e Author, e Title, o Editor, e Booktitle, e Year, Optional (either1 Volume Number), o Series, o Pages, o Address, o Month, o Organization, o Publisher, o Note]
+spec Inbook     = allOf [sAE, e Title, someOf (e Chapter) (e Pages), e Publisher, e Year, o Volume, Optional (Volume <|> Number), o Series, o Type, o Address, o Edition, o Month, o Note]
+spec Incollection  = allOf [e Author, e Title, e Booktitle, e Year, o Editor, Optional (Volume <|> Number), o Series, o Pages, o Address, o Month, o Organization, o Publisher, o Note]
+spec Inproceedings = allOf [e Author, e Title, o Editor, e Booktitle, e Year, Optional (Volume <|> Number), o Series, o Pages, o Address, o Month, o Organization, o Publisher, o Note]
 spec Manual     = allOf [e Title, o Author, o Organization, o Address, o Edition, o Month, o Year, o Note]
 spec Mastersthesis = allOf [e Author, e Title, e School, e Year, o Type, o Address, o Month, o Note]
 spec Misc       = allOf [o Author, o Title, o HowPublished, o Month, o Year, o Note]
 spec Phdthesis  = allOf [e Author, e Title, e School, e Year, o Type, o Address, o Month, o Note]
-spec Proceedings = allOf [e Title, e Year, o Editor, Optional (either1 Volume Number), o Series, o Address, o Month, o Organization, o Publisher, o Note]
+spec Proceedings = allOf [e Title, e Year, o Editor, Optional (Volume <|> Number), o Series, o Address, o Month, o Organization, o Publisher, o Note]
 spec Techreport = allOf [e Author, e Title, e Institution, e Year, o Type, o Address, o Month, o Note]
 spec Unpublished = allOf [e Author, e Title, e Note, o Month, o Year]
-
 
 
 -- | Converts an attribute to a html tree.
@@ -155,4 +165,24 @@ entryToHtml e@(Entry t k fs) = if any isError msgs then (msgs, Nothing) else (ms
 
 }
 
+-------------------------------------------------------------------------------
+-- Error messages
+-------------------------------------------------------------------------------
+{
+-- | Returns a 'Warning' message about two elements being both present.
+mutuallyExclusive :: String -> String -> Key -> Message
+mutuallyExclusive s1 s2 k = Warning 1 (text w)
+  where w = unwords ["Both", s1, "and", s2, "are given,",
+                     "but are mutually exclusive in entry", k]
 
+-- | Retuns an 'Error' message about none of two elements being present.
+bothMissing :: String -> String -> Key -> Message
+bothMissing s1 s2 k = Error (text e)
+  where e = unwords ["Neither of", s1, "and", s2, "is given,",
+                     "but one of them is required in entry", k] 
+ 
+-- | Returns an 'Error' about a missing field
+missing :: Field -> Key -> Message
+missing f k = Error (text e)
+  where e = unwords ["Required field", show f, "is missing in entry", k]
+}
