@@ -8,11 +8,11 @@
 --   
 -- * Implementation remarks
 --   
---   (The term attribute in this text is referring to the attribute grammer,
+--   (The term attribute in this text is referring to the attribute grammar,
 --    the term field is used to refer to fields of a bibtex entry.)
 --
 --   It is assumed that the printing of any field is indepent from all
---   other fields. To print an entry, it is therefor sufficient
+--   other fields. To print an entry, it is therefore sufficient
 --   to sort the fields in the correct order and call `fieldToHtml`
 --   for each field. 
 --   This is achieved using a tree specifying allowed fields, their 

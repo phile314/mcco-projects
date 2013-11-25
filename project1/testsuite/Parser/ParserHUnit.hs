@@ -34,13 +34,13 @@ simpleParseTest input p expected = TestCase $ do
 -- | Tests the entry parser 'pEntry'.
 testEntryParser :: Test
 testEntryParser = TestLabel "DataParser" $ simpleParseTest input pEntry expected
-  where input = runLexer "@article{key,author=\"bar\"}"
+  where input = C.lex lexer Stdin "@article{key,author=\"bar\"}"
         expected = Entry Article "key" [(Author, "bar")]
 
 -- | Tests the value parser 'pValue'.
 testValueParser :: Test
 testValueParser = TestLabel "ValueParser" $ simpleParseTest input pValue expected
-  where input = runLexer "\"foobar\""
+  where input = C.lex lexer Stdin "\"foobar\""
         expected = "foobar"
 
 -- | The tests that will be run

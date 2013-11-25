@@ -7,7 +7,6 @@ module Lexer (
   , pToken
   , Token(..)
   , isIdentifier
-  , runLexer
   ) where
 
 import CCO.Lexing hiding (satisfy)
@@ -27,7 +26,6 @@ instance Symbol Token where
   describe EqualSign = ("equal sign" ++)
   describe (Identifier _) = ("identifier " ++)
   describe (Value _) = ("value " ++)
-  describe (Decl _) = ("entry declaration `@entry{' " ++)
 
 -- | Tests whether a token is an identifier
 isIdentifier :: Token -> Bool
@@ -47,30 +45,8 @@ isValue  _        = False
 lexer :: Lexer Token
 lexer = choice lexers 
   where choice = foldr1 (<|>)
-        lexers = [whitespace, decl, lBracket, rBracket, 
+        lexers = [whitespace, atSign, lBracket, rBracket, 
                   comma, equal, value, identifier]
-
--- | Runs 'lexer' performing some simplification of the tokens.
-runLexer :: String -> Symbols Token
-runLexer = postProcess . (L.lex lexer Stdin)
-  where postProcess (Symbols s xs) = Symbols s (concatMap simplify xs)
-
--- Convert complex tokens into simple tokens.
--- This is needed because 'CCO.Lexing' does not allow to write contex sensitive
--- lexers (required for bibtex files). Therefore in order to make it contex-free
--- some tokens must be merged, however this make the parsing unnatural.
--- For instance the 'Token' @'Decl s'@ is splitted in three different tokens:
--- @[AtSign, Identifier s, LBracket]@.
-simplify :: LexicalUnit Token -> [LexicalUnit Token]
-simplify (Token (Decl s) p _ s2) = [at, identifier, bracket]
-  where at         = Token AtSign p "@" (s ++ "{")
-        identifier = Token (Identifier s) (skip 1 p) s ("{" ++ s2)
-        bracket    = Token LBracket (skip (1 + length s) p) "{" s2 
-simplify t = [t]
-
--- | @'skip' n p@ returns @p@ in which @n@ column numbers have been skipped.
-skip :: Int -> Pos -> Pos
-skip n (Pos l c) = Pos l (c + n)
 
 -------------------------------------------------------------------------------
 -- Utility Parser

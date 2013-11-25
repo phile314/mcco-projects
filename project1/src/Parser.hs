@@ -15,8 +15,7 @@ type TokenParser = Parser Token
 
 -- | A 'Component' for Bibtex database files (consumes all the input until eof)
 parser :: Component String BibtexDb
-parser = component (fmap fst . parse parseAll . runLexer)
-  where parseAll = pDb <* eof
+parser = C.parser lexer (pDb <* eof)
 
 -- | Parses a bibtex database composed by zero or more entries
 pDb :: TokenParser BibtexDb

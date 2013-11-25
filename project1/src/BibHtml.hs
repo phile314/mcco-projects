@@ -24,7 +24,7 @@ main = ioWrap $
 
 -- | Return the given 'BibtexDb' sorted first by author and then by year and title.
 -- If the considered field is missing in some entry, such entry will come after 
--- those that who have that field.
+-- those that have that field.
 sorter :: BibtexDb -> BibtexDb
 sorter (BibtexDb d) = BibtexDb $ sortBy criteria d
   where criteria (Entry _ _ xs) (Entry _ _ ys) = compare (ayt xs) (ayt ys)
