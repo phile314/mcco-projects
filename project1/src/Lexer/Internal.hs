@@ -49,7 +49,7 @@ value :: Lexer Token
 value = Value <$> (inQuotes <|> number)
   where inQuotes = concat <$> (char '"' *> some content <* char '"')
         number   = some digit
-        content = special <|> some (anyCharBut "\"")
+        content = special <|> ((:[]) <$> anyCharBut "\"") -- FIX not very efficient
         special  = convert <$> (char '{' *> many (anyCharBut "}") <* char '}')
  
 -- | A lexer that tokenizes an identifier (field name or key)
