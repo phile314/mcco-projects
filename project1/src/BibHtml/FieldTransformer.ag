@@ -51,6 +51,7 @@ data SpecTree
     | Optional child :: SpecTree
     | Exactly field  :: Field
 
+deriving SpecTree : Show
 
 attr SpecTree
     syn avail use {&&} {True} :: Bool
@@ -73,6 +74,8 @@ sem SpecTree
              lhs.reqStr = { "(" ++ @left.reqStr ++ " or " ++ @right.reqStr ++ ")"}
     | Optional lhs.msgs = { if @child.avail then @child.msgs else [] }
                lhs.html = { if @child.avail then @child.html else [] }
+               lhs.avail = True
+               lhs.reqStr = ""
     | Exactly lhs.avail = { @field `member` @lhs.fields }
               lhs.msgs = { if not (@field `member` @lhs.fields) then [Error (text $ "Required field " ++ (show @field) ++ " is missing in entry " ++ @lhs.key ++ ".")] else []}
               lhs.html = { [fieldToHtml @lhs.etype (@field, @lhs.fields ! @field)] }
@@ -134,14 +137,21 @@ deriveDispKey :: BibtexEntry -> String
 --TODO derive key correctly
 deriveDispKey (Entry t k fs) = k
 
+
+-- | Checks whether the given tree holds on a bitex entry.
+isAvail :: BibtexEntry -> SpecTree -> Bool
+isAvail t s = avail_Syn_SpecTree $ walkTree t s 
+
 -- | Converts a bibtex entry to html. If the first element of the result contains
 --   no error messages, the second element is a html tree. If there are error
 --   messages, `Nothing` will be returned as second element.
 entryToHtml :: BibtexEntry -> ([Message], Maybe (HtmlTree, HtmlTree))
-entryToHtml e@(Entry t k fs) = if any isError msgs then (msgs, Nothing) else (msgs, Just (htmlInd, htmlEnt))
-    where 
-        inh = Inh_SpecTree { etype_Inh_SpecTree = t, fields_Inh_SpecTree = M.fromList fs, key_Inh_SpecTree = k }
-        res = wrap_SpecTree (sem_SpecTree (spec t)) inh
+entryToHtml e@(Entry t _ _) = entryToHtml1 (spec t) e
+
+entryToHtml1 :: SpecTree -> BibtexEntry -> ([Message], Maybe (HtmlTree, HtmlTree))
+entryToHtml1 s e@(Entry _ k _) = if avail_Syn_SpecTree res then (msgs, Just (htmlInd, htmlEnt)) else (msgs, Nothing)
+    where
+        res = walkTree e s
         msgs = msgs_Syn_SpecTree res
 
         isError (Error _) = True
@@ -152,6 +162,10 @@ entryToHtml e@(Entry t k fs) = if any isError msgs then (msgs, Nothing) else (ms
                             Elem "td" [] [Elem "a" [("name", k)] [dKey]],
                             Elem "td" [] (html_Syn_SpecTree res)]
         dKey = Text $ "[" ++ (deriveDispKey e) ++ "]"
+
+walkTree :: BibtexEntry -> SpecTree -> Syn_SpecTree
+walkTree (Entry t k fs) s = wrap_SpecTree (sem_SpecTree s) inh
+    where inh = Inh_SpecTree { etype_Inh_SpecTree = t, fields_Inh_SpecTree = M.fromList fs, key_Inh_SpecTree = k }
 
 }
 
