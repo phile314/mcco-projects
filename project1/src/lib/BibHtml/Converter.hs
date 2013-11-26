@@ -1,38 +1,5 @@
--- | The attribute grammar used for converting a 'BibtexEntry' to 'Html'.
---  
---   The bibtex field specification is constructed as a tree, and then a tree
---   fold/walk is performed using the given field names/values as input. The output
---   is the generated html and warning/error messages. All error/warning messages
---   are collected even if an error is encountered. Html output is only produced,
---   if there were no errors.
---   
--- * Implementation remarks
---   
---   (The term attribute in this text is referring to the attribute grammar,
---    the term field is used to refer to fields of a bibtex entry.)
---
---   It is assumed that the printing of any field is indepent from all
---   other fields. To print an entry, it is therefore sufficient
---   to sort the fields in the correct order and call `fieldToHtml`
---   for each field. 
---   This is achieved using a tree specifying allowed fields, their 
---   combinations and their order. Then a fold
---   over this tree takes place, carrying the field values as attribute
---   throughout the tree. Each node of the tree then decides how to print a
---   subset of this fields.
---
---   For sorting alone the tree might not be strictly necessary,
---   but Bibtex is more complicated as it sometimes allows
---   a mutually-exclusive choice between two fields and a variety
---   of optional fields. As it is also a good idea to validate that
---   a valid set of field values is given, a simple list sorter
---   does not suffice.
---
--- * Usage remarks
---   
---   The function `entryToHtml` is intended as sole entry point for
---   users of this module.
---   (TODO: do not export all the other definitions. How to do this in uuagc?)
+-- | This module contains functions to convert from bibtex elements
+-- to html representation.
 
 module BibHtml.Converter where
 
@@ -40,8 +7,6 @@ import Html.Tree
 import CCO.Feedback
 import CCO.Printing
 import Bibtex
-import Data.Map hiding (map)
-import qualified Data.Map as M
 import BibHtml.BibtexSpec
 import BibHtml.Spec
 

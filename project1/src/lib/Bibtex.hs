@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
+
 -- | This module defines the data types 'Type' and 'Field' used
 -- inside a 'BibtexEntry'.
 
@@ -76,7 +77,6 @@ data Field
 --    | Unknown fieldName :: String
     deriving (Show, Eq, Enum, Bounded, Ord)
 
-
 -- | A list containing all the 'Field' constructors
 fields :: [Field]
 fields = enumFromTo minBound maxBound
@@ -111,4 +111,3 @@ instance Tree Type where
 -- | A 'TreeParser' for single showable constructors.
 pCons :: (Show a, Tree a) => a -> TreeParser a
 pCons c = app (show c) (pure c)
-

@@ -1,3 +1,7 @@
+-- | This module defines functions to convert a 'BibtexDb' to
+-- an html representation.
+-- TODO should be merged with Converter.
+
 module BibHtml.DbTransformer
     (toHtml)
 where

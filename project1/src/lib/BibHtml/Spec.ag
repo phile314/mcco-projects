@@ -30,8 +30,8 @@
 --
 -- * Usage remarks
 --   
---   The function `entryToHtml` is intended as sole entry point for
---   users of this module.
+--   The function `entryToHtml` and the provided 'SpecTree' related constructing 
+--   functions are the only elements that should actually be exported from this module
 --   (TODO: do not export all the other definitions. How to do this in uuagc?)
 
 imports
@@ -45,6 +45,8 @@ import qualified Data.Map as M
 }
 
 {
+-- A function that given an entry 'Type' and a 'Field' coupled with its value
+-- returns an html representation of the field and its value.
 type FieldToHtml = Type -> (Field, String) -> HtmlTree
 }
 
@@ -89,37 +91,50 @@ sem SpecTree
 
 {
 
+-- Exported constrctor functions
 
-sExactly = Exactly
-sOptional = Optional
-sEither = Either
-sBoth = Both
+-- | Builds an 'Exactly' value
+exactly :: Field -> SpecTree
+exactly = Exactly
+
+-- | Builds an Optional value
+optional :: SpecTree -> SpecTree
+optional = Optional
+
+-- | Builds an 'Either' value
+either :: SpecTree -> SpecTree -> SpecTree
+either = Either
+
+-- | Builds a 'Both' value
+both :: SpecTree -> SpecTree -> SpecTree
+both = Both
 
 -- | Expects at least one of the given specifications to hold,
 --   and uses all holding specifications when pretty printing.
-sSomeOf :: SpecTree -> SpecTree -> SpecTree
-sSomeOf s1 s2 = sEither (sBoth s1 s2) (sEither s1 s2)
+someOf :: SpecTree -> SpecTree -> SpecTree
+someOf s1 s2 = Either (Both s1 s2) (Either s1 s2)
 
 -- | Combines all given specification trees using `Both`. Undefined for empty lists.
-sAllOf :: [SpecTree] -> SpecTree
-sAllOf [s] = s
-sAllOf ss = foldr1 (sBoth) ss
-
+allOf :: [SpecTree] -> SpecTree
+allOf [s] = s
+allOf ss = foldr1 Both ss
 
 -- | @f1 <|> f2@ is 'Either' 'Exactly' f1@ or @'Exactly' f2@
 (<|>) :: Field -> Field -> SpecTree
 f1 <|> f2 = Either (Exactly f1) (Exactly f2)
 
-
 -- | Checks whether the given tree holds on a bitex entry.
 isAvail :: BibtexEntry -> SpecTree -> Bool
 isAvail t s = avail_Syn_SpecTree $ walkTree undefined t s 
 
-
+-- | Given a converter function, a bibtex entry and a specification tree
+-- runs the attribute grammar.
 walkTree :: FieldToHtml -> BibtexEntry -> SpecTree -> Syn_SpecTree
 walkTree f2h (Entry t k fs) s = wrap_SpecTree (sem_SpecTree s) inh
-    where inh = Inh_SpecTree { etype_Inh_SpecTree = t, fields_Inh_SpecTree = M.fromList fs, key_Inh_SpecTree = k, fieldToHtml_Inh_SpecTree = f2h}
-
+    where inh = Inh_SpecTree { etype_Inh_SpecTree = t,
+                               fields_Inh_SpecTree = M.fromList fs,
+                               key_Inh_SpecTree = k,
+                               fieldToHtml_Inh_SpecTree = f2h }
 }
 
 -------------------------------------------------------------------------------
