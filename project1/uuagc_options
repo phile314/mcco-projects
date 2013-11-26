@@ -1,3 +1,2 @@
-file :      "src/BibHtml/Spec.ag"
+file :      "src/lib/BibHtml/Spec.ag"
 options:    module "BibHtml.Spec", haskellsyntax, data, catas, semfuns, signatures, wrappers, pretty
-
