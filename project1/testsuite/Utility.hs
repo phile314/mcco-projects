@@ -2,7 +2,7 @@
 
 module Utility where
 
-import BibHtml.FieldTransformer
+import BibHtml.Spec
 import Bibtex
 import Control.Monad (liftM, liftM2, liftM3)
 import CCO.Lexing (LexicalUnit(..), Symbols(..))

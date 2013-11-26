@@ -5,7 +5,8 @@
 module Main where
 
 import Bibtex
-import BibHtml.FieldTransformer
+import BibHtml.Spec
+import BibHtml.Converter
 import Data.Maybe (isJust)
 import Data.List (lookup) 
 

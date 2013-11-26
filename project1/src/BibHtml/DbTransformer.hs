@@ -6,7 +6,7 @@ import Bibtex
 import CCO.Feedback
 import Html.Tree
 import Data.Maybe
-import BibHtml.FieldTransformer
+import BibHtml.Converter
 
 el :: String -> [Node] -> Node
 el n c = Elem n [] c

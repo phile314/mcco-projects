@@ -1,3 +1,3 @@
-file :      "src/BibHtml/FieldTransformer.ag"
-options:    module "BibHtml.FieldTransformer", haskellsyntax, data, catas, semfuns, signatures, wrappers, pretty
+file :      "src/BibHtml/Spec.ag"
+options:    module "BibHtml.Spec", haskellsyntax, data, catas, semfuns, signatures, wrappers, pretty
 
