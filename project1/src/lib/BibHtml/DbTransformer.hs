@@ -58,6 +58,7 @@ tableOf db ht = Elem "table" [("border", "0")] $ map process (zip db ht)
   where row xs = Elem "tr" [("valign", "top")] $ map ("td" <<) xs
         process (e,h) = row $ (reference e):h
 
+-- | Removes all entries with an unknown type and emits a warning for each such entry.
 dropUnknownTypes :: [BibtexEntry] -> Feedback [BibtexEntry]
 dropUnknownTypes = filterM f
   where f (Entry (UnknownType t) k _) = do
