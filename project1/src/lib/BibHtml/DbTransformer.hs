@@ -8,37 +8,46 @@ where
 
 import Bibtex
 import CCO.Feedback
+import Data.List (intersperse)
 import Html.Tree
 import Data.Maybe
 import BibHtml.Converter
 
-el :: String -> [Node] -> Node
-el n c = Elem n [] c
-
+-- | Returns an html representation of a 'BibtexDb'.
+-- Note that the result is wrapped in the 'Feedback' monad because this 
+-- operation may fail, for instance when some required field of a bibtex 
+-- entry are missing.
 toHtml :: BibtexDb -> Feedback HtmlTree
-toHtml (BibtexDb es) = do
-    entries <- toHtml1 es
-    
-    let doc = el "html" [
-                el "head" [
-                    el "title" [Text "Bibliography"]
-                ],
-                el "body" ((map fst entries) ++ [
-                    el "hr" [],
-                    Elem "table" [("border", "0")] (map snd entries)
-                ])
-            ]
-    return doc
+toHtml (BibtexDb db) = do
+    table <- mapM entryToHtml db >>= return . (tableOf db)
+    let body = Elem "body" [] (toc ++ [table])
+    return $ Elem "html" [] [header, body]
+  where header = "head" << "title" << Text "Bibliography"
+        toc    = makeSummary db
 
-wrapE :: HtmlTree -> HtmlTree
-wrapE t = Elem "tr" [("valign", "top")] [t]
+-- | Produces a summary of the given bibtex entries.
+-- More precisely it is an html object containing a list of 
+-- anchors referring to the associated entry. 
+makeSummary :: [BibtexEntry] -> [HtmlTree]
+makeSummary db = intersperse (Text " | ") anchors
+  where anchors = map reference db
 
-toHtml1 :: [BibtexEntry] -> Feedback [(HtmlTree, HtmlTree)]
-toHtml1 es = do
-    let (msgs, htmls) = unzip $ map entryToHtml es
+-- | Produces an anchor html object that points to the entry key.
+-- The visible name is the result of 'deriveKey' on the key entry.
+reference :: BibtexEntry -> HtmlTree
+reference e@(Entry _ k _) = Elem "a" [("href", '#':k)] [Text key]
+  where key = "[" ++ (deriveKey e) ++ "]"
 
-    -- if there is any error, this aborts the conversion.
-    messages (concat msgs)
-    
-    return $ map fromJust htmls
-    
+-- | Derives the key shown to the user when referring to an entry, eg "[LO98]".
+--TODO derive key correctly
+deriveKey :: BibtexEntry -> String
+deriveKey (Entry t k fs) = k
+
+-- | Produces a two column table, in which each row correspond to 
+-- each entry of the given list of 'BibtexEntry'.
+-- The first column contains the 'deriveKey's, whereas the second contains
+-- the given html description of the correspondent bibtex entry.
+tableOf :: [BibtexEntry] -> [[HtmlTree]] -> HtmlTree
+tableOf db ht = Elem "table" [("border", "0")] $ map process (zip db ht)
+  where row xs = Elem "tr" [("valign", "top")] $ map ("td" <<) xs
+        process (e,h) = row $ (reference e):h

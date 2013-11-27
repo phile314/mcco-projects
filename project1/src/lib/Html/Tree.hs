@@ -31,3 +31,9 @@ instance Tree Node where
     toTree (App "Text" [s])             = liftM Text (toTree s)
     toTree (App "Elem" [e, attrs, ns])  = liftM3 Elem (toTree e) (toTree attrs) (toTree ns)
 
+infixr 5 <<
+-- | @name << tree@ wraps the attributless element named @name@ around @tree@.
+(<<) :: ElemName  -- ^ The name of the outer element
+     -> HtmlTree  -- ^ The html element that gets nested
+     -> HtmlTree
+name << tree = Elem name [] [tree]

@@ -61,7 +61,8 @@ deriving SpecTree : Show
 
 attr SpecTree
     syn avail use {&&} {True} :: Bool
-    syn html use {++} {[]} :: { [HtmlTree] }
+    -- TODO does not make much sense to return a list here!
+    syn html use {++} {[]} :: { [HtmlTree] } 
     syn msgs use {++} {[]} :: { [Message] }
     syn reqStr use {++} {""} :: String
     inh fieldToHtml :: FieldToHtml
