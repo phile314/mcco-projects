@@ -12,6 +12,7 @@ import Data.List (intersperse)
 import Html.Tree
 import Data.Maybe
 import BibHtml.Converter
+import Control.Monad (filterM)
 
 -- | Returns an html representation of a 'BibtexDb'.
 -- Note that the result is wrapped in the 'Feedback' monad because this 
@@ -19,11 +20,16 @@ import BibHtml.Converter
 -- entry are missing.
 toHtml :: BibtexDb -> Feedback HtmlTree
 toHtml (BibtexDb db) = do
-    table <- mapM entryToHtml db >>= return . (tableOf db)
+
+    db' <- dropUnknownTypes db
+
+    table <- mapM entryToHtml db' >>= return . (tableOf db')
+
+    let toc  = makeSummary db'
     let body = Elem "body" [] (toc ++ [table])
+
     return $ Elem "html" [] [header, body]
   where header = "head" << "title" << Text "Bibliography"
-        toc    = makeSummary db
 
 -- | Produces a summary of the given bibtex entries.
 -- More precisely it is an html object containing a list of 
@@ -51,3 +57,10 @@ tableOf :: [BibtexEntry] -> [[HtmlTree]] -> HtmlTree
 tableOf db ht = Elem "table" [("border", "0")] $ map process (zip db ht)
   where row xs = Elem "tr" [("valign", "top")] $ map ("td" <<) xs
         process (e,h) = row $ (reference e):h
+
+dropUnknownTypes :: [BibtexEntry] -> Feedback [BibtexEntry]
+dropUnknownTypes = filterM f
+  where f (Entry (UnknownType t) k _) = do
+            warn 1 $ "Ignoring entry " ++ k ++ " because the type " ++ t ++ " is not supported."
+            return False
+        f e = return True
