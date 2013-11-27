@@ -7,3 +7,9 @@ cabal-dev
 .virthualenv
 *.DS_STORE
 *.swp
+*.aux
+*.bbl
+*.blg
+*.dvi
+*.log
+*.pdf
