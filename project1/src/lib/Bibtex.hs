@@ -17,7 +17,7 @@ import CCO.Tree
 import CCO.Tree.Parser
 import Control.Applicative
 import Bibtex.Utility
-
+import CCO.Tree (ATerm)
 
 -- | A bibtex database is a list of `BibtexEntry`. 
 data BibtexDb

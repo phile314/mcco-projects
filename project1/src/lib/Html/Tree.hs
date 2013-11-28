@@ -6,10 +6,13 @@ module Html.Tree where
 import CCO.Tree
 import Control.Monad
 
--- | An html tree.
+-- | A html document.
+data HtmlDoc = HtmlDoc HtmlTree
+
+-- | A html tree.
 type HtmlTree = Node
 
--- | Represents an html tag
+-- | Represents a html tag
 type ElemName = String
 
 -- | Represents the name of an attribute inside an html tag
@@ -27,6 +30,10 @@ data Node
 class Html a where
   -- | Returns an html representation
   toHtml :: a -> HtmlTree
+
+instance Tree HtmlDoc where
+    fromTree (HtmlDoc t)                = App "HtmlDoc" [fromTree t]
+    toTree   (App "HtmlDoc" [t])        = liftM HtmlDoc (toTree t)
 
 instance Tree Node where
     fromTree (Text s)                   = App "Text" [fromTree s]

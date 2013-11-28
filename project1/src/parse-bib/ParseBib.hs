@@ -10,7 +10,13 @@ import CCO.Printing (pp, render_)
 import CCO.Tree (fromTree)
 import Parser (parser)
 import Lexer
+import Options
 
 -- | The entry point of the program
 main :: IO ()
-main = ioWrap (parser >>> arr fromTree >>> printer)
+main = do
+    sane <- useSaneSerialize
+    if sane then
+        ioWrap (parser >>> arr fromTree >>> arr show)
+        else
+             ioWrap (parser >>> arr fromTree >>> printer)

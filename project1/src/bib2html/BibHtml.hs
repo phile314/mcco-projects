@@ -18,11 +18,16 @@ import CCO.Tree (parser, toTree, fromTree, ATerm)
 import Control.Arrow ((>>>), arr)
 import Data.List (sortBy)
 import Html.Tree (Node, HtmlTree)
+import Options
 
 -- | The entry point of the program
 main :: IO ()
-main = ioWrap $
-  parser >>> component toTree >>> arr sorter >>> component validateDb >>> arr toHtml >>> arr fromTree >>> printer
+main = do
+    sane <- useSaneSerialize
+    if sane then
+        ioWrap $ arr (read :: String -> ATerm) >>> component toTree >>> arr sorter >>> component validateDb >>> arr toHtml >>> arr fromTree >>> arr show
+        else
+            ioWrap $ parser >>> component toTree >>> arr sorter >>> component validateDb >>> arr toHtml >>> arr fromTree >>> printer
 
 -- | Return the given 'BibtexDb' sorted first by author and then by year and title.
 -- If the considered field is missing in some entry, such entry will come after 
