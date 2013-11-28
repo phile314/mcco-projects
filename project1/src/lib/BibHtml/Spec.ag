@@ -35,7 +35,28 @@
 --   functions are the only elements that should actually be exported from this module
 --   (TODO: do not export all the other definitions. How to do this in uuagc?)
 
-imports
+module {BibHtml.Spec}
+{
+SpecTree,
+Syn_SpecTree,
+
+FieldToHtml,
+walkTree,
+isAvail,
+depth,
+
+exactly,
+BibHtml.Spec.either,
+both,
+optional,
+allOf,
+someOf,
+(<|>),
+
+getHtml,
+getMsgs,
+getAvail
+}
 {
 import Html.Tree
 import CCO.Feedback
@@ -140,12 +161,22 @@ walkTree f2h (Entry t k fs) s = wrap_SpecTree (sem_SpecTree s) inh
     where inh = Inh_SpecTree { fields_Inh_SpecTree = M.fromList fs,
                                key_Inh_SpecTree = k,
                                fieldToHtml_Inh_SpecTree = (f2h t) }
-}
+
+getHtml = html_Syn_SpecTree
+getMsgs = msgs_Syn_SpecTree
+getAvail = avail_Syn_SpecTree
+
+
+depth (Both a b)    = 1 + (max (depth a) (depth b))
+depth (Either a b _)  = 1 + (max (depth a) (depth b))
+depth (Optional a)  = 1 + (depth a)
+depth (Exactly _)   = 1
+
 
 -------------------------------------------------------------------------------
 -- Error messages
 -------------------------------------------------------------------------------
-{
+
 -- | Returns a 'Warning' message about two elements being both present.
 mutuallyExclusive :: String -> String -> Key -> Message
 mutuallyExclusive s1 s2 k = Warning 1 (text w)

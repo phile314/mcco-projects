@@ -22,18 +22,18 @@ import Utility
 
 
 html :: BibtexEntry -> SpecTree -> [HtmlTree]
-html e s = html_Syn_SpecTree $ walkTree fieldToHtml e s
+html e s = getHtml $ walkTree fieldToHtml e s
 
 msgs :: BibtexEntry -> SpecTree -> [Message]
-msgs e s = msgs_Syn_SpecTree $ walkTree fieldToHtml e s
+msgs e s = getMsgs $ walkTree fieldToHtml e s
 
 
 -- | Asserts that either both spec are not available or both return the same tree for a given bitex entry.
 assertEqualAvailHtml :: BibtexEntry -> SpecTree -> SpecTree -> Property
 assertEqualAvailHtml entry act exp =
-    avail_Syn_SpecTree rAct ?== avail_Syn_SpecTree rExp
+    getAvail rAct ?== getAvail rExp
     .&.
-    (avail_Syn_SpecTree rExp ==> html_Syn_SpecTree rAct ?== html_Syn_SpecTree rExp)
+    (getAvail rExp ==> getHtml rAct ?== getHtml rExp)
     where rAct = walkTree fieldToHtml entry act
           rExp = walkTree fieldToHtml entry exp
 
@@ -87,10 +87,5 @@ main = do
   if passQ [r1, r2, r3, r4, r5]
     then return ()
     else exitFailure
-
-depth (Both a b)    = 1 + (max (depth a) (depth b))
-depth (Either a b _)  = 1 + (max (depth a) (depth b))
-depth (Optional a)  = 1 + (depth a)
-depth (Exactly _)   = 1
 
 lbl ss c = label ("Tree depth: " ++ (show $ maximum $ map depth ss)) c

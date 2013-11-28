@@ -20,6 +20,6 @@ fieldToHtml _ (f, s) = Text s
 
 -- | Converts a bibtex entry to html. 
 entryToHtml :: BibtexEntry -> Feedback [HtmlTree]
-entryToHtml e@(Entry t _ _) = messages msgs >> return (html_Syn_SpecTree res)
+entryToHtml e@(Entry t _ _) = messages msgs >> return (getHtml res)
   where res = walkTree fieldToHtml e (spec t)
-        msgs = msgs_Syn_SpecTree res
+        msgs = getMsgs res
