@@ -29,6 +29,8 @@
 % \date{25.12.00} or be a certain date
 % \date{ } or there is no date 
 
+\usepackage{hyperref}
+
 \begin{document}
 
 % Hint: \title{what ever}, \author{who care} and \date{when ever} could stand 
@@ -57,11 +59,42 @@
     \item Lexing/Parsing values enclosed by brackets, "\{....\}".
 \end{itemize}
 
-
 TODO we should say why we haven't implement the brackts stuff
 this also goes for other (important) unimplemented features
 
+\section{Input/Output Encoding}
+\subsection{Bibtex Input}
+The bibtex input file should only contain valid ascii characters. Input
+containing any other characters might lead to wrong output, altough
+this has not yet been tested.
 
+\subsection{Intermediate Results}
+All programs assume that unicode characters in an ATerm value
+are (de-)serialized correctly by the CCO library. As this
+is not the case, Unicode support is broken. To work around
+this problem, the --sane option can be passed to all programs.
+This option causes the use of the prelude show/read functions
+instead of the cco printer/parser functions.
 
+As far as one can tell, the cause are non-matching escape/unescape mechanisms.
+
+The pretty printer in file src/CCO/Tree/ATerm.hs:93 calls the prelude show
+function on the string to print. According to the source code of show,
+most unicode characters are encoded using \textbackslash and the base 10 representation of the unicode codepoint.
+ (See \url{http://hackage.haskell.org/package/base-4.6.0.1/docs/src/GHC-Show.html#showLitChar})
+
+The cco lexer (src/CCO/Tree/ATerm/Lexer.hs) on the other hand reads escape codes of this format. The two
+errors it makes are:
+\begin{enumerate}
+    \item It accepts only escape codes with exeactly 3 digits. Some unicode code points need more than 3 digits to represent.
+    \item It assumes that the digits are in base 8, but they are in base 10 as can be seen in the show source code.
+\end{enumerate}
+
+\subsection{Html Output}
+The pp-html program assumes that unicode strings are correctly printed
+by the cco component library. This seems to be the case on a Linux Fedora 19
+installation.
+As unicode is the only sensible approach nowadays to handle special characters,
+it appears unwise to do any unicode character escaping before printing a string.
 
 \end{document}
