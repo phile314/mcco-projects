@@ -16,12 +16,16 @@ import Control.Arrow ((>>>), arr)
 import Data.List (sortBy)
 import Html.Tree (Node, HtmlTree)
 import BibHtml.DbTransformer
+import Options
 
 -- | The entry point of the program
 main :: IO ()
-main = ioWrap $
-  parser >>> component toTree >>> arr sorter >>> component toHtml >>> arr fromTree >>> printer
---  parser >>> component toTree >>> arr sorter >>> component toHtml >>> arr fromTree >>> arr show
+main = do
+    sane <- useSaneSerialize
+    if sane then
+        ioWrap $ arr (read :: String -> ATerm) >>> component toTree >>> arr sorter >>> component toHtml >>> arr fromTree >>> arr show
+        else
+            ioWrap $ parser >>> component toTree >>> arr sorter >>> component toHtml >>> arr fromTree >>> printer
 
 -- | Return the given 'BibtexDb' sorted first by author and then by year and title.
 -- If the considered field is missing in some entry, such entry will come after 

@@ -12,11 +12,15 @@ import Html.Tree (HtmlDoc)
 import Html.PrettyPrinter
 import CCO.Tree (ATerm)
 import System.IO
+import Options
 
 -- | The entry point of the program
 main :: IO ()
 main = do
     hPutStrLn stderr "Please note that the output is in utf8. Some browsers have difficulty detecting the encoding if a file is opened using the \"file://\" scheme, see eg https://bugzilla.mozilla.org/show_bug.cgi?id=760050."
--- TODO
-    ioWrap (parser >>> component (toTree :: ATerm -> Feedback HtmlDoc) >>> printer)
---    ioWrap (arr (read :: String -> ATerm) >>> component (toTree :: ATerm -> Feedback HtmlDoc) >>> printer)
+    
+    sane <- useSaneSerialize
+    if sane then    
+        ioWrap (arr (read :: String -> ATerm) >>> component (toTree :: ATerm -> Feedback HtmlDoc) >>> printer)
+        else
+            ioWrap (parser >>> component (toTree :: ATerm -> Feedback HtmlDoc) >>> printer)
