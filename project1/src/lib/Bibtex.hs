@@ -109,7 +109,6 @@ instance Tree Field where
         where ps = map pCons fields
               pUnk = app "UnknownField" (UnknownField <$> arg)
 
-
 instance Tree Type where
     fromTree (UnknownType t) = App "UnknownType" [fromTree t]
     fromTree t = App (show t) []
