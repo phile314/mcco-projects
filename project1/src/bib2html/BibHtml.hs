@@ -10,6 +10,7 @@ module Main (main) where
 
 import Bibtex
 import BibHtml.BibtexSpec
+import BibHtml.Converter (toHtml)
 import BibHtml.Spec
 import CCO.Component (ioWrap, component, printer)
 import CCO.Feedback (Feedback, messages)
@@ -22,7 +23,6 @@ import Html.Tree (Node, HtmlTree)
 main :: IO ()
 main = ioWrap $
   parser >>> component toTree >>> arr sorter >>> component validateDb >>> arr toHtml >>> arr fromTree >>> printer
-  where toHtml = undefined :: a -> HtmlTree
 
 -- | Return the given 'BibtexDb' sorted first by author and then by year and title.
 -- If the considered field is missing in some entry, such entry will come after 
@@ -45,7 +45,7 @@ validateDb (BibtexDb db) = mapM validate db >>= return . BibtexDb
 -- Unknown fields or conflicting fields will be removed.
 validate :: BibtexEntry -> Feedback BibtexEntry
 validate e@(Entry t k _) = messages msgs >> return (Entry t k fs)
-  where fs = bib_Syn_SpecTree res
+  where fs = getBib res
         res = walkTree e (spec t)
-        msgs = msgs_Syn_SpecTree res
+        msgs = getMsgs res
 

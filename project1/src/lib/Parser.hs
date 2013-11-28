@@ -30,16 +30,23 @@ pEntry = Entry <$> (pAt *> pType) <*> pKey <*> pData
 
 -- | Parses a field 
 pField :: TokenParser Field
-pField = choice $ map pConstructor fields
+pField =  (choice $ map pConstructor fields) <|> pUnknown fields UnknownField
 
 -- | Parses an entry Type
 pType :: TokenParser Type
-pType = choice $ map pConstructor types
+pType = (choice $ map pConstructor types) <|> pUnknown types UnknownType
+
+-- | Parses an identifier which is not a known constructor. Useful to catch all unknown identifiers.
+pUnknown :: (Show a) => [a] -> (String -> a) -> TokenParser a
+pUnknown others ca = (\(Identifier s) -> ca s) <$> satisfy (\t -> isIdentifier t && all (not . (match t)) others)
 
 -- | Parses an identifier, whose showable constructor is given.
 pConstructor :: Show a => a -> TokenParser a
-pConstructor c = satisfy (\t -> isIdentifier t && match t) *> pure c
-  where match (Identifier s) = mk s == (mk . show) c
+pConstructor c = (satisfy (\t -> isIdentifier t && match t c) *> pure c)
+
+-- | Returns true if the given constructors matches the identifier token (case insensitive).
+match :: (Show a) => Token -> a -> Bool
+match (Identifier s) c = mk s == (mk . show) c
 
 -------------------------------------------------------------------------------
 -- Basic Parsers
@@ -58,3 +65,33 @@ pAt = pToken AtSign
 
 pEq :: TokenParser Token
 pEq = pToken EqualSign
+-- This module defines a lexer for a Bibtex database
+
+
+
+-------------------------------------------------------------------------------
+-- Utility Parser
+-------------------------------------------------------------------------------
+
+-- | Parses a given token and returns it
+pToken :: Token -> Parser Token Token
+pToken t = satisfy (t ==) <!> describe t ""
+
+-- | Parses a value token and returns the string content
+pValue :: Parser Token String
+pValue = (\(Value s) -> s) <$> satisfy isValue 
+
+-- | Parses an identifier token and returns the string content
+pIdentifier :: Parser Token String
+pIdentifier = (\(Identifier s) -> s) <$> satisfy isIdentifier  
+                                     <!> describe (Identifier "") ""
+
+-- | Tests whether a token is an identifier
+isIdentifier :: Token -> Bool
+isIdentifier (Identifier _) = True
+isIdentifier  _             = False
+
+-- | Tests whether a token is a value
+isValue :: Token -> Bool
+isValue (Value _) = True
+isValue  _        = False

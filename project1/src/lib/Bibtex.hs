@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, TemplateHaskell #-}
 
 -- | This module defines the data types 'Type' and 'Field' used
 -- inside a 'BibtexEntry'.
@@ -16,6 +16,7 @@ where
 import CCO.Tree
 import CCO.Tree.Parser
 import Control.Applicative
+import Bibtex.Utility
 
 
 -- | A bibtex database is a list of `BibtexEntry`. 
@@ -44,7 +45,8 @@ data Type
   | Proceedings
   | Techreport
   | Unpublished
-    deriving (Show, Eq, Enum, Bounded, Ord)
+  | UnknownType String
+    deriving (Show, Eq, Ord)
 
 type Key = String
 
@@ -74,16 +76,19 @@ data Field
     | Type
     | Volume
     | Year
---    | Unknown fieldName :: String
-    deriving (Show, Eq, Enum, Bounded, Ord)
+    | UnknownField String
+    deriving (Show, Eq, Ord)
 
--- | A list containing all the 'Field' constructors
+-- We have to resort to template haskell for getting the list of constructors because
+-- it is not possible to derive Enum from a type where at least one constructor takes an argument.
+
+-- | A list containing all the 'Field' constructors except `UnkownField`.
 fields :: [Field]
-fields = enumFromTo minBound maxBound
+fields = $(getSimpleCTors ''Field)
 
--- | A list containing all the 'Type' constructors
+-- | A list containing all the 'Type' constructors except `UnkownType`.
 types :: [Type]
-types = enumFromTo minBound maxBound
+types = $(getSimpleCTors ''Type)
 
 --------------------------------------------------------------------------------
 ----- ATerm
@@ -98,14 +103,18 @@ instance Tree BibtexEntry where
     toTree = parseTree [app "Entry" (Entry <$> arg <*> arg <*> arg)]
 
 instance Tree Field where
+    fromTree (UnknownField f) = App "UnknownField" [fromTree f]
     fromTree f = App (show f) []
-    toTree = parseTree ps
+    toTree = parseTree (pUnk:ps)
         where ps = map pCons fields
+              pUnk = app "UnknownField" (UnknownField <$> arg)
 
 instance Tree Type where
+    fromTree (UnknownType t) = App "UnknownType" [fromTree t]
     fromTree t = App (show t) []
-    toTree = parseTree ps
+    toTree = parseTree (pUnk:ps)
         where ps = map pCons types
+              pUnk = app "UnknownType" (UnknownType <$> arg)
 
 -- | A 'TreeParser' for single showable constructors.
 pCons :: (Show a, Tree a) => a -> TreeParser a

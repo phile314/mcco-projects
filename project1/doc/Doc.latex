@@ -1,0 +1,67 @@
+\documentclass[12pt, a4paper, twoside, titlepage]{article}
+% font size could be 10pt (default), 11pt or 12 pt
+% paper size coulde be letterpaper (default), legalpaper, executivepaper,
+% a4paper, a5paper or b5paper
+% side coulde be oneside (default) or twoside 
+% columns coulde be onecolumn (default) or twocolumn
+% graphics coulde be final (default) or draft 
+%
+% titlepage coulde be notitlepage (default) or titlepage which 
+% makes an extra page for title 
+% 
+% paper alignment coulde be portrait (default) or landscape 
+%
+% equations coulde be 
+%   default number of the equation on the rigth and equation centered 
+%   leqno number on the left and equation centered 
+%   fleqn number on the rigth and  equation on the left side
+%   
+\title{MMCO Project A}
+\author{Marco Vassena  \\
+    STDNR  \\
+    \and 
+    Philipp Hausmann \\
+    4003373 \\
+    }
+
+\date{\today} 
+% \date{\today} date coulde be today 
+% \date{25.12.00} or be a certain date
+% \date{ } or there is no date 
+
+\begin{document}
+
+% Hint: \title{what ever}, \author{who care} and \date{when ever} could stand 
+% before or after the \begin{document} command 
+% BUT the \maketitle command MUST come AFTER the \begin{document} command! 
+\maketitle
+
+
+
+%\tableofcontents % create a table of contens 
+
+
+
+\section{Features}
+
+\subsection{Implemented}
+\begin{itemize}
+    \item Basic escape codes
+    \item Correct validation and printing of required, optional and "and/or" fields.
+    \item Different rendering for different fields, e.g. "--" becomes a long dash for pages. TODO
+    \item what else?
+\end{itemize}
+
+\subsection{Not Implemented}
+\begin{itemize}
+    \item Lexing/Parsing values enclosed by brackets, "\{....\}".
+\end{itemize}
+
+
+TODO we should say why we haven't implement the brackts stuff
+this also goes for other (important) unimplemented features
+
+
+
+
+\end{document}

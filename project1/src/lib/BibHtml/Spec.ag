@@ -1,5 +1,6 @@
 -- | The attribute grammar used for converting a 'BibtexEntry' to 'Html'.
 --  
+-- TODO check whether comment is up to date
 --   The bibtex field specification is constructed as a tree, and then a tree
 --   fold/walk is performed using the given field names/values as input. The output
 --   is the generated bib and warning/error messages. All error/warning messages
@@ -34,7 +35,28 @@
 --   functions are the only elements that should actually be exported from this module
 --   (TODO: do not export all the other definitions. How to do this in uuagc?)
 
-imports
+module {BibHtml.Spec}
+{
+SpecTree,
+Syn_SpecTree,
+
+walkTree,
+isAvail,
+depth,
+
+exactly,
+BibHtml.Spec.either,
+both,
+optional,
+allOf,
+someOf,
+(<|>),
+
+-- FIX
+getBib,
+getMsgs,
+getAvail
+}
 {
 import Html.Tree
 import CCO.Feedback
@@ -47,7 +69,7 @@ import qualified Data.Map as M
 -- | A specification tree for the possible fields and combinations thereof in a bibtex entry.
 data SpecTree
     | Both left :: SpecTree right :: SpecTree
-    | Either left :: SpecTree right :: SpecTree
+    | Either left :: SpecTree right :: SpecTree warnBoth :: Bool
     | Optional child :: SpecTree
     | Exactly field  :: Field
 
@@ -65,7 +87,7 @@ attr SpecTree
 sem SpecTree
   | Either lhs.avail = { @left.avail || @right.avail }
            lhs.msgs = { case (@left.avail, @right.avail) of
-                            (True, True)   -> [mutuallyExclusive @left.reqStr @right.reqStr @lhs.key]
+                            (True, True)   -> [mutuallyExclusive @left.reqStr @right.reqStr @lhs.key | @warnBoth]
                             (False, False) -> [bothMissing @left.reqStr @right.reqStr @lhs.key]
                             _              -> [] }
            lhs.bib = { case (@left.avail, @right.avail) of
@@ -78,7 +100,7 @@ sem SpecTree
                lhs.reqStr = ""
     | Exactly lhs.avail = { @field `member` @lhs.fields }
               lhs.msgs = { if not (@field `member` @lhs.fields) then [missing @field @lhs.key] else []}
-              lhs.bib = { undefined }
+              lhs.bib = {[(@field, @lhs.fields ! @field)]}  -- Direct access
               lhs.reqStr = { show @field }
     | Both lhs.reqStr = { "(" ++ @left.reqStr ++ " and " ++ @right.reqStr ++ ")" }
 
@@ -86,26 +108,30 @@ sem SpecTree
 
 -- Exported constrctor functions
 
--- | Builds an 'Exactly' value
+-- | Expects exactly the given field and causes an error if it is not available.
 exactly :: Field -> SpecTree
 exactly = Exactly
 
--- | Builds an Optional value
+-- | Uses the given `SpecTree` if it is available, else it is just ignored.
+--   No warning/error messsages are generated if it is not available.
+--   An optional `SpecTree` always return True for `isAvail`.
 optional :: SpecTree -> SpecTree
 optional = Optional
 
--- | Builds an 'Either' value
+-- | Expects that exactly one of the two `SpecTree`s is available and returns
+--   the html of the available child. If both children are available, the left
+--   child is used and a warning message is emitted.
 either :: SpecTree -> SpecTree -> SpecTree
-either = Either
+either l r = Either l r True
 
--- | Builds a 'Both' value
+-- | Expects both given `SpecTree`s to be available and concatenates their html output.
 both :: SpecTree -> SpecTree -> SpecTree
 both = Both
 
 -- | Expects at least one of the given specifications to hold,
 --   and uses all holding specifications when pretty printing.
 someOf :: SpecTree -> SpecTree -> SpecTree
-someOf s1 s2 = Either (Both s1 s2) (Either s1 s2)
+someOf s1 s2 = Either (Both s1 (Optional s2)) s2 False
 
 -- | Combines all given specification trees using `Both`. Undefined for empty lists.
 allOf :: [SpecTree] -> SpecTree
@@ -114,9 +140,10 @@ allOf ss = foldr1 Both ss
 
 -- | @f1 <|> f2@ is 'Either' 'Exactly' f1@ or @'Exactly' f2@
 (<|>) :: Field -> Field -> SpecTree
-f1 <|> f2 = Either (Exactly f1) (Exactly f2)
+f1 <|> f2 = Either (Exactly f1) (Exactly f2) True
 
--- | Checks whether the given tree holds on a bitex entry.
+-- | Checks whether the given tree holds on a bibtex entry, meaning that
+--   all constraints occuring in the `SpecTree` are fullfilled.
 isAvail :: BibtexEntry -> SpecTree -> Bool
 isAvail t s = avail_Syn_SpecTree $ walkTree t s 
 
@@ -127,6 +154,18 @@ walkTree (Entry t k fs) s = wrap_SpecTree (sem_SpecTree s) inh
     where inh = Inh_SpecTree { etype_Inh_SpecTree = t,
                                fields_Inh_SpecTree = M.fromList fs,
                                key_Inh_SpecTree = k }
+
+getBib = bib_Syn_SpecTree
+getMsgs = msgs_Syn_SpecTree
+getAvail = avail_Syn_SpecTree
+
+depth (Both a b)    = 1 + (max (depth a) (depth b))
+depth (Either a b _)  = 1 + (max (depth a) (depth b))
+depth (Optional a)  = 1 + (depth a)
+depth (Exactly _)   = 1
+
+
+
 }
 
 -------------------------------------------------------------------------------

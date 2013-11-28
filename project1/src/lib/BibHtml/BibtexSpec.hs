@@ -19,7 +19,7 @@ sAE = Author <|> Editor
 
 -- | Optionally either exactly 'Volume' or 'Number'
 sVN :: SpecTree
-sVN = sVN
+sVN = optional (Volume <|> Number)
 
 -- | Returns the specification tree for a given entry type. All entry types specified
 --   in http://www.andy-roberts.net/res/writing/latex/bibentries.pdf are implemented as of 24.11.2013.

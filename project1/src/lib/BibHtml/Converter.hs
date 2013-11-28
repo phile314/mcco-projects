@@ -1,12 +1,12 @@
 -- | This module contains functions to convert from bibtex elements
 -- to html representation.
 
-module BibHtml.Converter where
+module BibHtml.Converter (toHtml) where
 
 import Html.Tree
 import CCO.Feedback
 import CCO.Printing
-import Data.List (intersperse)
+import Data.List (intersperse, isPrefixOf)
 import Bibtex
 import BibHtml.BibtexSpec
 import BibHtml.Spec
@@ -27,6 +27,8 @@ fieldToHtml Inproceedings (Title, s) = Text s
 fieldToHtml Inproceedings (Booktitle, s) = Elem "em" [] [Text s]
 fieldToHtml _ (Title, s) = Elem "em" [] [Text s]
 fieldToHtml _ (Editor, s) = Text $ "In: " ++ s
+-- REMARK: The cco library has a bug when parsing escaped unicode characters, so this will not appear correctly in the html (but it is not our fault....)
+fieldToHtml _ (Pages, s) = Text $ replace "--" "—" s
 fieldToHtml _ (f, s) = Text s
 
 
@@ -61,3 +63,16 @@ anchor e@(Entry _ k _) = Elem "a" [("href", '#':k)] [Text key]
 --TODO derive key correctly
 deriveKey :: BibtexEntry -> String
 deriveKey (Entry t k fs) = k
+
+
+-- There seems to be no str-replace function in the prelude.
+-- There is one in the MissingH library, but this library
+-- leads to dependency errors when trying to install on my computer (Philipp).
+
+-- | Given a search list and a replacement list, replaces all occurences
+--   of the search list with the replacement list in a third list.
+replace :: Eq a => [a] -> [a] -> [a] -> [a]
+replace s r i | s `isPrefixOf` i = r ++ (replace s r (drop (length s) i))
+replace s r (_:is) | otherwise   = replace s r is
+replace _ _ [] = []
+

@@ -9,52 +9,68 @@ category:            Text
 build-type:          Custom
 cabal-version:       >=1.8
 
+
+-- cabal/uuagc workaround --
+--
+-- using cabal 1.14, the preprocessed uuagc file is put into the ./dist/build/ directory when
+-- building test cases instead of the proper ./dist/build/MY_TEST_CASE/...
+-- This leads to build errors because ghc then cannot find the file. To work around this
+-- bug, the -idist option is passed.
+-- This bug is not triggered with cabal 1.16.0.2, but for the time being we also want to
+-- be able to compile with cabal 1.14.
+
+
+
 executable parse-bib
   main-is:           ParseBib.hs
   other-modules:     Bibtex, Lexer, Parser, Lexer.Internal, BibHtml.Spec
   hs-source-dirs:    src/parse-bib, src/lib
-  build-depends:     base >=4.5.0, cco ==0.0.4, containers >=0.4, case-insensitive >=1.0
+  build-depends:     base >=4.5.0, cco ==0.0.4, containers >=0.4, case-insensitive >=1.0, template-haskell >=2.7.0.0
 
 executable bib2html
   main-is:           BibHtml.hs
   hs-source-dirs:    src/bib2html, src/lib
-  build-depends:     base >=4.5.0, cco ==0.0.4, containers >=0.4
+  build-depends:     base >=4.5.0, cco ==0.0.4, containers >=0.4, template-haskell >=2.7.0.0
   other-modules:     Bibtex, BibHtml.Spec
 
 executable pp-html
   main-is:           PpHtml.hs
   hs-source-dirs:    src/pp-html, src/lib
-  build-depends:     base >=4.5.0, cco ==0.0.4
+  build-depends:     base >=4.5.0, cco ==0.0.4, template-haskell >=2.7.0.0
 
 test-suite lexer
   type:              exitcode-stdio-1.0
   main-is:           Test.hs
   hs-source-dirs:    testsuite, src/lib, testsuite/Lexer
-  build-depends:     base >=4.5.0, HUnit ==1.2.*, cco ==0.0.4, QuickCheck >=2.6, containers >=0.4, case-insensitive >=1.0
+  build-depends:     base >=4.5.0, HUnit ==1.2.*, cco ==0.0.4, QuickCheck >=2.6, containers >=0.4, case-insensitive >=1.0, template-haskell >=2.7.0.0
   other-modules:     Bibtex, BibHtml.Spec
--- there seems to be some bug when using the uuagc precompiler with cabal
--- this is an ugly work around...
--- TODO open bug
+-- cabal/uuagc workaround
   ghc-options:       -idist/build/
 
 test-suite parser
   type:              exitcode-stdio-1.0
   main-is:           Test.hs
   hs-source-dirs:    testsuite, src/lib, testsuite/Parser
-  build-depends:     base >=4.5.0, HUnit ==1.2.*, cco ==0.0.4, QuickCheck >=2.6, containers >=0.4, case-insensitive >=1.0
+  build-depends:     base >=4.5.0, HUnit ==1.2.*, cco ==0.0.4, QuickCheck >=2.6, containers >=0.4, case-insensitive >=1.0, template-haskell >=2.7.0.0
   other-modules:     Bibtex, BibHtml.Spec
--- there seems to be some bug when using the uuagc precompiler with cabal
--- this is an ugly work around...
--- TODO open bug
+-- cabal/uuagc workaround
   ghc-options:       -idist/build/
 
 test-suite tree
   type:              exitcode-stdio-1.0
   main-is:           TreeTest.hs
   hs-source-dirs:    testsuite, src/lib
-  build-depends:     base >=4.5.0, HUnit ==1.2.*,cco ==0.0.4, QuickCheck >=2.6, containers >=0.4, case-insensitive >=1.0
+  build-depends:     base >=4.5.0, HUnit ==1.2.*,cco ==0.0.4, QuickCheck >=2.6, containers >=0.4, case-insensitive >=1.0, template-haskell >=2.7.0.0
   other-modules:     Bibtex, BibHtml.Spec
--- there seems to be some bug when using the uuagc precompiler with cabal
--- this is an ugly work around...
--- TODO open bug
+-- cabal/uuagc workaround
+  ghc-options:       -idist/build/
+
+
+test-suite spec
+  type:              exitcode-stdio-1.0
+  main-is:           SpecTest.hs
+  hs-source-dirs:    testsuite, src/lib
+  build-depends:     base >=4.5.0, HUnit ==1.2.*,cco ==0.0.4, QuickCheck >=2.6, containers >=0.4, case-insensitive >=1.0, quickcheck-assertions >=0.1.1, template-haskell >=2.7.0.0
+  other-modules:     BibHtml.Spec
+-- cabal/uuagc workaround
   ghc-options:       -idist/build/
