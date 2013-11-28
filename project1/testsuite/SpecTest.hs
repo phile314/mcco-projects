@@ -6,6 +6,7 @@ module Main where
 
 import Bibtex
 import BibHtml.Spec
+import qualified BibHtml.Spec as S
 import BibHtml.Converter
 import Data.Maybe (isJust)
 import Data.List (lookup) 
@@ -46,27 +47,27 @@ prop_either e s1 s2 = lbl [s1, s2] $
             (True, _)      -> assertEqualAvailHtml e t s1
             (False, True)  -> assertEqualAvailHtml e t s2
     )
-    where t = Either s1 s2
+    where t = S.either s1 s2
 
 prop_both :: BibtexEntry -> SpecTree -> SpecTree -> Property
 prop_both e s1 s2 = lbl [s1, s2] $
     (isAvail e t) ?== (isAvail e s1 && isAvail e s2)
     .&.
     (isAvail e t ==> (html e t) ?== ((html e s1) ++ (html e s2)))
-    where t = (Both s1 s2)
+    where t = S.both s1 s2
 
 prop_optional :: BibtexEntry -> SpecTree -> Property
 prop_optional e s = lbl [s] $
-    isAvail e (Optional s) ?== True
+    isAvail e t ?== True
     .&.
     case isAvail e s of
         True  -> assertEqualAvailHtml e t s
         False -> (binAsrt "Unavailable optional elements must not generate messages." (null $ msgs e t)) .&. (html e t ?== [])
-    where t = Optional s
+    where t = S.optional s
 
 prop_exactly :: BibtexEntry -> Field -> Property
 prop_exactly e@(Entry _ _ fs) f = property $
-    isAvail e (Exactly f) ?== (isJust $ lookup f fs)
+    isAvail e (S.exactly f) ?== (isJust $ lookup f fs)
 
 prop_avail_msgs :: BibtexEntry -> SpecTree -> Property
 prop_avail_msgs e s = lbl [s] $
@@ -88,7 +89,7 @@ main = do
     else exitFailure
 
 depth (Both a b)    = 1 + (max (depth a) (depth b))
-depth (Either a b)  = 1 + (max (depth a) (depth b))
+depth (Either a b _)  = 1 + (max (depth a) (depth b))
 depth (Optional a)  = 1 + (depth a)
 depth (Exactly _)   = 1
 

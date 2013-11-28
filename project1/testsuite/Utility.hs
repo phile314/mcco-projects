@@ -2,7 +2,7 @@
 
 module Utility where
 
-import BibHtml.Spec
+import qualified BibHtml.Spec as S
 import Bibtex
 import Control.Monad (liftM, liftM2, liftM3)
 import CCO.Lexing (LexicalUnit(..), Symbols(..))
@@ -37,15 +37,15 @@ instance Arbitrary Field where
     arbitrary = elements fields
 
 -- | A generator of spec trees.
-instance Arbitrary SpecTree where
+instance Arbitrary S.SpecTree where
     arbitrary = sized tree
         where
-            tree 0 = liftM Exactly arbitrary
+            tree 0 = liftM S.exactly arbitrary
             tree n | n > 0 = let sub = tree (n `div` 2) in
-                              oneof [  liftM Exactly arbitrary
-                                    , liftM2 Both sub sub
-                                    , liftM2 Either sub sub
-                                    , liftM Optional sub]
+                              oneof [  liftM S.exactly arbitrary
+                                    , liftM2 S.both sub sub
+                                    , liftM2 S.either sub sub
+                                    , liftM S.optional sub]
 
 -- | A generator for values associated with a field
 values :: Gen String

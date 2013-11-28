@@ -1,5 +1,6 @@
 -- | The attribute grammar used for converting a 'BibtexEntry' to 'Html'.
 --  
+-- TODO check whether comment is up to date
 --   The bibtex field specification is constructed as a tree, and then a tree
 --   fold/walk is performed using the given field names/values as input. The output
 --   is the generated html and warning/error messages. All error/warning messages
@@ -53,7 +54,7 @@ type FieldToHtml = Type -> (Field, String) -> HtmlTree
 -- | A specification tree for the possible fields and combinations thereof in a bibtex entry.
 data SpecTree
     | Both left :: SpecTree right :: SpecTree
-    | Either left :: SpecTree right :: SpecTree
+    | Either left :: SpecTree right :: SpecTree warnBoth :: Bool
     | Optional child :: SpecTree
     | Exactly field  :: Field
 
@@ -72,7 +73,7 @@ attr SpecTree
 sem SpecTree
   | Either lhs.avail = { @left.avail || @right.avail }
            lhs.msgs = { case (@left.avail, @right.avail) of
-                            (True, True)   -> [mutuallyExclusive @left.reqStr @right.reqStr @lhs.key]
+                            (True, True)   -> [mutuallyExclusive @left.reqStr @right.reqStr @lhs.key | @warnBoth]
                             (False, False) -> [bothMissing @left.reqStr @right.reqStr @lhs.key]
                             _              -> [] }
            lhs.html = { case (@left.avail, @right.avail) of
@@ -107,7 +108,7 @@ optional = Optional
 --   the html of the available child. If both children are available, the left
 --   child is used and a warning message is emitted.
 either :: SpecTree -> SpecTree -> SpecTree
-either = Either
+either l r = Either l r True
 
 -- | Expects both given `SpecTree`s to be available and concatenates their html output.
 both :: SpecTree -> SpecTree -> SpecTree
@@ -115,9 +116,8 @@ both = Both
 
 -- | Expects at least one of the given specifications to hold,
 --   and uses all holding specifications when pretty printing.
---   TODO: prints warning messages
 someOf :: SpecTree -> SpecTree -> SpecTree
-someOf s1 s2 = Either (Both s1 s2) (Either s1 s2)
+someOf s1 s2 = Either (Both s1 (Optional s2)) s2 False
 
 -- | Combines all given specification trees using `both`. Undefined for empty lists.
 allOf :: [SpecTree] -> SpecTree
@@ -126,7 +126,7 @@ allOf ss = foldr1 Both ss
 
 -- | @f1 `<|>` f2@ combines two fields using `either`.
 (<|>) :: Field -> Field -> SpecTree
-f1 <|> f2 = Either (Exactly f1) (Exactly f2)
+f1 <|> f2 = Either (Exactly f1) (Exactly f2) True
 
 -- | Checks whether the given tree holds on a bibtex entry, meaning that
 --   all constraints occuring in the `SpecTree` are fullfilled.
