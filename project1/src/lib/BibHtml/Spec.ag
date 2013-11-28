@@ -45,7 +45,7 @@ import qualified Data.Map as M
 }
 
 {
--- A function that given an entry 'Type' and a 'Field' coupled with its value
+-- | A function that given an entry 'Type' and a 'Field' coupled with its value
 -- returns an html representation of the field and its value.
 type FieldToHtml = Type -> (Field, String) -> HtmlTree
 }
@@ -93,37 +93,43 @@ sem SpecTree
 
 -- Exported constrctor functions
 
--- | Builds an 'Exactly' value
+-- | Expects exactly the given field and causes an error if it is not available.
 exactly :: Field -> SpecTree
 exactly = Exactly
 
--- | Builds an Optional value
+-- | Uses the given `SpecTree` if it is available, else it is just ignored.
+--   No warning/error messsages are generated if it is not available.
+--   An optional `SpecTree` always return True for `isAvail`.
 optional :: SpecTree -> SpecTree
 optional = Optional
 
--- | Builds an 'Either' value
+-- | Expects that exactly one of the two `SpecTree`s is available and returns
+--   the html of the available child. If both children are available, the left
+--   child is used and a warning message is emitted.
 either :: SpecTree -> SpecTree -> SpecTree
 either = Either
 
--- | Builds a 'Both' value
+-- | Expects both given `SpecTree`s to be available and concatenates their html output.
 both :: SpecTree -> SpecTree -> SpecTree
 both = Both
 
 -- | Expects at least one of the given specifications to hold,
 --   and uses all holding specifications when pretty printing.
+--   TODO: prints warning messages
 someOf :: SpecTree -> SpecTree -> SpecTree
 someOf s1 s2 = Either (Both s1 s2) (Either s1 s2)
 
--- | Combines all given specification trees using `Both`. Undefined for empty lists.
+-- | Combines all given specification trees using `both`. Undefined for empty lists.
 allOf :: [SpecTree] -> SpecTree
 allOf [s] = s
 allOf ss = foldr1 Both ss
 
--- | @f1 <|> f2@ is 'Either' 'Exactly' f1@ or @'Exactly' f2@
+-- | @f1 `<|>` f2@ combines two fields using `either`.
 (<|>) :: Field -> Field -> SpecTree
 f1 <|> f2 = Either (Exactly f1) (Exactly f2)
 
--- | Checks whether the given tree holds on a bitex entry.
+-- | Checks whether the given tree holds on a bibtex entry, meaning that
+--   all constraints occuring in the `SpecTree` are fullfilled.
 isAvail :: BibtexEntry -> SpecTree -> Bool
 isAvail t s = avail_Syn_SpecTree $ walkTree undefined t s 
 
