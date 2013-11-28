@@ -18,7 +18,7 @@ import Control.Monad (filterM)
 -- Note that the result is wrapped in the 'Feedback' monad because this 
 -- operation may fail, for instance when some required field of a bibtex 
 -- entry are missing.
-toHtml :: BibtexDb -> Feedback HtmlTree
+toHtml :: BibtexDb -> Feedback HtmlDoc
 toHtml (BibtexDb db) = do
 
     db' <- dropUnknownTypes db
@@ -28,7 +28,7 @@ toHtml (BibtexDb db) = do
     let toc  = makeSummary db'
     let body = Elem "body" [] (toc ++ [table])
 
-    return $ Elem "html" [] [header, body]
+    return $ HtmlDoc $ Elem "html" [] [header, body]
   where header = "head" << "title" << Text "Bibliography"
 
 -- | Produces a summary of the given bibtex entries.

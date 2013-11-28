@@ -15,6 +15,9 @@ ind = 4
 
 --TODO escaping
 
+instance Printable HtmlDoc where
+    pp (HtmlDoc t) = text "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" >-< text "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"  \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">" >-< pp t
+
 -- | Converts an 'HtmlTree' to a `Doc`. Special characters are escaped properly
 --   by this function (TODO).
 instance Printable HtmlTree where

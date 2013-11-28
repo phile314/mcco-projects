@@ -21,6 +21,7 @@ import BibHtml.DbTransformer
 main :: IO ()
 main = ioWrap $
   parser >>> component toTree >>> arr sorter >>> component toHtml >>> arr fromTree >>> printer
+--  parser >>> component toTree >>> arr sorter >>> component toHtml >>> arr fromTree >>> arr show
 
 -- | Return the given 'BibtexDb' sorted first by author and then by year and title.
 -- If the considered field is missing in some entry, such entry will come after 
