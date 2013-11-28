@@ -65,8 +65,7 @@ attr SpecTree
     syn html use {++} {[]} :: { [HtmlTree] } 
     syn msgs use {++} {[]} :: { [Message] }
     syn reqStr use {++} {""} :: String
-    inh fieldToHtml :: FieldToHtml
-    inh etype :: Type
+    inh fieldToHtml :: { (Field, String) -> HtmlTree }
     inh fields :: {Map Field String}
     inh key :: Key
 
@@ -86,7 +85,7 @@ sem SpecTree
                lhs.reqStr = ""
     | Exactly lhs.avail = { @field `member` @lhs.fields }
               lhs.msgs = { if not (@field `member` @lhs.fields) then [missing @field @lhs.key] else []}
-              lhs.html = { [@lhs.fieldToHtml @lhs.etype (@field, @lhs.fields ! @field)] }
+              lhs.html = { [@lhs.fieldToHtml (@field, @lhs.fields ! @field)] }
               lhs.reqStr = { show @field }
     | Both lhs.reqStr = { "(" ++ @left.reqStr ++ " and " ++ @right.reqStr ++ ")" }
 
@@ -132,10 +131,9 @@ isAvail t s = avail_Syn_SpecTree $ walkTree undefined t s
 -- runs the attribute grammar.
 walkTree :: FieldToHtml -> BibtexEntry -> SpecTree -> Syn_SpecTree
 walkTree f2h (Entry t k fs) s = wrap_SpecTree (sem_SpecTree s) inh
-    where inh = Inh_SpecTree { etype_Inh_SpecTree = t,
-                               fields_Inh_SpecTree = M.fromList fs,
+    where inh = Inh_SpecTree { fields_Inh_SpecTree = M.fromList fs,
                                key_Inh_SpecTree = k,
-                               fieldToHtml_Inh_SpecTree = f2h }
+                               fieldToHtml_Inh_SpecTree = (f2h t) }
 }
 
 -------------------------------------------------------------------------------
