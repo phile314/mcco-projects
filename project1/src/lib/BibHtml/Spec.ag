@@ -106,7 +106,10 @@ sem SpecTree
 
 {
 
--- Exported constrctor functions
+
+-------------------------------------------------------------------------------
+-- Exported functions
+-------------------------------------------------------------------------------
 
 -- | Expects exactly the given field and causes an error if it is not available.
 exactly :: Field -> SpecTree
@@ -133,12 +136,12 @@ both = Both
 someOf :: SpecTree -> SpecTree -> SpecTree
 someOf s1 s2 = Either (Both s1 (Optional s2)) s2 False
 
--- | Combines all given specification trees using `Both`. Undefined for empty lists.
+-- | Combines all given specification trees using `both`. Undefined for empty lists.
 allOf :: [SpecTree] -> SpecTree
 allOf [s] = s
 allOf ss = foldr1 Both ss
 
--- | @f1 <|> f2@ is 'Either' 'Exactly' f1@ or @'Exactly' f2@
+-- | Combines two fields using `either`.
 (<|>) :: Field -> Field -> SpecTree
 f1 <|> f2 = Either (Exactly f1) (Exactly f2) True
 
@@ -166,12 +169,10 @@ depth (Exactly _)   = 1
 
 
 
-}
-
 -------------------------------------------------------------------------------
 -- Error messages
 -------------------------------------------------------------------------------
-{
+
 -- | Returns a 'Warning' message about two elements being both present.
 mutuallyExclusive :: String -> String -> Key -> Message
 mutuallyExclusive s1 s2 k = Warning 1 (text w)
