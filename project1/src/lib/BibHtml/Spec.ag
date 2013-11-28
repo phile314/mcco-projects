@@ -2,7 +2,7 @@
 --  
 --   The bibtex field specification is constructed as a tree, and then a tree
 --   fold/walk is performed using the given field names/values as input. The output
---   is the generated html and warning/error messages. All error/warning messages
+--   is the generated bib and warning/error messages. All error/warning messages
 --   are collected even if an error is encountered. Html output is only produced,
 --   if there were no errors.
 --   
@@ -44,12 +44,6 @@ import Data.Map hiding (map)
 import qualified Data.Map as M
 }
 
-{
--- A function that given an entry 'Type' and a 'Field' coupled with its value
--- returns an html representation of the field and its value.
-type FieldToHtml = Type -> (Field, String) -> HtmlTree
-}
-
 -- | A specification tree for the possible fields and combinations thereof in a bibtex entry.
 data SpecTree
     | Both left :: SpecTree right :: SpecTree
@@ -61,11 +55,9 @@ deriving SpecTree : Show
 
 attr SpecTree
     syn avail use {&&} {True} :: Bool
-    -- TODO does not make much sense to return a list here!
-    syn html use {++} {[]} :: { [HtmlTree] } 
+    syn bib use {++} {[]} :: { [(Field, String)] } 
     syn msgs use {++} {[]} :: { [Message] }
     syn reqStr use {++} {""} :: String
-    inh fieldToHtml :: FieldToHtml
     inh etype :: Type
     inh fields :: {Map Field String}
     inh key :: Key
@@ -76,17 +68,17 @@ sem SpecTree
                             (True, True)   -> [mutuallyExclusive @left.reqStr @right.reqStr @lhs.key]
                             (False, False) -> [bothMissing @left.reqStr @right.reqStr @lhs.key]
                             _              -> [] }
-           lhs.html = { case (@left.avail, @right.avail) of
-                            (True, _)      -> @left.html
-                            (False, True)  -> @right.html }
+           lhs.bib = { case (@left.avail, @right.avail) of
+                            (True, _)      -> @left.bib
+                            (False, True)  -> @right.bib }
              lhs.reqStr = { "(" ++ @left.reqStr ++ " or " ++ @right.reqStr ++ ")"}
     | Optional lhs.msgs = { if @child.avail then @child.msgs else [] }
-               lhs.html = { if @child.avail then @child.html else [] }
+               lhs.bib = { if @child.avail then @child.bib else [] }
                lhs.avail = True
                lhs.reqStr = ""
     | Exactly lhs.avail = { @field `member` @lhs.fields }
               lhs.msgs = { if not (@field `member` @lhs.fields) then [missing @field @lhs.key] else []}
-              lhs.html = { [@lhs.fieldToHtml @lhs.etype (@field, @lhs.fields ! @field)] }
+              lhs.bib = { undefined }
               lhs.reqStr = { show @field }
     | Both lhs.reqStr = { "(" ++ @left.reqStr ++ " and " ++ @right.reqStr ++ ")" }
 
@@ -126,16 +118,15 @@ f1 <|> f2 = Either (Exactly f1) (Exactly f2)
 
 -- | Checks whether the given tree holds on a bitex entry.
 isAvail :: BibtexEntry -> SpecTree -> Bool
-isAvail t s = avail_Syn_SpecTree $ walkTree undefined t s 
+isAvail t s = avail_Syn_SpecTree $ walkTree t s 
 
 -- | Given a converter function, a bibtex entry and a specification tree
 -- runs the attribute grammar.
-walkTree :: FieldToHtml -> BibtexEntry -> SpecTree -> Syn_SpecTree
-walkTree f2h (Entry t k fs) s = wrap_SpecTree (sem_SpecTree s) inh
+walkTree :: BibtexEntry -> SpecTree -> Syn_SpecTree
+walkTree (Entry t k fs) s = wrap_SpecTree (sem_SpecTree s) inh
     where inh = Inh_SpecTree { etype_Inh_SpecTree = t,
                                fields_Inh_SpecTree = M.fromList fs,
-                               key_Inh_SpecTree = k,
-                               fieldToHtml_Inh_SpecTree = f2h }
+                               key_Inh_SpecTree = k }
 }
 
 -------------------------------------------------------------------------------

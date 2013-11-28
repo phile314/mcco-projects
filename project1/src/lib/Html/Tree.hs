@@ -24,6 +24,10 @@ data Node
     | Elem ElemName [(AttrName, AttrVal)] [Node]
     deriving (Show, Eq)
 
+class Html a where
+  -- | Returns an html representation
+  toHtml :: a -> HtmlTree
+
 instance Tree Node where
     fromTree (Text s)                   = App "Text" [fromTree s]
     fromTree (Elem e attrs ns)          = App "Elem" [fromTree e, fromTree attrs, fromTree ns]

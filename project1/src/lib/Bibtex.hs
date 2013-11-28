@@ -102,7 +102,6 @@ instance Tree Field where
     toTree = parseTree ps
         where ps = map pCons fields
 
-
 instance Tree Type where
     fromTree t = App (show t) []
     toTree = parseTree ps
