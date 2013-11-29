@@ -28,7 +28,7 @@ import CCO.Printing (text)
 import Data.Map hiding (map)
 }
 
-include "Spec.ag"
+include "Spec/Spec.ag"
 
 attr SpecTree
     syn avail use {&&} {True} :: Bool

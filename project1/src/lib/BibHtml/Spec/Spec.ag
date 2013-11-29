@@ -1,7 +1,9 @@
 -- | This module contains the data types used to define specification rules,
 -- and some combinators to conviniently construct such rules.
+-- This module is intended for internal use only.
+
 {-
-module {BibHtml.Spec}
+module {BibHtml.Spec.Internal}
 {
 SpecTree(..),
 exactly,
