@@ -1,6 +1,8 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances #-}
 
-module Bibtex.Utility where
+-- | Internal functions for the Bibtex module. Contains Template Haskell code,
+--   as template haskell functions cannot be applied in the file where they are defined.
+module Bibtex.Internal where
 
 import Language.Haskell.TH
 

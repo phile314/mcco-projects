@@ -27,6 +27,7 @@ data Node
     | Elem ElemName [(AttrName, AttrVal)] [Node]
     deriving (Show, Eq)
 
+-- | A class for things from which a html representation can be derivied.
 class Html a where
   -- | Returns an html representation
   toHtml :: a -> HtmlTree

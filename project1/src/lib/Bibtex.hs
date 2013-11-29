@@ -16,7 +16,7 @@ where
 import CCO.Tree
 import CCO.Tree.Parser
 import Control.Applicative
-import Bibtex.Utility
+import Bibtex.Internal
 import CCO.Tree (ATerm)
 
 -- | A bibtex database is a list of `BibtexEntry`. 
@@ -48,6 +48,7 @@ data Type
   | UnknownType String
     deriving (Show, Eq, Ord)
 
+-- | Represents a bibtex entry's key.
 type Key = String
 
 -- | Represents a field that can be possibly used in a 'BibtexEntry'.
