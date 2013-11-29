@@ -1,49 +1,9 @@
--- | The attribute grammar used for converting a 'BibtexEntry' to 'Html'.
---  
--- TODO check whether comment is up to date
---   The bibtex field specification is constructed as a tree, and then a tree
---   fold/walk is performed using the given field names/values as input. The output
---   is the generated bib and warning/error messages. All error/warning messages
---   are collected even if an error is encountered. Html output is only produced,
---   if there were no errors.
---   
--- * Implementation remarks
---   
---   (The term attribute in this text is referring to the attribute grammar,
---    the term field is used to refer to fields of a bibtex entry.)
---
---   It is assumed that the printing of any field is indepent from all
---   other fields. To print an entry, it is therefore sufficient
---   to sort the fields in the correct order and call `fieldToHtml`
---   for each field. 
---   This is achieved using a tree specifying allowed fields, their 
---   combinations and their order. Then a fold
---   over this tree takes place, carrying the field values as attribute
---   throughout the tree. Each node of the tree then decides how to print a
---   subset of this fields.
---
---   For sorting alone the tree might not be strictly necessary,
---   but Bibtex is more complicated as it sometimes allows
---   a mutually-exclusive choice between two fields and a variety
---   of optional fields. As it is also a good idea to validate that
---   a valid set of field values is given, a simple list sorter
---   does not suffice.
---
--- * Usage remarks
---   
---   The function `entryToHtml` and the provided 'SpecTree' related constructing 
---   functions are the only elements that should actually be exported from this module
---   (TODO: do not export all the other definitions. How to do this in uuagc?)
-
+-- | This module contains the data types used to define specification rules,
+-- and some combinators to conviniently construct such rules.
+{-
 module {BibHtml.Spec}
 {
-SpecTree,
-Syn_SpecTree,
-
-walkTree,
-isAvail,
-depth,
-
+SpecTree(..),
 exactly,
 BibHtml.Spec.either,
 both,
@@ -51,19 +11,10 @@ optional,
 allOf,
 someOf,
 (<|>),
+-}
 
--- FIX
-getBib,
-getMsgs,
-getAvail
-}
-{
-import Html.Tree
-import CCO.Feedback
-import CCO.Printing
+imports {
 import Bibtex
-import Data.Map hiding (map)
-import qualified Data.Map as M
 }
 
 -- | A specification tree for the possible fields and combinations thereof in a bibtex entry.
@@ -72,45 +23,13 @@ data SpecTree
     | Either left :: SpecTree right :: SpecTree warnBoth :: Bool
     | Optional child :: SpecTree
     | Exactly field  :: Field
-
 deriving SpecTree : Show
-
-attr SpecTree
-    syn avail use {&&} {True} :: Bool
-    syn bib use {++} {[]} :: { [(Field, String)] } 
-    syn msgs use {++} {[]} :: { [Message] }
-    syn reqStr use {++} {""} :: String
-    inh etype :: Type
-    inh fields :: {Map Field String}
-    inh key :: Key
-
-sem SpecTree
-  | Either lhs.avail = { @left.avail || @right.avail }
-           lhs.msgs = { case (@left.avail, @right.avail) of
-                            (True, True)   -> [mutuallyExclusive @left.reqStr @right.reqStr @lhs.key | @warnBoth]
-                            (False, False) -> [bothMissing @left.reqStr @right.reqStr @lhs.key]
-                            _              -> [] }
-           lhs.bib = { case (@left.avail, @right.avail) of
-                            (True, _)      -> @left.bib
-                            (False, True)  -> @right.bib }
-             lhs.reqStr = { "(" ++ @left.reqStr ++ " or " ++ @right.reqStr ++ ")"}
-    | Optional lhs.msgs = { if @child.avail then @child.msgs else [] }
-               lhs.bib = { if @child.avail then @child.bib else [] }
-               lhs.avail = True
-               lhs.reqStr = ""
-    | Exactly lhs.avail = { @field `member` @lhs.fields }
-              lhs.msgs = { if not (@field `member` @lhs.fields) then [missing @field @lhs.key] else []}
-              lhs.bib = {[(@field, @lhs.fields ! @field)]}  -- Direct access
-              lhs.reqStr = { show @field }
-    | Both lhs.reqStr = { "(" ++ @left.reqStr ++ " and " ++ @right.reqStr ++ ")" }
-
-{
 
 
 -------------------------------------------------------------------------------
 -- Exported functions
 -------------------------------------------------------------------------------
-
+{
 -- | Expects exactly the given field and causes an error if it is not available.
 exactly :: Field -> SpecTree
 exactly = Exactly
@@ -144,49 +63,4 @@ allOf ss = foldr1 Both ss
 -- | Combines two fields using `either`.
 (<|>) :: Field -> Field -> SpecTree
 f1 <|> f2 = Either (Exactly f1) (Exactly f2) True
-
--- | Checks whether the given tree holds on a bibtex entry, meaning that
---   all constraints occuring in the `SpecTree` are fullfilled.
-isAvail :: BibtexEntry -> SpecTree -> Bool
-isAvail t s = avail_Syn_SpecTree $ walkTree t s 
-
--- | Given a converter function, a bibtex entry and a specification tree
--- runs the attribute grammar.
-walkTree :: BibtexEntry -> SpecTree -> Syn_SpecTree
-walkTree (Entry t k fs) s = wrap_SpecTree (sem_SpecTree s) inh
-    where inh = Inh_SpecTree { etype_Inh_SpecTree = t,
-                               fields_Inh_SpecTree = M.fromList fs,
-                               key_Inh_SpecTree = k }
-
-getBib = bib_Syn_SpecTree
-getMsgs = msgs_Syn_SpecTree
-getAvail = avail_Syn_SpecTree
-
-depth (Both a b)    = 1 + (max (depth a) (depth b))
-depth (Either a b _)  = 1 + (max (depth a) (depth b))
-depth (Optional a)  = 1 + (depth a)
-depth (Exactly _)   = 1
-
-
-
--------------------------------------------------------------------------------
--- Error messages
--------------------------------------------------------------------------------
-
--- | Returns a 'Warning' message about two elements being both present.
-mutuallyExclusive :: String -> String -> Key -> Message
-mutuallyExclusive s1 s2 k = Warning 1 (text w)
-  where w = unwords ["Both", s1, "and", s2, "are given,",
-                     "but are mutually exclusive in entry", k]
-
--- | Retuns an 'Error' message about none of two elements being present.
-bothMissing :: String -> String -> Key -> Message
-bothMissing s1 s2 k = Error (text e)
-  where e = unwords ["Neither of", s1, "and", s2, "is given,",
-                     "but one of them is required in entry", k] 
- 
--- | Returns an 'Error' about a missing field
-missing :: Field -> Key -> Message
-missing f k = Error (text e)
-  where e = unwords ["Required field", show f, "is missing in entry", k]
 }

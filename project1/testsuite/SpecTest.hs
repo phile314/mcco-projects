@@ -6,6 +6,7 @@ module Main where
 
 import Bibtex
 import BibHtml.Spec
+import BibHtml.Validator
 import qualified BibHtml.Spec as S
 import BibHtml.Converter
 import Data.Maybe (isJust)

@@ -31,7 +31,7 @@ executable bib2html
   main-is:           BibHtml.hs
   hs-source-dirs:    src/bib2html, src/lib
   build-depends:     base >=4.5.0, cco ==0.0.4, containers >=0.4, template-haskell >=2.7.0.0
-  other-modules:     Bibtex, BibHtml.Spec
+  other-modules:     Bibtex, BibHtml.Spec, BibHtml.Validator
 
 executable pp-html
   main-is:           PpHtml.hs
@@ -71,6 +71,6 @@ test-suite spec
   main-is:           SpecTest.hs
   hs-source-dirs:    testsuite, src/lib
   build-depends:     base >=4.5.0, HUnit ==1.2.*,cco ==0.0.4, QuickCheck >=2.6, containers >=0.4, case-insensitive >=1.0, quickcheck-assertions >=0.1.1, template-haskell >=2.7.0.0
-  other-modules:     BibHtml.Spec
+  other-modules:     BibHtml.Spec, BibHtml.Validator
 -- cabal/uuagc workaround
   ghc-options:       -idist/build/

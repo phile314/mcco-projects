@@ -11,7 +11,7 @@ module Main (main) where
 import Bibtex
 import BibHtml.BibtexSpec
 import BibHtml.Converter (toHtml)
-import BibHtml.Spec
+import BibHtml.Validator
 import CCO.Component (ioWrap, component, printer)
 import CCO.Feedback (Feedback, messages)
 import CCO.Tree (parser, toTree, fromTree, ATerm)
