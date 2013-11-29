@@ -31,7 +31,7 @@ executable bib2html
   main-is:           BibHtml.hs
   hs-source-dirs:    src/bib2html, src/lib
   build-depends:     base >=4.5.0, cco ==0.0.4, containers >=0.4, template-haskell >=2.7.0.0
-  other-modules:     Bibtex, BibHtml.Spec, BibHtml.Validator
+  other-modules:     Bibtex, BibHtml.Spec, BibHtml.Validator, BibHtml.Spec.Internal
 
 executable pp-html
   main-is:           PpHtml.hs
@@ -43,7 +43,7 @@ test-suite lexer
   main-is:           Test.hs
   hs-source-dirs:    testsuite, src/lib, testsuite/Lexer
   build-depends:     base >=4.5.0, HUnit ==1.2.*, cco ==0.0.4, QuickCheck >=2.6, containers >=0.4, case-insensitive >=1.0, template-haskell >=2.7.0.0
-  other-modules:     Bibtex, BibHtml.Spec
+  other-modules:     Bibtex, BibHtml.Spec, BibHtml.Spec.Internal
 -- cabal/uuagc workaround
   ghc-options:       -idist/build/
 
@@ -52,7 +52,7 @@ test-suite parser
   main-is:           Test.hs
   hs-source-dirs:    testsuite, src/lib, testsuite/Parser
   build-depends:     base >=4.5.0, HUnit ==1.2.*, cco ==0.0.4, QuickCheck >=2.6, containers >=0.4, case-insensitive >=1.0, template-haskell >=2.7.0.0
-  other-modules:     Bibtex, BibHtml.Spec
+  other-modules:     Bibtex, BibHtml.Spec, BibHtml.Spec.Internal
 -- cabal/uuagc workaround
   ghc-options:       -idist/build/
 
@@ -61,7 +61,7 @@ test-suite tree
   main-is:           TreeTest.hs
   hs-source-dirs:    testsuite, src/lib
   build-depends:     base >=4.5.0, HUnit ==1.2.*,cco ==0.0.4, QuickCheck >=2.6, containers >=0.4, case-insensitive >=1.0, template-haskell >=2.7.0.0
-  other-modules:     Bibtex, BibHtml.Spec
+  other-modules:     Bibtex, BibHtml.Spec, BibHtml.Spec.Internal
 -- cabal/uuagc workaround
   ghc-options:       -idist/build/
 
@@ -71,6 +71,6 @@ test-suite spec
   main-is:           SpecTest.hs
   hs-source-dirs:    testsuite, src/lib
   build-depends:     base >=4.5.0, HUnit ==1.2.*,cco ==0.0.4, QuickCheck >=2.6, containers >=0.4, case-insensitive >=1.0, quickcheck-assertions >=0.1.1, template-haskell >=2.7.0.0
-  other-modules:     BibHtml.Spec, BibHtml.Validator
+  other-modules:     BibHtml.Spec, BibHtml.Validator, BibHtml.Spec.Internal
 -- cabal/uuagc workaround
   ghc-options:       -idist/build/

@@ -6,6 +6,7 @@ module Main where
 
 import Bibtex
 import BibHtml.Spec
+import BibHtml.Spec.Internal (SpecTree(..))
 import BibHtml.Validator
 import qualified BibHtml.Spec as S
 import BibHtml.Converter
@@ -78,6 +79,10 @@ prop_avail_msgs e s = lbl [s] $
     where isError (Error _) = True
           isError _         = False
 
+depth (Both a b)    = 1 + (max (depth a) (depth b))
+depth (Either a b _)  = 1 + (max (depth a) (depth b))
+depth (Optional a)  = 1 + (depth a)
+depth (Exactly _)   = 1
 
 -- | The entry point of the test suite
 main :: IO ()

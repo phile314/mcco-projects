@@ -1,5 +1,5 @@
 file:       "src/lib/BibHtml/Validator.ag"
 options:    module "BibHtml.Validator", haskellsyntax, catas, semfuns, signatures, wrappers, pretty
 
-file :      "src/lib/BibHtml/Spec/Spec.ag"
+file :      "src/lib/BibHtml/Spec/Internal.ag"
 options:    module "BibHtml.Spec.Internal", haskellsyntax, data

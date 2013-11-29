@@ -13,7 +13,6 @@ Syn_SpecTree,
 
 walkTree,
 isAvail,
-depth,
 
 -- FIX
 getBib,
@@ -22,13 +21,14 @@ getAvail
 }
 
 {
-import BibHtml.Spec
+import Bibtex
+import BibHtml.Spec.Internal
 import CCO.Feedback
 import CCO.Printing (text)
 import Data.Map hiding (map)
 }
 
-include "Spec/Spec.ag"
+include "Spec/Internal.ag"
 
 attr SpecTree
     syn avail use {&&} {True} :: Bool
@@ -77,11 +77,6 @@ walkTree (Entry t k fs) s = wrap_SpecTree (sem_SpecTree s) inh
 getBib = bib_Syn_SpecTree
 getMsgs = msgs_Syn_SpecTree
 getAvail = avail_Syn_SpecTree
-
-depth (Both a b)    = 1 + (max (depth a) (depth b))
-depth (Either a b _)  = 1 + (max (depth a) (depth b))
-depth (Optional a)  = 1 + (depth a)
-depth (Exactly _)   = 1
 
 -------------------------------------------------------------------------------
 -- Error messages

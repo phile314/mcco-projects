@@ -1,7 +1,7 @@
 module BibHtml.Spec (
     SpecTree
   , exactly
-  , BibHtml.Spec.either
+  , BibHtml.Spec.Internal.either
   , both
   , optional
   , allOf
@@ -9,4 +9,4 @@ module BibHtml.Spec (
   , (<|>)
   ) where
 
-import BibHtml.Internal
+import BibHtml.Spec.Internal
