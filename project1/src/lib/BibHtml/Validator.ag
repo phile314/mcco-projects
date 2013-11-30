@@ -8,13 +8,13 @@
 --   can access to this result only through the 'Feedback' monad.
 
 module {BibHtml.Validator} {
-    validate
+    Validate
+  , validate
   , Syn_SpecTree
 
   , walkTree
   , isAvail
 
-  -- FIX
   , getBib
   , getMsgs
   , getAvail
@@ -36,7 +36,7 @@ include "Spec/Internal.ag"
 -- Validator
 -------------------------------------------------------------------------------
 {
--- | A class for objects that can be validate
+-- | A class for objects that can be validated.
 class Validate a where
   -- | Perform a validation. The result is wrapped in the Feedback monad
   -- to encode error and warning messages and failure.
@@ -111,9 +111,13 @@ walkTree (Entry t k fs) s = wrap_SpecTree (sem_SpecTree s) inh
                                fields_Inh_SpecTree = fromList fs,
                                key_Inh_SpecTree = k }
 
--- TODO this should not be exported, the only entry point should be validate
-getBib = bib_Syn_SpecTree
+-- | Returns the validated and preprocessed bibtex entry fields. Only defined when `getAvail` returns `True` for the given tree.
+getBib r = if getAvail r then bib_Syn_SpecTree r
+           else error "getBib is not defined when getAvail returns false."
+-- | Returns all error/warning messages. The following law holds:
+--   @ getAvail r == (no error in getMsgs r) @
 getMsgs = msgs_Syn_SpecTree
+-- | Returns `True` if the fold was successful, meaning that validation succeeded.
 getAvail = avail_Syn_SpecTree
 
 -------------------------------------------------------------------------------
