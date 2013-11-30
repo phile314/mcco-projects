@@ -27,10 +27,17 @@ data Node
     | Elem ElemName [(AttrName, AttrVal)] [Node]
     deriving (Show, Eq)
 
+
+
 -- | A class for things from which a html representation can be derivied.
 class Html a where
   -- | Returns an html representation
   toHtml :: a -> HtmlTree
+
+-- | Converts something into a html document.
+toHtmlDoc :: Html a => a -> HtmlDoc
+toHtmlDoc = HtmlDoc . toHtml
+
 
 instance Tree HtmlDoc where
     fromTree (HtmlDoc t)                = App "HtmlDoc" [fromTree t]
@@ -42,6 +49,7 @@ instance Tree Node where
 
     toTree (App "Text" [s])             = liftM Text (toTree s)
     toTree (App "Elem" [e, attrs, ns])  = liftM3 Elem (toTree e) (toTree attrs) (toTree ns)
+
 
 infixr 5 <<
 -- | @name << tree@ wraps the attributless element named @name@ around @tree@.

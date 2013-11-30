@@ -11,6 +11,8 @@ import Bibtex
 import BibHtml.BibtexSpec
 import BibHtml.Spec
 
+
+
 instance Html BibtexEntry where
   toHtml (Entry t _ xs) = Elem "span" [] cont
     where cont = reverse $ (Text "."):(foldl f [] xs)
