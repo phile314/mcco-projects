@@ -8,16 +8,16 @@
 --   can access to this result only through the 'Feedback' monad.
 
 module {BibHtml.Validator} {
+    validate
+  , Syn_SpecTree
 
-Syn_SpecTree,
+  , walkTree
+  , isAvail
 
-walkTree,
-isAvail,
-
--- FIX
-getBib,
-getMsgs,
-getAvail
+  -- FIX
+  , getBib
+  , getMsgs
+  , getAvail
 }
 
 {
@@ -26,10 +26,38 @@ import BibHtml.Spec.Internal
 import CCO.Feedback
 import CCO.Printing (text)
 import Data.Map hiding (map)
+import BibHtml.BibtexSpec (spec)
 }
 
 include "Spec/Internal.ag"
 
+-------------------------------------------------------------------------------
+-- Validator
+-------------------------------------------------------------------------------
+{
+-- | A class for objects that can be validate
+class Validate a where
+  -- | Perform a validation. The result is wrapped in the Feedback monad
+  -- to encode error and warning messages and failure.
+  validate :: a -> Feedback a
+
+instance Validate BibtexDb where
+  -- | Validates a 'BibtexDb'.
+  validate (BibtexDb db) = mapM validate db >>= return . BibtexDb
+
+instance Validate BibtexEntry where
+  -- | Validates a 'BibtexEntry'.
+  -- If the validation succeeds the given bitex entry is returned, with
+  -- the fields ordered according to the specification for its type.
+  -- Unknown fields or conflicting fields will be removed.
+  validate e@(Entry t k _) = messages msgs >> return (Entry t k fs)
+    where fs = getBib res
+          res = walkTree e (spec t)
+          msgs = getMsgs res
+}
+-------------------------------------------------------------------------------
+-- Attribute Grammar
+-------------------------------------------------------------------------------
 attr SpecTree
     syn avail use {&&} {True} :: Bool
     syn bib use {++} {[]} :: { [(Field, String)] } 
