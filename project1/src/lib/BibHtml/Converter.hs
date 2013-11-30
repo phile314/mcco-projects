@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleInstances #-}
+
 -- | This module contains functions to convert from bibtex elements
 -- to html representation.
 
@@ -15,10 +17,11 @@ import BibHtml.Spec
 
 instance Html BibtexEntry where
   toHtml (Entry t _ xs) = Elem "span" [] cont
-    where cont = reverse $ (Text "."):(foldl f [] xs)
-          f :: [HtmlTree] -> (Field, String) -> [HtmlTree]
-          f [] e = [fieldToHtml t e]
-          f s e  = (fieldToHtml t e):(Text ", "):s
+    where cont = (foldr f [] xs) ++ [Text "."]
+          f :: (Field, String) -> [HtmlTree] -> [HtmlTree]
+          f e [] = [fst $ fieldToHtml t e]
+          f e s  = (tree):(Text (sep ++ " ")):s
+            where (tree, sep) = fieldToHtml t e
         
 
 instance Html BibtexDb where
@@ -28,14 +31,21 @@ instance Html BibtexDb where
           toc  = summaryOf db
           table = tableOf db
 
+infixr 0 @>
+a @> b = (a,b)
+def = ","
 -- | Converts an attribute to a html tree.
-fieldToHtml :: Type -> (Field, String) -> HtmlTree
-fieldToHtml Inproceedings (Title, s) = Text s
-fieldToHtml Inproceedings (Booktitle, s) = Elem "em" [] [Text s]
-fieldToHtml _ (Title, s) = Elem "em" [] [Text s]
-fieldToHtml _ (Editor, s) = Text $ "In: " ++ s
-fieldToHtml _ (Pages, s) = Text $ "pages " ++ (replace "--" "—" s)
-fieldToHtml _ (f, s) = Text s
+fieldToHtml :: Type -> (Field, String) -> (HtmlTree, String)
+fieldToHtml t (f, s) = f2h t (f, prep s)
+  where
+    prep = replace "--" "—"
+    f2h Inproceedings (Title, s) = Text s @> def
+    f2h Inproceedings (Booktitle, s) = Elem "em" [] [Text s] @> def
+    f2h _ (Author, s) = Text s @> "."
+    f2h _ (Title, s) = Elem "em" [] [Text s] @> "."
+    f2h _ (Editor, s) = Text ("In: " ++ s ++ ", editors") @> def
+    f2h _ (Pages, s) = Text ("pages " ++ s) @> "."
+    f2h _ (f, s) = Text s @> def
 
 
 -- | Produces a summary of the given bibtex entries.
