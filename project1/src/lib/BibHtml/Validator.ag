@@ -8,13 +8,13 @@
 --   can access to this result only through the 'Feedback' monad.
 
 module {BibHtml.Validator} {
-    validate
+    Validate
+  , validate
   , Syn_SpecTree
 
   , walkTree
   , isAvail
 
-  -- FIX
   , getBib
   , getMsgs
   , getAvail
@@ -36,7 +36,7 @@ include "Spec/Internal.ag"
 -- Validator
 -------------------------------------------------------------------------------
 {
--- | A class for objects that can be validate
+-- | A class for objects that can be validated.
 class Validate a where
   -- | Perform a validation. The result is wrapped in the Feedback monad
   -- to encode error and warning messages and failure.
