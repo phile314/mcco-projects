@@ -102,8 +102,13 @@ walkTree (Entry t k fs) s = wrap_SpecTree (sem_SpecTree s) inh
                                fields_Inh_SpecTree = fromList fs,
                                key_Inh_SpecTree = k }
 
-getBib = bib_Syn_SpecTree
+-- | Returns the validated and preprocessed bibtex entry fields. Only defined when `getAvail` returns `True` for the given tree.
+getBib r = if getAvail r then bib_Syn_SpecTree r
+           else error "getBib is not defined when getAvail returns false."
+-- | Returns all error/warning messages. The following law holds:
+--   @ getAvail r == (no error in getMsgs r) @
 getMsgs = msgs_Syn_SpecTree
+-- | Returns `True` if the fold was successful, meaning that validation succeeded.
 getAvail = avail_Syn_SpecTree
 
 -------------------------------------------------------------------------------
