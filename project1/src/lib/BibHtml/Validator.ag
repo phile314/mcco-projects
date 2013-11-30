@@ -25,7 +25,8 @@ import Bibtex
 import BibHtml.Spec.Internal
 import CCO.Feedback
 import CCO.Printing (text)
-import Data.Map hiding (map)
+import Data.Map hiding (map, partition)
+import Data.List (partition)
 import BibHtml.BibtexSpec (spec)
 }
 
@@ -43,7 +44,7 @@ class Validate a where
 
 instance Validate BibtexDb where
   -- | Validates a 'BibtexDb'.
-  validate (BibtexDb db) = mapM validate db >>= return . BibtexDb
+  validate (BibtexDb db) = dropUnknown db >>= mapM validate >>= return . BibtexDb
 
 instance Validate BibtexEntry where
   -- | Validates a 'BibtexEntry'.
@@ -54,6 +55,14 @@ instance Validate BibtexEntry where
     where fs = getBib res
           res = walkTree e (spec t)
           msgs = getMsgs res
+
+-- | Drops the 'UnknownType' entries in the given list, producing a warning 
+-- message for each. The other entries are returned unchanged in the original order.
+dropUnknown :: [BibtexEntry] -> Feedback [BibtexEntry]
+dropUnknown es = mapM_ (message . unknown) dropped >> return valid
+   where (dropped, valid) = partition isUnknown es
+         isUnknown (Entry (UnknownType _) _ _) = True
+         isUnknown _                           = False 
 }
 -------------------------------------------------------------------------------
 -- Attribute Grammar
@@ -102,13 +111,23 @@ walkTree (Entry t k fs) s = wrap_SpecTree (sem_SpecTree s) inh
                                fields_Inh_SpecTree = fromList fs,
                                key_Inh_SpecTree = k }
 
+-- TODO this should not be exported, the only entry point should be validate
 getBib = bib_Syn_SpecTree
 getMsgs = msgs_Syn_SpecTree
 getAvail = avail_Syn_SpecTree
 
 -------------------------------------------------------------------------------
--- Error messages
+-- Error and warning messages
 -------------------------------------------------------------------------------
+
+-- | Returns a 'Warning' message for an unknown type.
+-- Fails for type different from 'UnknownType'.
+unknown :: BibtexEntry -> Message
+unknown (Entry (UnknownType s) k _) = Warning 1 (text w)
+  where w = unwords ["Ignoring entry", k, ": the type", s,
+                     "is not supported"]
+unknown (Entry t _ _) = error e
+  where e = unwords ["Validator.unknown:", show t, "is not Unknown"]
 
 -- | Returns a 'Warning' message about two elements being both present.
 mutuallyExclusive :: String -> String -> Key -> Message
