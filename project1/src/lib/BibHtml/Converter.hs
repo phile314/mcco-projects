@@ -12,7 +12,11 @@ import BibHtml.BibtexSpec
 import BibHtml.Spec
 
 instance Html BibtexEntry where
-  toHtml (Entry t _ xs) = Elem "span" [] $ map (fieldToHtml t) xs
+  toHtml (Entry t _ xs) = Elem "span" [] $ reverse $ foldl f [] xs
+    where f :: [HtmlTree] -> (Field, String) -> [HtmlTree]
+          f [] e = [fieldToHtml t e]
+          f s e  = (fieldToHtml t e):(Text ", "):s
+        
 
 instance Html BibtexDb where
   toHtml (BibtexDb db) = Elem "html" [] [header, body]
@@ -27,7 +31,6 @@ fieldToHtml Inproceedings (Title, s) = Text s
 fieldToHtml Inproceedings (Booktitle, s) = Elem "em" [] [Text s]
 fieldToHtml _ (Title, s) = Elem "em" [] [Text s]
 fieldToHtml _ (Editor, s) = Text $ "In: " ++ s
--- REMARK: The cco library has a bug when parsing escaped unicode characters, so this will not appear correctly in the html (but it is not our fault....)
 fieldToHtml _ (Pages, s) = Text $ "pages " ++ (replace "--" "—" s)
 fieldToHtml _ (f, s) = Text s
 
