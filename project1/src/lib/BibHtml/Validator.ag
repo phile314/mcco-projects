@@ -27,6 +27,7 @@ import CCO.Feedback
 import CCO.Printing (text)
 import Data.Map hiding (map)
 import BibHtml.BibtexSpec (spec)
+import Control.Monad (filterM)
 }
 
 include "Spec/Internal.ag"
@@ -43,7 +44,7 @@ class Validate a where
 
 instance Validate BibtexDb where
   -- | Validates a 'BibtexDb'.
-  validate (BibtexDb db) = mapM validate db >>= return . BibtexDb
+  validate (BibtexDb db) = dropUnknownTypes db >>= mapM validate >>= return . BibtexDb
 
 instance Validate BibtexEntry where
   -- | Validates a 'BibtexEntry'.
@@ -54,6 +55,14 @@ instance Validate BibtexEntry where
     where fs = getBib res
           res = walkTree e (spec t)
           msgs = getMsgs res
+
+-- | Removes all entries with an unknown type and emits a warning for each such entry.
+dropUnknownTypes :: [BibtexEntry] -> Feedback [BibtexEntry]
+dropUnknownTypes = filterM f
+  where f (Entry (UnknownType t) k _) = do
+            warn 1 $ "Ignoring entry " ++ k ++ " because the type " ++ t ++ " is not supported."
+            return False
+        f e = return True
 }
 -------------------------------------------------------------------------------
 -- Attribute Grammar

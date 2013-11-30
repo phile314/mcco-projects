@@ -12,8 +12,9 @@ import BibHtml.BibtexSpec
 import BibHtml.Spec
 
 instance Html BibtexEntry where
-  toHtml (Entry t _ xs) = Elem "span" [] $ reverse $ foldl f [] xs
-    where f :: [HtmlTree] -> (Field, String) -> [HtmlTree]
+  toHtml (Entry t _ xs) = Elem "span" [] cont
+    where cont = reverse $ (Text "."):(foldl f [] xs)
+          f :: [HtmlTree] -> (Field, String) -> [HtmlTree]
           f [] e = [fieldToHtml t e]
           f s e  = (fieldToHtml t e):(Text ", "):s
         
