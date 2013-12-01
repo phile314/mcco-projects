@@ -28,8 +28,9 @@ instance Html BibtexEntry where
 instance Html BibtexDb where
   toHtml (BibtexDb db) = Elem "html" [] [header, body]
     where header = "head" << "title" << Text "Bibliography"
-          body = Elem "body" [] (toc ++ [table])
+          body = Elem "body" [] (toc ++ [line, table])
           toc  = summaryOf db
+          line = Elem "hr" [] []
           table = tableOf db
 
 -- | Converts an attribute to a html tree. The value of the field is trimmed.
