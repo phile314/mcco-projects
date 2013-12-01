@@ -32,7 +32,6 @@ pEntry = Entry <$> (pAt *> pType) <*> pKey <*> pData
 -- | Parses a field 
 pField :: TokenParser Field
 pField = pCtors fields UnknownField
---pField =  (choice $ map pConstructor fields) <|> pUnknown fields UnknownField
 
 -- | Parses an entry Type
 pType :: TokenParser Type
