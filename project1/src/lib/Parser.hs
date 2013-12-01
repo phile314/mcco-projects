@@ -9,6 +9,7 @@ import CCO.Parsing
 import Control.Applicative
 import Data.CaseInsensitive (mk)
 import Lexer
+import Data.List (find)
 
 -- | A parser for streams of tokens
 type TokenParser = Parser Token
@@ -30,25 +31,25 @@ pEntry = Entry <$> (pAt *> pType) <*> pKey <*> pData
 
 -- | Parses a field 
 pField :: TokenParser Field
-pField =  (choice $ map pConstructor fields) <|> pUnknown fields UnknownField
+pField = pCtors fields UnknownField
+--pField =  (choice $ map pConstructor fields) <|> pUnknown fields UnknownField
 
 -- | Parses an entry Type
 pType :: TokenParser Type
-pType = (choice $ map pConstructor types) <|> pUnknown types UnknownType
+pType = pCtors types UnknownType
 
--- | Parses an identifier which is not a known constructor. 
--- Useful to catch all unknown identifiers.
-pUnknown :: (Show a) => [a] -> (String -> a) -> TokenParser a
-pUnknown others ca = (\(Identifier s) -> ca s) <$> satisfy notOthers
-  where notOthers t = isIdentifier t && all (not . (match t)) others
+-- | Parses one of the given constructors, or if none of them
+--   match the idenfitier the default constructor is called
+--   with the identifier string as parameter.
+--   All comparisons are done case-insensitive.
+pCtors :: (Show a) => [a] -> (String -> a) -> TokenParser a
+pCtors cs d = f <$> satisfy isIdentifier
+  where f (Identifier s) = case find (match s) cs of
+          (Just c) -> c
+          Nothing  -> d s
 
--- | Parses an identifier, whose showable constructor is given.
-pConstructor :: Show a => a -> TokenParser a
-pConstructor c = (satisfy (\t -> isIdentifier t && match t c) *> pure c)
-
--- | Returns true if the given constructors matches the identifier token (case insensitive).
-match :: (Show a) => Token -> a -> Bool
-match (Identifier s) c = mk s == (mk . show) c
+        match :: (Show a) => String -> a -> Bool
+        match s c = mk s == (mk . show) c
 
 -------------------------------------------------------------------------------
 -- Basic Parsers
