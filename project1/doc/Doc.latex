@@ -33,22 +33,20 @@
 
 \subsection{Implemented}
 \begin{itemize}
-    \item Basic escape codes
     \item Correct validation and printing of required, optional and "and/or" fields.
     \item Special Characters, eg "-\--" becomes "--" and support for \{\textbackslash"o\} style escapes
-    \item Different rendering for different fields, e.g. the editor field is prefixed with "In:" and followed by ", editors". TODO
-    \item what else?
+    \item Different rendering for different fields, e.g. the editor field is prefixed with "In:" and followed by ", editors".
+    \item Work-around for what seems to be a parse/print bug in the cco library when using unicode, see \ref{sec:ioenc}.
 \end{itemize}
 
 \subsection{Not Implemented}
 \begin{itemize}
     \item Lexing/Parsing values enclosed by brackets, "\{....\}".
-    \item No warning for duplicate bibtex entry keys
+    \item No warning for duplicate bibtex entry keys (the one after the type, eg "@type\{MYKEY,...")
     \item The user-visible key for entry indexing (eg "[LO98]") could be non-unique if the author name and year are similar.
+    \item The less common entry types print the fields in the wrong order.
 \end{itemize}
 
-TODO we should say why we haven't implement the brackts stuff
-this also goes for other (important) unimplemented features
 
 \section{Lexing}
 The lexer produces a stream of \texttt{Token} that are later parsed by the \texttt{TokenParser}. 
@@ -75,27 +73,29 @@ need to be carried out:
 \end{enumerate}
 
 To encode all this information in a concise manner, a tree-like data structure seems to be the
-best approach. Trees representing the bibtex specification are built where the nodes
+best approach. Trees representing the bibtex specification are built. The nodes
 indicate the ways how to combine their children, eg. to concatenate them, to choose
-one of the children, and so on.
+one of the children and so on.
 
-The order in this tree can be used to perform the sorting, and all fields not present
+The location of the fields in this tree can then be used to perform the sorting, and all fields not present
 in the tree are dropped.
 
 \subsection{Implementation}
-Building the tree specification is a rather straight forward one-to-one translation
+Building the specification tree is a rather straight forward one-to-one translation
 of the bibtex specification found at (\url{http://www.andy-roberts.net/res/writing/latex/bibentries.pdf}).
 
 More involved is using the given tree. Basically, all tasks are carried out
 as tree folds/walks. The UUAGC system was chosen to implement this as it allows
-the expression of tree folds in a convenient way.
+us to specify tree folds in a convenient way.
 
-All folds carry all field names and values around as input. The output is
+For each bibtex entry the correct specification tree is retrieved and used
+for all further folds with this entry.
+All this folds carry the field names and values around as input. The output is
 the modified list of fields/values suitable for printing. Additionally,
 warning and error messages are returned as well.
 
-From the outside, either at least one error message is emitted through the
-Feedback monad or a modified BibtexEntry with the new fields and values.
+From the outside, either at least one error message is received through the
+Feedback monad or a modified BibtexEntry with the new fields and values (see file "src/lib/BibHtml/Validator.ag").
 
 \subsection{Attribute Grammar Attributes}
 The following attributes are defined for the grammar: \newline
@@ -114,6 +114,7 @@ The following attributes are defined for the grammar: \newline
 
 
 \section{Input/Output Encoding}
+\label{sec:ioenc}
 \subsection{Bibtex Input}
 The bibtex input file should only contain valid ascii characters. Input
 containing any other characters might lead to wrong output, altough
@@ -122,7 +123,7 @@ this has not yet been tested.
 \subsection{Intermediate Results}
 All programs assume that unicode characters in an ATerm value
 are (de-)serialized correctly by the CCO library. As this
-is not the case, Unicode support is broken. To work around
+seems to be not the case, Unicode support is broken. To work around
 this problem, the -\--sane option can be passed to all programs.
 This option causes the use of the prelude show/read functions
 instead of the cco printer/parser functions.
@@ -134,8 +135,8 @@ function on the string to print. According to the source code of show,
 most unicode characters are encoded using \textbackslash and the base 10 representation of the unicode codepoint.
  (See \url{http://hackage.haskell.org/package/base-4.6.0.1/docs/src/GHC-Show.html#showLitChar})
 
-The cco lexer (src/CCO/Tree/ATerm/Lexer.hs) on the other hand reads escape codes of this format. The two
-errors it makes are:
+The cco lexer (src/CCO/Tree/ATerm/Lexer.hs), on the other hand, expects escape codes to be in a slightly different
+format:
 \begin{enumerate}
     \item It accepts only escape codes with exeactly 3 digits. Some unicode code points need more than 3 digits to represent.
     \item It assumes that the digits are in base 8, but they are in base 10 as can be seen in the show source code.
