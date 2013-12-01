@@ -11,6 +11,7 @@ import CCO.Printing
 import Control.Monad (msum)
 import Data.Char (isUpper)
 import Data.List (intersperse, isPrefixOf)
+import qualified Data.List as L (last)
 import Data.List.Split (splitOn)
 import Data.Maybe (fromMaybe)
 import Bibtex
@@ -45,12 +46,17 @@ fieldToHtml t (f, s) = f2h t (f, prep s)
     prep = replace "--" "—"
     f2h Inproceedings (Title, s) = Text s @> def
     f2h Inproceedings (Booktitle, s) = Elem "em" [] [Text s] @> def
-    f2h _ (Author, s) = Text s @> "."
+    f2h _ (Author, s) =
+      case names of
+        [n] -> Text n @> "."
+        _ -> Text (unwords $ intersperse ", " (init names) ++ ["and", L.last names]) @> "."
+      where names = map layout (retrieveNames s)
+            layout n = unwords [first n, middle n, last n]
+  
     f2h _ (Title, s) = Elem "em" [] [Text s] @> "."
     f2h _ (Editor, s) = Text ("In: " ++ s ++ ", editors") @> def
     f2h _ (Pages, s) = Text ("pages " ++ s) @> "."
     f2h _ (f, s) = Text s @> def
-
 
 -- | Produces a summary of the given bibtex entries.
 -- More precisely it is an html object containing a list of 
