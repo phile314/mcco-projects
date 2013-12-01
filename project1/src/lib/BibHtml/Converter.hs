@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleInstances #-}
-
 -- | This module contains functions to convert from bibtex elements
 -- to html representation.
 
@@ -22,12 +20,10 @@ import Text.Regex (mkRegex, splitRegex)
 
 instance Html BibtexEntry where
   toHtml (Entry t _ xs) = Elem "span" [] cont
-    where cont = (foldr f [] xs) ++ [Text "."]
-          f :: (Field, String) -> [HtmlTree] -> [HtmlTree]
-          f e [] = [fst $ fieldToHtml t e]
-          f e s  = (tree):(Text (sep ++ " ")):s
-            where (tree, sep) = fieldToHtml t e
-        
+    where cont = (foldr merge [] xs) ++ [Text "."]
+          merge e [] = [f2h e]
+          merge e@(f,_) s = (f2h e):(Text (separatorOf t f ++ " ")):s
+          f2h (f, s) = fieldToHtml t (f, replace "--" "—" s)
 
 instance Html BibtexDb where
   toHtml (BibtexDb db) = Elem "html" [] [header, body]
@@ -36,27 +32,29 @@ instance Html BibtexDb where
           toc  = summaryOf db
           table = tableOf db
 
-infixr 0 @>
-a @> b = (a,b)
-def = ","
 -- | Converts an attribute to a html tree.
-fieldToHtml :: Type -> (Field, String) -> (HtmlTree, String)
-fieldToHtml t (f, s) = f2h t (f, prep s)
-  where
-    prep = replace "--" "—"
-    f2h Inproceedings (Title, s) = Text s @> def
-    f2h Inproceedings (Booktitle, s) = Elem "em" [] [Text s] @> def
-    f2h _ (Author, s) =
-      case names of
-        [n] -> Text n @> "."
-        _ -> Text (unwords $ intersperse ", " (init names) ++ ["and", L.last names]) @> "."
-      where names = map layout (retrieveNames s)
-            layout n = unwords [first n, middle n, last n]
-  
-    f2h _ (Title, s) = Elem "em" [] [Text s] @> "."
-    f2h _ (Editor, s) = Text ("In: " ++ s ++ ", editors") @> def
-    f2h _ (Pages, s) = Text ("pages " ++ s) @> "."
-    f2h _ (f, s) = Text s @> def
+fieldToHtml :: Type -> (Field, String) -> HtmlTree
+fieldToHtml Inproceedings (Title, s) = Text s
+fieldToHtml Inproceedings (Booktitle, s) = Elem "em" [] [Text s]
+fieldToHtml _ (Title, s) = Elem "em" [] [Text s]
+fieldToHtml _ (Editor, s) = Text ("In: " ++ s ++ ", editors")
+fieldToHtml _ (Pages, s) = Text ("pages " ++ s)
+fieldToHtml _ (Author, s) =
+  case names of
+    [n] -> Text n
+    _ -> Text (unwords $ intersperse ", " (init names) ++ ["and", L.last names])
+  where names = map layout (retrieveNames s)
+        layout n = unwords [first n, middle n, last n]
+fieldToHtml _ (f, s) = Text s
+
+-- | Retrieves the specific separator required for each 'Field'.
+-- The default separator is comma.
+separatorOf :: Type -> Field -> String
+separatorOf Inproceedings Title = ","
+separatorOf _ Title = "."
+separatorOf _ Pages = "."
+separatorOf _ Author = "."
+separatorOf _ _ = ","
 
 -- | Produces a summary of the given bibtex entries.
 -- More precisely it is an html object containing a list of 
@@ -147,4 +145,3 @@ replace :: Eq a => [a] -> [a] -> [a] -> [a]
 replace s r i | s `isPrefixOf` i = r ++ (replace s r (drop (length s) i))
 replace s r (i:is) | otherwise   = i:(replace s r is)
 replace _ _ [] = []
-
