@@ -19,7 +19,7 @@ Building:
 $ make
 
 Running the programs:
-$ cat ... | ./dist/build/PROG/PROG | ....
+$ cat <bibtex file> | ./dist/build/PROG/PROG
 
 where PROG may be one of "parse-bib", "bib2html", "pp-html"
 
@@ -28,7 +28,7 @@ instead of the cco ATerm parser/printer. This is required for unicode support
 due to what seems to be a bug in the cco library.
 
 To run everything with the same arguments:
-$ cat .... | ./run-all.sh --sane
+$ cat .... | ./run-all.sh [--sane]
 
 
 Running the tests:
@@ -47,10 +47,19 @@ if not all other examples require the "--sane" option.
 DOCUMENTATION
 ==========
 
-See Doc/Doc.pdf for the complete documentation. The features section of the pdf is copied here as requested on the cco website.
+See Doc/Doc.pdf for the complete documentation. The features section of the pdf is copied here as requested on the course website.
 
 Features:
+  - Error messages generation
+  - Warning messages generation for conflicting and unknown fields, unknown entry types, which are then ignored
+  - Accents in field (latex special syntax for unicode character such as \{"o})
+  - Generation of convinient reference names ([LO93])
+  - Formatting rules for names
+  - Unicode support
 
-
-TODO
-
+Unsupported features:
+  - Brackets around values
+  - Warnings for duplicate bibtex entry keys
+  - Unique reference names
+  - The order used for the fields in some bibtex entries may be wrong
+  - Some escaping rules are missing.
