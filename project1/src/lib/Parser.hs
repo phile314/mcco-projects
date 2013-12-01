@@ -38,7 +38,7 @@ pType :: TokenParser Type
 pType = pCtors types UnknownType
 
 -- | Parses one of the given constructors, or if none of them
---   match the idenfitier the default constructor is called
+--   matches the identifier the default constructor is called
 --   with the identifier string as parameter.
 --   All comparisons are done case-insensitive.
 pCtors :: (Show a) => [a] -> (String -> a) -> TokenParser a
