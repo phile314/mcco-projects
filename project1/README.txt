@@ -35,6 +35,15 @@ Running the tests:
 $ make test
 
 ==========
+Examples
+==========
+
+See the examples/.. directory.
+
+The example "mcco-example_simplified.bibtex" can be processed without the "--sane" option. Most 
+if not all other examples require the "--sane" option.
+
+==========
 DOCUMENTATION
 ==========
 
