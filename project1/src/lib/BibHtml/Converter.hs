@@ -38,17 +38,21 @@ fieldToHtml :: Type -> (Field, String) -> HtmlTree
 fieldToHtml Inproceedings (Title, s) = Text (trim s)
 fieldToHtml Inproceedings (Booktitle, s) = "em" << Text (trim s)
 fieldToHtml _ (Title, s) = "em" << Text (trim s)
-fieldToHtml _ (Editor, s) = Text ("In: " ++ trim s ++ ", editors")
+fieldToHtml _ (Editor, s) = Text ("In: " ++ formatNames s ++ ", editors")
 fieldToHtml _ (Pages, s) = Text ("pages " ++ trim s)
-fieldToHtml _ (Author, s) =
-  case names of
-    [n] -> Text n
-    _ -> Text $ concat (intersperse ", " (init names)) ++ " and " ++ L.last names
-  where names = map layout (retrieveNames s)
-        layout n = unwords [first n, middle n, last n]
+fieldToHtml _ (Author, s) = Text (formatNames s)
 fieldToHtml _ (f, s) = Text s
 
--- | Retrieves the specific separator required for each 'Field'.
+-- | Format a string detecting names following latex syntax.
+formatNames :: String -> String
+formatNames s =
+  let names = map layout (retrieveNames s)
+      layout n = unwords [first n, middle n, last n] in
+  case names of
+    [n] -> n
+    _ -> concat (intersperse ", " (init names)) ++ " and " ++ L.last names
+
+  -- | Retrieves the specific separator required for each 'Field'.
 -- The default separator is comma.
 separatorOf :: Type -> Field -> String
 separatorOf _ Title = "."
