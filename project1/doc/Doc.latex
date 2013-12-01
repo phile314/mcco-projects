@@ -65,6 +65,45 @@
 TODO we should say why we haven't implement the brackts stuff
 this also goes for other (important) unimplemented features
 
+\section{Bibtex Entry Validation}
+A bibtex entry basically consists of a (hopefully) unique key, a type and
+a list of fields and their values.
+
+For each type of bibtex entry, a different set of fields might be required or
+optionally given. Furthermore, some of this fields might be mutually exclusive/conflicting,
+meaning that only one of them should be given. In the end, the following tasks
+need to be carried out:
+\begin{enumerate}
+    \item Generate error messages for missing fields
+    \item Generate warning messages for conflicting fields, resolve conflict by dropping a field
+    \item Order the fields in their printing order
+    \item Drop unknown fields
+\end{enumerate}
+
+To encode all this information in a concise manner, a tree-like data structure seems to be the
+best approach. Trees representing the bibtex specification are built where the nodes
+indicate the ways how to combine their children, eg. to concatenate them, to choose
+one of the children, and so on.
+
+The order in this tree can be used to perform the sorting, and all fields not present
+in the tree are dropped.
+
+\subsection{Implementation}
+Building the tree specification is a rather straight forward one-to-one translation
+of the bibtex specification found at (http://www.andy-roberts.net/res/writing/latex/bibentries.pdf).
+
+More involved is using the given tree. Basically, all tasks are carried out
+as tree folds/walks. The UUAGC system was chosen to implement this as it allows
+the expression of tree folds in a convenient way.
+
+All folds carry all field names and values around as input. The output is
+the modified list of fields/values suitable for printing. Additionally,
+warning and error messages are returned as well.
+
+From the outside, either at least one error message is emitted through the
+Feedback monad or a modified BibtexEntry with the new fields and values.
+
+
 \section{Input/Output Encoding}
 \subsection{Bibtex Input}
 The bibtex input file should only contain valid ascii characters. Input
