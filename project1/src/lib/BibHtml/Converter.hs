@@ -118,7 +118,7 @@ getName s = fromMaybe (Name "" "" s) (msum [s1 s, s2 s])
 -- | First specification strategy: von Last, First
 s1 :: String -> Maybe Name
 s1 s = 
-  case splitRegex  (mkRegex ",") s of
+  case splitRegex (mkRegex ",") s of
   [left,first] -> 
     -- Simplification: von words are all lowercase
     let (middle, last) = span (not . isCapitalized) (words left)
