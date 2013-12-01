@@ -13,30 +13,48 @@ import Html.Tree
 ind :: Int
 ind = 4
 
---TODO escaping
-
+-- | Converts a `HtmlDoc` to a `Doc`.
 instance Printable HtmlDoc where
     pp (HtmlDoc t) = text "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" >-< text "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"  \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">" >-< pp t
 
--- | Converts an 'HtmlTree' to a `Doc`. Special characters are escaped properly
---   by this function (TODO).
+-- | Converts an 'HtmlTree' to a `Doc`. Special characters in text and xml attribute values are escaped properly
+--   by this function.
 instance Printable HtmlTree where
-    pp (Text s) = escapedAll s
-    pp (Elem t attrs []) = closedTag $ text t >|< pp attrs
-      where closedTag = enclose langle (text "/" >|< rangle)
-    pp (Elem t attrs es) = tagOpen >-< content >-< tagClosed
-      where tagOpen = angles (text t >|< pp attrs)
-            tagClosed = enclose (langle >|< text "/") rangle (text t)
-            content = indent ind (pp es)
+    pp = ppNode False
 
--- I'm not really sure what are valid characters in xml names, hence we do not escape them for the time being...
+instance Printable [HtmlTree] where
+    pp = ppNodes False
+
+-- | Converts an attribute association list to a `Doc`. Please note that
+--   the result of passing invalid xml attribute names is not defined.
 instance Printable [(AttrName, AttrVal)] where
     pp [] = empty
     pp ((an, av):as) = besides [space, text an, text "=", value, pp as]
+      -- it seems that the only invalid character in an attribute value is the quote character
       where value = quoted $ escaped (=='\"') av
 
-instance Printable [Node] where
-    pp es = foldl (\a c -> a >|< (pp c)) empty es
+
+-- | Converts a `Node` to a `Doc`. If the first parameter is true,
+--   the result will be a one-line document.
+ppNode _ (Text s) = escapedAll s
+ppNode _ (Elem t attrs []) = closedTag $ text t >|< pp attrs
+    where closedTag = enclose langle (text "/" >|< rangle)
+
+ppNode fOneLine (Elem t attrs es) =
+    if fOneLine then oneLine else oneLine >//< multiLine
+    where oneLine = tagOpen >|< content True >|< tagClosed
+          multiLine = tagOpen >-< content False >-< tagClosed
+          tagOpen = angles (text t >|< pp attrs)
+          tagClosed = enclose (langle >|< text "/") rangle (text t)
+          content o = indent ind (ppNodes o es)
+
+-- | Converts a list of nodes to a `Doc`. If the first paramter is true,
+--   the result will be a one-line document.
+ppNodes fOneLine es = pp' empty es
+    where pp' ac (e@(Text _):es)   = pp' (ac >|< ppNode True e) es
+          pp' ac (e:es) | fOneLine = pp' (ac >|< ppNode True e) es
+          pp' ac (e:es)            = pp' (ac >-< ppNode False e) es
+          pp' ac [] = ac
 
 -- | Returns the given 'Doc' enclosed in quotes.
 quoted :: Doc -> Doc

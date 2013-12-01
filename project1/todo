@@ -5,15 +5,22 @@ MV- ag/Converter decoupling
         create Htmll class    
 
 MV- Names convention for the most common cases (see http://maverick.inria.fr/~Xavier.Decoret/resources/xdkbibtex/bibtex_summary.html for a specification)
+MV- User Key derivation
+MV- correct anchors, solved, has to be checked
+
+  - More example (both succeding and failing)
+  - Doc.pdf needs some more text
+
+
+
+=======
+DONE
+=======
 PH- Field delimiters in the html output:
         Author, Title: '.'
         Editor: 'In: ' .... ', editors'
         ....
         fieldToHtml add suffixes and prefixes, 
         there has to be a way to specifiy seperator. Probably a map Field -> Char, and should have a default of ','
-MV- User Key derivation
-MV- correct anchors, solved, has to be checked
-PH- HTML Indentation can be improved
 
-  - More example (both succeding and failing)
-  - Doc.pdf needs some more text
+PH- HTML Indentation can be improved
