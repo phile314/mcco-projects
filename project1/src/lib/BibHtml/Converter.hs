@@ -7,8 +7,8 @@ import Html.Tree
 import CCO.Feedback
 import CCO.Printing
 import Control.Monad (msum)
-import Data.Char (isUpper)
-import Data.List (intersperse, isPrefixOf)
+import Data.Char (isUpper, isSpace)
+import Data.List (intersperse, intercalate)
 import qualified Data.List as L (last)
 import Data.List.Split (splitOn)
 import Data.Maybe (fromMaybe)
@@ -32,17 +32,17 @@ instance Html BibtexDb where
           toc  = summaryOf db
           table = tableOf db
 
--- | Converts an attribute to a html tree.
+-- | Converts an attribute to a html tree. The value of the field is trimmed.
 fieldToHtml :: Type -> (Field, String) -> HtmlTree
-fieldToHtml Inproceedings (Title, s) = Text s
-fieldToHtml Inproceedings (Booktitle, s) = Elem "em" [] [Text s]
-fieldToHtml _ (Title, s) = Elem "em" [] [Text s]
-fieldToHtml _ (Editor, s) = Text ("In: " ++ s ++ ", editors")
-fieldToHtml _ (Pages, s) = Text ("pages " ++ s)
+fieldToHtml Inproceedings (Title, s) = Text (trim s)
+fieldToHtml Inproceedings (Booktitle, s) = "em" << Text (trim s)
+fieldToHtml _ (Title, s) = "em" << Text (trim s)
+fieldToHtml _ (Editor, s) = Text ("In: " ++ trim s ++ ", editors")
+fieldToHtml _ (Pages, s) = Text ("pages " ++ trim s)
 fieldToHtml _ (Author, s) =
   case names of
     [n] -> Text n
-    _ -> Text (unwords $ intersperse ", " (init names) ++ ["and", L.last names])
+    _ -> Text $ concat (intersperse ", " (init names)) ++ unwords ["and", L.last names]
   where names = map layout (retrieveNames s)
         layout n = unwords [first n, middle n, last n]
 fieldToHtml _ (f, s) = Text s
@@ -50,7 +50,6 @@ fieldToHtml _ (f, s) = Text s
 -- | Retrieves the specific separator required for each 'Field'.
 -- The default separator is comma.
 separatorOf :: Type -> Field -> String
-separatorOf Inproceedings Title = ","
 separatorOf _ Title = "."
 separatorOf _ Pages = "."
 separatorOf _ Author = "."
@@ -101,7 +100,7 @@ data Name = Name { first :: String, middle :: String, last :: String}
 -- | Retrieves first, middle and last names from a string that uses
 -- latex conversion.
 retrieveNames :: String -> [Name]
-retrieveNames = (map getName) . splitNames 
+retrieveNames = map (getName . trim) . splitNames 
   where splitNames = splitOn "and"
 
 -- | Retrieves a single author 'Name' from a string.
@@ -118,7 +117,7 @@ s1 s =
   [left,first] -> 
     -- Simplification: von words are all lowercase
     let (middle, last) = span (not . isCapitalized) (words left)
-        name = Name first (unwords middle) (unwords last) in
+        name = Name (trim first) (unwords middle) (unwords last) in
     if null last then Nothing else Just name
   _            -> Nothing
 
@@ -135,13 +134,11 @@ isCapitalized :: String -> Bool
 isCapitalized [] = False
 isCapitalized (c:_) = isUpper c
 
--- There seems to be no str-replace function in the prelude.
--- There is one in the MissingH library, but this library
--- leads to dependency errors when trying to install on my computer (Philipp).
-
--- | Given a search list and a replacement list, replaces all occurences
---   of the search list with the replacement list in a third list.
+-- | @'replace' old new s@ replaces all the occurences of @old@ with @new@ in @s@.
 replace :: Eq a => [a] -> [a] -> [a] -> [a]
-replace s r i | s `isPrefixOf` i = r ++ (replace s r (drop (length s) i))
-replace s r (i:is) | otherwise   = i:(replace s r is)
-replace _ _ [] = []
+replace old new = intercalate new . splitOn old
+
+-- | Trims the withespace from the start and the end of a string
+trim :: String -> String
+trim = tr . tr
+  where tr = reverse . dropWhile isSpace
