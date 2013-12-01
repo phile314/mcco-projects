@@ -84,7 +84,7 @@ in the tree are dropped.
 
 \subsection{Implementation}
 Building the tree specification is a rather straight forward one-to-one translation
-of the bibtex specification found at (http://www.andy-roberts.net/res/writing/latex/bibentries.pdf).
+of the bibtex specification found at (\url{http://www.andy-roberts.net/res/writing/latex/bibentries.pdf}).
 
 More involved is using the given tree. Basically, all tasks are carried out
 as tree folds/walks. The UUAGC system was chosen to implement this as it allows
@@ -96,6 +96,21 @@ warning and error messages are returned as well.
 
 From the outside, either at least one error message is emitted through the
 Feedback monad or a modified BibtexEntry with the new fields and values.
+
+\subsection{Attribute Grammar Attributes}
+The following attributes are defined for the grammar: \newline
+\begin{tabular}{| l | l | p{12cm} |}
+    \hline
+    Type & Name  & Description \\ \hline
+    Syn & avail  & True when validation passes without errors on a node and it's children. \\ \hline
+    Syn & bib    & The new bibtex fields, only containing fields to be printed in correct order. \\
+    Syn & msgs   & Collected warning and error messages. \\ \hline
+    Syn & reqStr & String to show when a required subtree is missing. \\ \hline
+    Inh & etype  & The type field from the bibtex entry. \\ \hline
+    Inh & fields & The fields from the bibtex entry as (Map Field String). \\ \hline
+    Inh & key    & The key of the bibtex entry. \newline Mainly used to produce more helpful warning/error messages. \\
+    \hline
+\end{tabular}
 
 
 \section{Input/Output Encoding}
