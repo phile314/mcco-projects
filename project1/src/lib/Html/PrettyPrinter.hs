@@ -42,12 +42,11 @@ ppNode _ (Elem t attrs []) = closedTag $ text t >|< pp attrs
     where closedTag = enclose langle (text "/" >|< rangle)
 
 ppNode fOneLine (Elem t attrs es) =
-    if fOneLine then oneLine else oneLine >//< multiLine
-    where oneLine = tagOpen >|< content True >|< tagClosed
-          multiLine = tagOpen >-< content False >-< tagClosed
+    if fOneLine then oneLine else (oneLine >//< multiLine)
+    where oneLine = tagOpen   >|< ppNodes True es >|< tagClosed
+          multiLine = tagOpen >-< ((ppNodes True es) >//< (indent ind (ppNodes False es))) >-< tagClosed
           tagOpen = angles (text t >|< pp attrs)
           tagClosed = enclose (langle >|< text "/") rangle (text t)
-          content o = indent ind (ppNodes o es)
 
 -- | Converts a list of nodes to a `Doc`. If the first paramter is true,
 --   the result will be a one-line document.
