@@ -8,12 +8,16 @@ module BibHtml.Converter (toHtml) where
 import Html.Tree
 import CCO.Feedback
 import CCO.Printing
+import Control.Monad (msum)
+import Data.Char (isUpper)
 import Data.List (intersperse, isPrefixOf)
+import Data.List.Split (splitOn)
+import Data.Maybe (fromMaybe)
 import Bibtex
 import BibHtml.BibtexSpec
 import BibHtml.Spec
-
-
+import Prelude hiding (last)
+import Text.Regex (mkRegex, splitRegex)
 
 instance Html BibtexEntry where
   toHtml (Entry t _ xs) = Elem "span" [] cont
@@ -76,10 +80,56 @@ anchor e@(Entry _ k _) = Elem "a" [("href", '#':k)] [Text key]
   where key = "[" ++ (deriveKey e) ++ "]"
 
 -- | Derives the key shown to the user when referring to an entry, eg "[LO98]".
---TODO derive key correctly
+-- If the author and the year fields are present in the entry the key is 
+-- composed by the initials of the last name of the authors and the last two
+-- digits of the year. Otherwise the first 4 characters of key are used.
 deriveKey :: BibtexEntry -> String
-deriveKey (Entry t k fs) = k
+deriveKey (Entry t k fs) = 
+  case (lookup Author fs, lookup Year fs) of
+    (Just a, Just y) -> initials a ++ last2 y
+    _                -> take 4 k
+  where initials a = concatMap ((take 1) . last) $ retrieveNames a
+        last2 = reverse . take 2 . reverse
 
+-- | Represents the complete name of an author.
+data Name = Name { first :: String, middle :: String, last :: String}
+
+-- | Retrieves first, middle and last names from a string that uses
+-- latex conversion.
+retrieveNames :: String -> [Name]
+retrieveNames = (map getName) . splitNames 
+  where splitNames = splitOn "and"
+
+-- | Retrieves a single author 'Name' from a string.
+-- ('splitNames' is assumed to be already called).
+-- Three names specifications are supported. If all fail
+-- then the given string as last name is returned.
+getName :: String -> Name 
+getName s = fromMaybe (Name "" "" s) (msum [s1 s, s2 s])
+
+-- | First specification strategy: von Last, First
+s1 :: String -> Maybe Name
+s1 s = 
+  case splitRegex  (mkRegex ",") s of
+  [left,first] -> 
+    -- Simplification: von words are all lowercase
+    let (middle, last) = span (not . isCapitalized) (words left)
+        name = Name first (unwords middle) (unwords last) in
+    if null last then Nothing else Just name
+  _            -> Nothing
+
+-- | Second specification strategy: First von Last
+s2 :: String -> Maybe Name
+s2 s = if null last then Nothing else Just name
+  where name = Name (unwords first) (unwords middle) (unwords last)
+        (first, left) = span isCapitalized (words s)
+        (middle, last) = span (not . isCapitalized) left
+
+-- | Checks whether a string starts with a capital letter.
+-- The empty string is considered not capitalazied.
+isCapitalized :: String -> Bool
+isCapitalized [] = False
+isCapitalized (c:_) = isUpper c
 
 -- There seems to be no str-replace function in the prelude.
 -- There is one in the MissingH library, but this library
