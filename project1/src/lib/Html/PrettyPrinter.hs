@@ -22,6 +22,7 @@ instance Printable HtmlDoc where
 instance Printable HtmlTree where
     pp = ppNode False
 
+-- | Converts a list of html tree to a `Doc`.
 instance Printable [HtmlTree] where
     pp = ppNodes False
 
