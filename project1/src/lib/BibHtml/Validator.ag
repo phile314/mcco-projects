@@ -44,22 +44,25 @@ class Validate a where
 
 instance Validate BibtexDb where
   -- | Validates a 'BibtexDb'.
-  validate (BibtexDb db) = dropUnknown db >>= mapM validate >>= return . BibtexDb
+  validate (BibtexDb db) = dropUnknownType db >>= mapM validate >>= return . BibtexDb
 
 instance Validate BibtexEntry where
   -- | Validates a 'BibtexEntry'.
   -- If the validation succeeds the given bitex entry is returned, with
   -- the fields ordered according to the specification for its type.
   -- Unknown fields or conflicting fields will be removed.
-  validate e@(Entry t k _) = messages msgs >> return (Entry t k fs)
-    where fs = getBib res
-          res = walkTree e (spec t)
-          msgs = getMsgs res
+  validate e@(Entry t k fs) = messages msgs >> return (Entry t k fs')
+    where (dropped, valid) = partition isUnknown fs
+          fs' = getBib res
+          res = walkTree (Entry t k valid) (spec t)
+          msgs = map (unknownField . fst) dropped ++ getMsgs res
+          isUnknown ((UnknownField _), _) = True
+          isUnknown _                     = False
 
 -- | Drops the 'UnknownType' entries in the given list, producing a warning 
 -- message for each. The other entries are returned unchanged in the original order.
-dropUnknown :: [BibtexEntry] -> Feedback [BibtexEntry]
-dropUnknown es = mapM_ (message . unknown) dropped >> return valid
+dropUnknownType :: [BibtexEntry] -> Feedback [BibtexEntry]
+dropUnknownType es = mapM_ (message . unknownType) dropped >> return valid
    where (dropped, valid) = partition isUnknown es
          isUnknown (Entry (UnknownType _) _ _) = True
          isUnknown _                           = False 
@@ -124,14 +127,22 @@ getAvail = avail_Syn_SpecTree
 -- Error and warning messages
 -------------------------------------------------------------------------------
 
--- | Returns a 'Warning' message for an unknown type.
+-- | Returns a 'Warning' message for an unknown bibtex type.
 -- Fails for type different from 'UnknownType'.
-unknown :: BibtexEntry -> Message
-unknown (Entry (UnknownType s) k _) = Warning 1 (text w)
-  where w = unwords ["Ignoring entry", k, ": the type", s,
-                     "is not supported"]
-unknown (Entry t _ _) = error e
-  where e = unwords ["Validator.unknown:", show t, "is not Unknown"]
+unknownType :: BibtexEntry -> Message
+unknownType (Entry (UnknownType s) k _) = Warning 1 (text w)
+  where w = unwords ["Ignoring entry", k, ": the type", s, "is not supported"]
+unknownType (Entry t _ _) = error e
+  where e = unwords ["Validator.unknownType:", show t, "is not UnknownType"]
+
+-- | Returns a 'Warning' message for an unknown field.
+-- Fails for 'Field' different from 'UnknownField'.
+unknownField :: Field -> Message
+unknownField (UnknownField f) = Warning 1 (text w)
+  where w = unwords ["Ignoring field", f, "(not supported)"]
+unknownField f = error e
+  where e = unwords ["Validator.unknownField:", show f, "is not UnknownField"]
+                
 
 -- | Returns a 'Warning' message about two elements being both present.
 mutuallyExclusive :: String -> String -> Key -> Message
