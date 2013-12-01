@@ -19,11 +19,11 @@ Building:
 $ make
 
 Running the programs:
-$ cat <bibtex file> | ./dist/build/PROG/PROG
+$ cat <bibtex file> | ./dist/build/PROG/PROG | .....
 
 where PROG may be one of "parse-bib", "bib2html", "pp-html"
 
-All options accept the "--sane" parameter. When given, show/read is used
+All progams accept the "--sane" parameter. When given, show/read is used
 instead of the cco ATerm parser/printer. This is required for unicode support
 due to what seems to be a bug in the cco library.
 
@@ -53,7 +53,7 @@ Features:
   - Error messages generation
   - Warning messages generation for conflicting and unknown fields, unknown entry types, which are then ignored
   - Accents in field (latex special syntax for unicode character such as \{"o})
-  - Generation of convinient reference names ([LO93])
+  - Generation of convenient reference names ([LO93])
   - Formatting rules for names
   - Unicode support
 
