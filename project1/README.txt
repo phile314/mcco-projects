@@ -47,7 +47,10 @@ if not all other examples require the "--sane" option.
 DOCUMENTATION
 ==========
 
-See Doc/Doc.pdf for the complete documentation. The features section of the pdf is copied here as requested on the course website.
+See Doc/Doc.pdf for the complete documentation.
+See also the haddock documentation.
+
+The features section of the pdf is copied here as requested on the course website.
 
 Features:
   - Error messages generation

@@ -33,18 +33,24 @@
 
 \subsection{Implemented}
 \begin{itemize}
-    \item Correct validation and printing of required, optional and "and/or" fields.
-    \item Special Characters, eg "-\--" becomes "--" and support for \{\textbackslash"o\} style escapes
+    \item Error messages generation for conflicting/missing fields
+    \item Warning messages generation for conflicting and unknown fields, unknown entry types, which are then ignored
+    \item Accents in field (latex special syntax for unicode character such as \textbackslash\{"o\})
+    \item Generation of convenient reference names ([LO93])
+    \item Formatting rules for names
+    \item Support for long dashes.
     \item Different rendering for different fields, e.g. the editor field is prefixed with "In:" and followed by ", editors".
     \item Work-around for what seems to be a parse/print bug in the cco library when using unicode, see \ref{sec:ioenc}.
 \end{itemize}
 
 \subsection{Not Implemented}
 \begin{itemize}
+
     \item Lexing/Parsing values enclosed by brackets, "\{....\}".
-    \item No warning for duplicate bibtex entry keys (the one after the type, eg "@type\{MYKEY,...")
+    \item Warnings for duplicate bibtex entry keys
     \item The user-visible key for entry indexing (eg "[LO98]") could be non-unique if the author name and year are similar.
     \item The less common entry types print the fields in the wrong order.
+    \item Some escaping rules are missing.
 \end{itemize}
 
 
