@@ -52,7 +52,7 @@ formatNames s =
     [n] -> n
     _ -> concat (intersperse ", " (init names)) ++ " and " ++ L.last names
 
-  -- | Retrieves the specific separator required for each 'Field'.
+-- | Retrieves the specific separator required for each 'Field'.
 -- The default separator is comma.
 separatorOf :: Type -> Field -> String
 separatorOf _ Title = "."
