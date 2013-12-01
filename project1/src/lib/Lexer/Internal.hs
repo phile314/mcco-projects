@@ -66,4 +66,4 @@ convert s = fromMaybe s $ lookup s conversionRules
 -- | An association list that contains the conversion rules from latex special syntax to 
 -- utf8 characters.
 conversionRules :: [(String, String)]
-conversionRules = [("\\`e", "è"), ("\\\"o", "ö")]
+conversionRules = [("\\`e", "è"), ("\\\"a", "ä"), ("\\\"o", "ö"), ("\\\"u", "ü")]
