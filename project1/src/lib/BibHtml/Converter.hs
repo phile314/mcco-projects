@@ -42,7 +42,7 @@ fieldToHtml _ (Pages, s) = Text ("pages " ++ trim s)
 fieldToHtml _ (Author, s) =
   case names of
     [n] -> Text n
-    _ -> Text $ concat (intersperse ", " (init names)) ++ unwords ["and", L.last names]
+    _ -> Text $ concat (intersperse ", " (init names)) ++ " and " ++ L.last names
   where names = map layout (retrieveNames s)
         layout n = unwords [first n, middle n, last n]
 fieldToHtml _ (f, s) = Text s
