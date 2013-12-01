@@ -36,9 +36,11 @@ pField =  (choice $ map pConstructor fields) <|> pUnknown fields UnknownField
 pType :: TokenParser Type
 pType = (choice $ map pConstructor types) <|> pUnknown types UnknownType
 
--- | Parses an identifier which is not a known constructor. Useful to catch all unknown identifiers.
+-- | Parses an identifier which is not a known constructor. 
+-- Useful to catch all unknown identifiers.
 pUnknown :: (Show a) => [a] -> (String -> a) -> TokenParser a
-pUnknown others ca = (\(Identifier s) -> ca s) <$> satisfy (\t -> isIdentifier t && all (not . (match t)) others)
+pUnknown others ca = (\(Identifier s) -> ca s) <$> satisfy notOthers
+  where notOthers t = isIdentifier t && all (not . (match t)) others
 
 -- | Parses an identifier, whose showable constructor is given.
 pConstructor :: Show a => a -> TokenParser a
@@ -65,9 +67,6 @@ pAt = pToken AtSign
 
 pEq :: TokenParser Token
 pEq = pToken EqualSign
--- This module defines a lexer for a Bibtex database
-
-
 
 -------------------------------------------------------------------------------
 -- Utility Parser

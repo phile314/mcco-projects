@@ -5,7 +5,8 @@ where
 
 import System.Environment
 
--- | Returns whether we should use show/read serialization instead of the cco parser/printer functions.
+-- | Returns whether we should use show/read serialization 
+-- instead of the cco parser/printer functions.
 useSaneSerialize :: IO Bool
 useSaneSerialize = do
     s <- getArgs
