@@ -1,4 +1,5 @@
-\documentclass[12pt, a4paper, twoside, titlepage]{article}
+\documentclass[12pt, a4paper, twoside]{article}
+\usepackage{hyperref}
 % font size could be 10pt (default), 11pt or 12 pt
 % paper size coulde be letterpaper (default), legalpaper, executivepaper,
 % a4paper, a5paper or b5paper
@@ -18,32 +19,16 @@
 %   
 \title{MMCO Project A}
 \author{Marco Vassena  \\
-    STDNR  \\
+    4110161 \\
     \and 
     Philipp Hausmann \\
     4003373 \\
     }
 
 \date{\today} 
-% \date{\today} date coulde be today 
-% \date{25.12.00} or be a certain date
-% \date{ } or there is no date 
-
-\usepackage{hyperref}
-
 \begin{document}
 
-% Hint: \title{what ever}, \author{who care} and \date{when ever} could stand 
-% before or after the \begin{document} command 
-% BUT the \maketitle command MUST come AFTER the \begin{document} command! 
 \maketitle
-
-
-
-%\tableofcontents % create a table of contens 
-
-
-
 \section{Features}
 
 \subsection{Implemented}
@@ -64,6 +49,15 @@
 
 TODO we should say why we haven't implement the brackts stuff
 this also goes for other (important) unimplemented features
+
+\section{Lexing}
+The lexer produces a stream of \texttt{Token} that are later parsed by the \texttt{TokenParser}. 
+The tokens produced are: commas, brackets, equal signs, identifiers and values. Identifiers denotes entry types, fields names and keys and are lexed as a non-null sequence of alphanumeric characters starting with a letter. They could actually be extended to support some few other special symbols.
+Values represent the right hand side of a field declaration.
+They are either a number or a string in quotes.
+During the lexing phase white space and comments are disregarded. In addition latex special syntax (e.g. \{\textbackslash''o\}) is detected and directly mapped to the proper unicode character. The list of supported escaping rules is not complete and those unsupported rules
+will be left unchanged.
+As a final remark the bracket syntax for specifying values within a bibtex entry is not supported. In order to provide this feature the lexer should be context sensitive, otherwise it would be impossible to disambiguate a value from a whole bibtex entry. Since the \texttt{CCO} library, that we were required to use, does not provide context sensitive lexing, we could not implement this feature. A possible workaround would be to tokenize the right hand side and then recompose the value during the parsing phase converting back the tokens between brackets to strings.  Although this could be possible with a context free lexer, we decided not to follow this approach because it is muddled and unnatural.
 
 \section{Bibtex Entry Validation}
 A bibtex entry basically consists of a (hopefully) unique key, a type and
