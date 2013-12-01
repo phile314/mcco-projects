@@ -50,13 +50,16 @@
 \begin{itemize}
     \item Basic escape codes
     \item Correct validation and printing of required, optional and "and/or" fields.
-    \item Different rendering for different fields, e.g. "--" becomes a long dash for pages. TODO
+    \item Special Characters, eg "-\--" becomes "--" and support for \{\textbackslash"o\} style escapes
+    \item Different rendering for different fields, e.g. the editor field is prefixed with "In:" and followed by ", editors". TODO
     \item what else?
 \end{itemize}
 
 \subsection{Not Implemented}
 \begin{itemize}
     \item Lexing/Parsing values enclosed by brackets, "\{....\}".
+    \item No warning for duplicate bibtex entry keys
+    \item The user-visible key for entry indexing (eg "[LO98]") could be non-unique if the author name and year are similar.
 \end{itemize}
 
 TODO we should say why we haven't implement the brackts stuff
@@ -72,7 +75,7 @@ this has not yet been tested.
 All programs assume that unicode characters in an ATerm value
 are (de-)serialized correctly by the CCO library. As this
 is not the case, Unicode support is broken. To work around
-this problem, the --sane option can be passed to all programs.
+this problem, the -\--sane option can be passed to all programs.
 This option causes the use of the prelude show/read functions
 instead of the cco printer/parser functions.
 
@@ -91,10 +94,13 @@ errors it makes are:
 \end{enumerate}
 
 \subsection{Html Output}
-The pp-html program assumes that unicode strings are correctly printed
-by the cco component library. This seems to be the case on a Linux Fedora 19
-installation.
-As unicode is the only sensible approach nowadays to handle special characters,
-it appears unwise to do any unicode character escaping before printing a string.
+The pp-html program assumes that unicode strings are correctly printed by the cco component library. This seems to be the case on a Linux Fedora 19
+installation. It is assumed that the output is stored in utf-8, as this is the most popular and sensible encoding for html documents nowadays.
 
+Please note that the cco library by default does not produce a unicode byte order mark (BOM, \url{http://en.wikipedia.org/wiki/Byte_order_mark}).
+A byte order mark is not mandatory for utf-8 encoded files, but at least firefox uses the wrong encoding if no byte order mark is
+present when opening files locally with the "file://" scheme. See for example \url{https://bugzilla.mozilla.org/show_bug.cgi?id=760050}.
+As a workaround the encoding can be corrected manually in most browsers in the menu.
+
+As html documents are normally intended to be served over the http(s) protocol, this behaviour is not considered to be a bug in our program.
 \end{document}
