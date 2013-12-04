@@ -1,2 +1,25 @@
 -- | This module defines the data types used to encode types for t-diagrams.
 -- and an attribute grammar to type check arbitrary complex t-diagrams.
+
+-- | Represents the type of a t-diagram.
+data Type 
+  -- | The type of a program t-diagram. 'language' is the implementation language.
+  | ProgramT    language :: String
+  -- | The type of platform t-diagram. 
+  -- 'language' is the implementation language that can be directly executed
+  | PlatformT   language :: String
+  -- | The type of an interpreter t-diagram.
+  -- 'language' is the implementation language of the interpreter,
+  -- 'target' is the implementation,
+  -- 'language' of the programs that can be interpreted.
+  | Interpreter target :: String 
+                language :: String
+  -- | The typeof a compiler t-diagram.
+  -- 'from' is the source language, 'to' is the target language,
+  -- 'language' is the implementation language of the compiler.
+  | Compiler    from :: String 
+                to :: String
+                language :: String
+
+  -- | A dummy type used for t-diagram that are completely executed.
+  | Unit
