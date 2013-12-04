@@ -1,0 +1,16 @@
+name:                t-diagrams
+version:             0.1.0.0
+synopsis:            A DSL for T-Diagrams
+description:         The second project for the Compiler Construction course (2013) at Uthrecht University.
+license:             GPL-3
+license-file:        LICENSE
+author:              Marco Vassena, Philipp Hausmann
+maintainer:          <m.vassena@students.uu.nl>, <philipp.hausmann@314.ch>
+category:            Language
+build-type:          Simple
+cabal-version:       >=1.8
+
+library
+  build-depends:    base ==4.6.*
+  exposed-modules:  TypeChecker
+  hs-source-dirs:   src

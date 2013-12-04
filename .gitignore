@@ -13,3 +13,5 @@ cabal-dev
 *.dvi
 *.log
 *.pdf
+*.out
+*.gz

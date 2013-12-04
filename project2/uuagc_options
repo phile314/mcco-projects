@@ -1,0 +1,2 @@
+file : "src/TypeChecker.ag"
+options : data, module "TypeChecker", haskellsyntax

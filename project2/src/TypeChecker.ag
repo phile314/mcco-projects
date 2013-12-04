@@ -1,0 +1,2 @@
+-- | This module defines the data types used to encode types for t-diagrams.
+-- and an attribute grammar to type check arbitrary complex t-diagrams.
