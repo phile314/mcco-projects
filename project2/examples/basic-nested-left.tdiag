@@ -1,0 +1,13 @@
+execute
+    execute
+        execute
+            program hello in Haskell
+        on
+            interpreter hugs for Haskell in Python
+        end
+    on
+        interpreter CPython for Python in amd64-linux
+    end
+on
+    platform amd64-linux
+end

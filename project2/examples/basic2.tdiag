@@ -1,0 +1,4 @@
+execute
+    program hello in Haskell
+on platform i686-windows
+end

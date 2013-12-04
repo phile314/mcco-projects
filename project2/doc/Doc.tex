@@ -1,0 +1,94 @@
+\documentclass[12pt, a4paper, twoside]{article}
+\usepackage{hyperref}
+\usepackage{fullpage}
+\usepackage{bussproofs}
+% font size could be 10pt (default), 11pt or 12 pt
+% paper size coulde be letterpaper (default), legalpaper, executivepaper,
+% a4paper, a5paper or b5paper
+% side coulde be oneside (default) or twoside 
+% columns coulde be onecolumn (default) or twocolumn
+% graphics coulde be final (default) or draft 
+%
+% titlepage coulde be notitlepage (default) or titlepage which 
+% makes an extra page for title 
+% 
+% paper alignment coulde be portrait (default) or landscape 
+%
+% equations coulde be 
+%   default number of the equation on the rigth and equation centered 
+%   leqno number on the left and equation centered 
+%   fleqn number on the rigth and  equation on the left side
+%   
+\title{MMCO Project A}
+\author{Marco Vassena  \\
+    4110161 \\
+    \and
+    Philipp Hausmann \\
+    4003373 \\
+    }
+
+\date{\today}
+
+\newcommand{\sproof}{
+  \scriptsize
+  \begin{center}
+  \begin{prooftree}
+  \def\defaultHypSeparation{\hskip .1in}
+% whats that doing? ->  \def\fCenter{\models}
+}
+
+\newcommand{\eproof}{
+  \end{prooftree}
+  \end{center}
+  \normalsize
+}
+
+\newcommand{\bcase}[2]{
+  \sproof
+  \RightLabel{#2}
+  \AxiomC{}
+  \UnaryInfC{#1}
+  \eproof
+}
+
+\begin{document}
+\maketitle
+
+\section{Formal Specification}
+
+\subsection{Basic values}
+\bcase{Program : Program $l_m$ $()$}{program}
+\bcase{Platform : Platform $l_m$}{platform}
+\bcase{Interpreter : Program $l_m$ (Interpreter $l_i$)}{interpreter}
+\bcase{Compiler : Program $l_m$ (Compiler $l_i$ $l_o$)}{compiler}
+
+\subsection{Compositional Cases}
+\sproof
+\RightLabel{execute}
+\AxiomC{p : Program $l$ $r$}
+\AxiomC{d : Platform $l$}
+\BinaryInfC{Execute p d : $r$}
+\eproof
+
+\sproof
+\RightLabel{compile}
+\AxiomC{d1 : Program $l_i$ $r$}
+\AxiomC{d2 : Compiler $l_i$ $l_o$ $l_m$}
+\BinaryInfC{Compile d1 d2 : Program $l_o$ $r$}
+\eproof
+
+\subsection{Coercion}
+\sproof
+\RightLabel{inter-plat}
+\AxiomC{i : Interpreter $l_i$}
+\UnaryInfC{i : Platform $l_i$}
+\eproof
+
+Should we allow sloppy execute statements where the platform underlying the interpreter appears out of thin air?
+\sproof
+\RightLabel{p-inter-plat}
+\AxiomC{i : Program $l_m$ (Interpreter $l_i$)}
+\UnaryInfC{i : Platform $l_i$}
+\eproof
+
+\end{document}

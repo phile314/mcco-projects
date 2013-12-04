@@ -1,6 +1,7 @@
 ====
 TODO
 ====
+    - We should remove t-diagrams from git again, doesn't belong there (i know, was my idea in the first place....)
 
 PH  - Translate formal specification to latex
 MV  - Type data type, AG type attribute & semantics
