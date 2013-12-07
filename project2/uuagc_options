@@ -1,5 +1,5 @@
 file : "src/Type/AG.ag"
-options : data, haskellsyntax
+options : haskellsyntax
 
 file : "src/CCO/Diag/AG.ag"
 options : data, semfuns, catas, wrappers, signatures, haskellsyntax

@@ -1,5 +1,6 @@
 -- | Attribute grammar for type checking t-diagrams
 
-module {Type.AG}{}{}
+module {Type.AG}{}{
+import Type.Internal
+}
 
-include "AG/Base.ag"

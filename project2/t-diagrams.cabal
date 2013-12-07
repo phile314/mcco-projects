@@ -18,7 +18,7 @@ extra-source-files:    Makefile, src/CCO/Diag/AG.ag,
 executable tc-tdiag
   main-is:          TcTDiag.hs
   build-depends:    base ==4.6.*
-  other-modules:    Type, Type.AG
+  other-modules:    Type, Type.AG, Type.Internal
   hs-source-dirs:   src
 
 executable parse-tdiag

@@ -1,8 +1,7 @@
--- | This module defines the data types used to encode types for t-diagrams.
--- and an attribute grammar to type check arbitrary complex t-diagrams.
+-- | This module defines the data type used to encode t-diagrams types
 
-{
--- | Represents the type of a t-diagram.
+module Type.Internal where
+
 data Type 
   -- | The type of a program t-diagram. 
   = ProgramT { language :: String } -- ^ the implementation language
@@ -17,4 +16,4 @@ data Type
                language :: String} -- ^ the implementation language of the compiler.
   -- | A dummy type used for t-diagram that are completely executed.
   | Unit
-}
+
