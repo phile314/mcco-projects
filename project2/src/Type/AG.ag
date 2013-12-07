@@ -1,0 +1,5 @@
+-- | Attribute grammar for type checking t-diagrams
+
+module {Type.AG}{}{}
+
+include "AG/Base.ag"

@@ -15,9 +15,10 @@ extra-source-files:    Makefile, src/CCO/Diag/AG.ag,
                        src/CCO/Picture/AG/Base.ag, 
                        src/CCO/Picture/AG/Printing.ag
 
-library
+executable tc-tdiag
+  main-is:          TcTDiag.hs
   build-depends:    base ==4.6.*
-  exposed-modules:  TypeChecker
+  other-modules:    Type, Type.AG
   hs-source-dirs:   src
 
 executable parse-tdiag
