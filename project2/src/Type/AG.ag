@@ -14,3 +14,38 @@ attr Diag syn pos :: {SourcePos}
 sem Diag
   | Diag d.pos = @pos
          lhs.pos = @pos
+
+-- | The type of a t-diagram
+attr Diag_ Diag
+  syn ty :: {Type}
+
+sem Diag_
+  | Program  lhs.ty = ProgramT @l UnitT
+  | Platform lhs.ty = PlatformT @m
+  | Interpreter lhs.ty = ProgramT @m (InterpreterT @l)
+  | Compiler lhs.ty = ProgramT @m (CompilerT @l1 @l2)
+  | Execute lhs.ty = {
+      if @d1.ty `matchLanguage` @d2.ty
+        then result @d1.ty
+        else error "languages do not match"
+  }
+  | Compile lhs.ty = {
+      if @d1.ty `matchCompiler` @d2.ty
+        then ProgramT (to @d2.ty) (result @d1.ty)
+        else error "language 'from' does not match"
+  }
+
+{
+-- | @'matchLanguage' d1 d2@ is true if @d1@ is a 'ProgramT' implemented in some language, which
+-- is the accepted language of the 'InterpreterT' or 'PlatformT' @d2@, false otherwise.
+matchLanguage :: Type -> Type -> Bool
+matchLanguage (ProgramT l _) (PlatformT l') = l == l'
+matchLanguage (ProgramT l _) (InterpreterT l') = l == l'
+matchLanguage _ _ = False
+
+-- | @'matchCompiler' d1 d2@ is true if @d1@ is a 'ProgramT' implemented in some language, which
+-- is the input language of the 'CompilerT' @d2@.
+matchCompiler :: Type -> Type -> Bool
+matchCompiler (ProgramT l _) (CompilerT l1 _) = l == l1
+matchCompiler _ _ = False
+}
