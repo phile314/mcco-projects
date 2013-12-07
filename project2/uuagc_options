@@ -1,2 +1,8 @@
 file : "src/TypeChecker.ag"
 options : data, module "TypeChecker", haskellsyntax
+
+file : "src/CCO/Diag/AG.ag"
+options : data, semfuns, catas, wrappers, signatures, haskellsyntax
+
+file : "src/CCO/Picture/AG.ag"
+options : data, semfuns, catas, wrappers, signatures, haskellsyntax
