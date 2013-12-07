@@ -13,12 +13,12 @@ cabal-version:       >=1.8
 extra-source-files:    Makefile, src/CCO/Diag/AG.ag,
                        src/CCO/Diag/AG/Base.ag, src/CCO/Picture/AG.ag,
                        src/CCO/Picture/AG/Base.ag, 
-                       src/CCO/Picture/AG/Printing.ag
+                       src/CCO/Picture/AG/Printing.ag, src/Type/AG.ag
 
 executable tc-tdiag
   main-is:          TcTDiag.hs
-  build-depends:    base ==4.6.*
-  other-modules:    Type, Type.AG, Type.Internal
+  build-depends:    base ==4.6.*, cco >= 0.0.4
+  other-modules:    Type, Type.AG, Type.Internal, CCO.Diag
   hs-source-dirs:   src
 
 executable parse-tdiag

@@ -2,5 +2,15 @@
 
 module {Type.AG}{}{
 import Type.Internal
+import CCO.Diag (Diag(..), Diag_(..))
 }
 
+include "../CCO/Diag/AG.ag"
+
+-- | Makes available the position in order for error messages.
+attr Diag_ inh pos :: {SourcePos}
+attr Diag syn pos :: {SourcePos}
+
+sem Diag
+  | Diag d.pos = @pos
+         lhs.pos = @pos
