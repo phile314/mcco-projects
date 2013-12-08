@@ -15,4 +15,4 @@ data Type
                 to :: String } -- ^ the target language,
   -- | A dummy type used for t-diagram that are completely executed.
   | UnitT
-
+  deriving (Eq, Show)

@@ -5,4 +5,4 @@ file : "src/CCO/Picture/AG.ag"
 options : data, semfuns, catas, wrappers, signatures, haskellsyntax
 
 file : "src/Type/AG.ag"
-options : haskellsyntax
+options : haskellsyntax, semfuns, catas, signatures, wrappers

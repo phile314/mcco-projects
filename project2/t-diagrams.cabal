@@ -33,3 +33,10 @@ executable pp-picture
   build-depends:       base, cco >= 0.0.4
   other-modules:       CCO.Picture, CCO.Picture.AG
   hs-source-dirs:      src
+
+test-suite type-check
+  type:               exitcode-stdio-1.0
+  main-is:            TypeCheckTest.hs
+  build-depends:      base, QuickCheck ==2.6.*, cco >= 0.0.4
+  other-modules:      Utility, CCO.Diag, Type.AG, Type.Internal
+  hs-source-dirs:     testsuite, src

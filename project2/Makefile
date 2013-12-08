@@ -1,4 +1,4 @@
-CABAL-CONFIGURE-FLAGS := --user
+CABAL-CONFIGURE-FLAGS := --user --enable-tests
 CABAL-BUILD-FLAGS     :=
 
 all : haskell
@@ -16,5 +16,8 @@ src/Type/AG.hs : src/Type/Ag.ag
 haskell : src/CCO/Diag/AG.hs src/CCO/Picture/AG.hs
 	runhaskell Setup.hs configure $(CABAL-CONFIGURE-FLAGS)
 	runhaskell Setup.hs build $(CABAL-BUILD-FLAGS)
+
+test : haskell
+	runhaskell Setup.hs test
 
 .PHONY : haskell

@@ -13,6 +13,7 @@ type Ident = String
 {-# LINE 14 "src/CCO/Diag/AG.hs" #-}
 -- Diag --------------------------------------------------------
 data Diag = Diag (SourcePos) (Diag_)
+          deriving ( Show)
 -- cata
 sem_Diag :: Diag ->
             T_Diag
@@ -41,6 +42,7 @@ data Diag_ = Program (Ident) (Ident)
            | Compiler (Ident) (Ident) (Ident) (Ident)
            | Execute (Diag) (Diag)
            | Compile (Diag) (Diag)
+           deriving ( Show)
 -- cata
 sem_Diag_ :: Diag_ ->
              T_Diag_
