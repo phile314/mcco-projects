@@ -64,10 +64,17 @@
 
 \subsection{Compositional Cases}
 \sproof
-\RightLabel{execute}
+\RightLabel{execute-plat}
 \AxiomC{p : Program $l$ $r$}
 \AxiomC{d : Platform $l$}
-\BinaryInfC{Execute p d : $r$}
+\BinaryInfC{Execute p d : ()}
+\eproof
+
+\sproof
+\RightLabel{execute-intp}
+\AxiomC{p : Program $l_i$ $r$}
+\AxiomC{i : Program $l_m$ (Interpreter $l_i$)}
+\BinaryInfC{Execute p i : Program $l_m$ $r$}
 \eproof
 
 \sproof
@@ -77,7 +84,12 @@
 \BinaryInfC{Compile d1 d2 : Program $l_o$ $r$}
 \eproof
 
+What is the top-level type we expect? I assume () and/or Program ... .
+Should partial programs be allowed, e.g. missing platforms? Should the
+missing parts still be drawn if they could be inferred automatically?
+
 \subsection{Coercion}
+do we really need coercion anymore??
 \sproof
 \RightLabel{inter-plat}
 \AxiomC{i : Interpreter $l_i$}
