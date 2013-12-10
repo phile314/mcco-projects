@@ -88,19 +88,4 @@ What is the top-level type we expect? I assume () and/or Program ... .
 Should partial programs be allowed, e.g. missing platforms? Should the
 missing parts still be drawn if they could be inferred automatically?
 
-\subsection{Coercion}
-do we really need coercion anymore??
-\sproof
-\RightLabel{inter-plat}
-\AxiomC{i : Interpreter $l_i$}
-\UnaryInfC{i : Platform $l_i$}
-\eproof
-
-Should we allow sloppy execute statements where the platform underlying the interpreter appears out of thin air?
-\sproof
-\RightLabel{p-inter-plat}
-\AxiomC{i : Program $l_m$ (Interpreter $l_i$)}
-\UnaryInfC{i : Platform $l_i$}
-\eproof
-
 \end{document}
