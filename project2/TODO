@@ -1,13 +1,17 @@
 ====
 TODO
 ====
-    - We should remove t-diagrams from git again, doesn't belong there (i know, was my idea in the first place....)
-
 PH  - Translate formal specification to latex
-MV  - Type data type, AG type attribute & semantics
+MV  - Sync AG with specification
+    - Use type T as returning type for errors
+    - Get rid of coercion, use specific type rules
 
     - AST to latex transformation
     - Example files
+    - Proof tree for rules
+        One succeding
+        One failing
+    - Fix Makefile-cabal-uuagc building thing
 
     - variables, if we have time
 
