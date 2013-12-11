@@ -1,7 +1,9 @@
 import CCO.Component  (Component, component, printer, ioWrap)
 import CCO.Picture    (Picture)
-import CCO.Tree       (ATerm, Tree (toTree), parser)
-import Control.Arrow  ((>>>))
+import CCO.Tree       (ATerm, Tree (toTree, fromTree), parser)
+import CCO.Diag       (Diag)
+import Control.Arrow  ((>>>), arr)
+import Diag2Picture
 
-main = undefined
---  ioWrap (parser >>> (component toTree :: Component ATerm Diag_) >>> printer)
+main =
+  ioWrap (parser >>> (component toTree :: Component ATerm Diag) >>> arr toPicture >>> arr fromTree >>> printer)

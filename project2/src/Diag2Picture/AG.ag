@@ -1,0 +1,57 @@
+-- | Attribute grammar for type checking t-diagrams
+
+module {Diag2Picture.AG}{}{
+import CCO.Diag (Diag(..), Diag_(..))
+import CCO.Picture
+}
+
+{
+type Vec2 = (Double, Double)
+type Size = Vec2
+}
+
+include "../CCO/Diag/AG.ag"
+
+-- | Makes available the position in order for error messages.
+attr Diag_ inh pos :: {SourcePos}
+attr Diag syn pos :: {SourcePos}
+
+sem Diag
+  | Diag d.pos = @pos
+         lhs.pos = @pos
+
+-- | The type of a t-diagram.
+-- The type returned is correct only if no error massage is raised.
+attr Diag_ Diag
+  syn pict :: {[Command]}
+  syn size :: {Size}
+
+sem Diag_
+  | Program  (lhs.size, lhs.pict) = mkProg @l @p
+{-  | Platform lhs.ty = PlatformT @m
+  | Interpreter lhs.ty = ProgramT @m (InterpreterT @l)
+  | Compiler lhs.ty = ProgramT @m (CompilerT @l1 @l2)
+  | Execute lhs.ty = result @d1.ty
+  | Compile lhs.ty = ProgramT ((to . result) @d2.ty) (result @d1.ty)
+-}
+
+{
+
+
+translate :: Vec2 -> [Command] -> [Command]
+translate (dx, dy) cs = map f cs
+  where f (Put (x, y) a) = Put (x + dx, y + dy) a
+translate' d (a, cs) = (a, translate d cs)
+
+mkProg :: String -> String -> (Size, [Command])
+mkProg l n = ((65, 30),
+    [ Put (7.5, 0)      (Line (1,0)  50)
+    , Put (7.5, 0)      (Line (0,1)  15)
+    , Put (7.5, 15)     (Line (-1,2) 7.5)
+    , Put (57.5, 15)    (Line (1,2)  7.5)
+    , Put (57.5, 0)     (Line (0,1)  15)
+    , Put (0, 30)       (Line (1,0)  65)
+    , Put (7.5, 15)     (Makebox (50, 15) n)
+    , Put (7.5, 0)      (Makebox (50, 15) l)])
+
+}
