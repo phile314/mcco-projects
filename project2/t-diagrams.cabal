@@ -25,18 +25,25 @@ extra-source-files:    Makefile, src/CCO/Diag/AG.ag,
                        src/CCO/Picture/AG/Base.ag, 
                        src/CCO/Picture/AG/Printing.ag, src/Type/AG.ag
 
-executable tc-tdiag
-  main-is:          TcTDiag.hs
-  build-depends:    base >=4.5, cco >= 0.0.4
-  other-modules:    Type, Type.AG, Type.Internal, CCO.Diag, CCO.Diag.AG
-  hs-source-dirs:   src
-
 executable parse-tdiag
   main-is:             ParseTDiag.hs
   build-depends:       base, cco >= 0.0.4
   other-modules:       CCO.Diag, CCO.Diag.AG, CCO.Diag.Base, CCO.Diag.Lexer,
                        CCO.Diag.Parser
   hs-source-dirs:      src
+
+executable tc-tdiag
+  main-is:          TcTDiag.hs
+  build-depends:    base >=4.5, cco >= 0.0.4
+  other-modules:    Type, Type.AG, Type.Internal, CCO.Diag, CCO.Diag.AG
+  hs-source-dirs:   src
+
+executable tdiag2picture
+  main-is:          TDiag2Picture.hs
+  build-depends:    base >=4.5, cco >= 0.0.4
+  other-modules:    CCO.Diag, CCO.Picture, CCO.Picture.AG
+  hs-source-dirs:   src
+
 
 executable pp-picture
   main-is:             PpPicture.hs
