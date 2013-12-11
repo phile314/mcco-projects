@@ -7,8 +7,18 @@ license-file:        LICENSE
 author:              Marco Vassena, Philipp Hausmann
 maintainer:          <m.vassena@students.uu.nl>, <philipp.hausmann@314.ch>
 category:            Language
-build-type:          Simple
+build-type:          Custom
 cabal-version:       >=1.8
+
+-- cabal/uuagc workaround --
+--
+-- using cabal 1.14, the preprocessed uuagc file is put into the ./dist/build/ directory when
+-- building test cases instead of the proper ./dist/build/MY_TEST_CASE/...
+-- This leads to build errors because ghc then cannot find the file. To work around this
+-- bug, the -idist option is passed.
+-- This bug is not triggered with cabal 1.16.0.2, but for the time being we also want to
+-- be able to compile with cabal 1.14.
+
 
 extra-source-files:    Makefile, src/CCO/Diag/AG.ag,
                        src/CCO/Diag/AG/Base.ag, src/CCO/Picture/AG.ag,
@@ -17,8 +27,8 @@ extra-source-files:    Makefile, src/CCO/Diag/AG.ag,
 
 executable tc-tdiag
   main-is:          TcTDiag.hs
-  build-depends:    base ==4.6.*, cco >= 0.0.4
-  other-modules:    Type, Type.AG, Type.Internal, CCO.Diag
+  build-depends:    base >=4.5, cco >= 0.0.4
+  other-modules:    Type, Type.AG, Type.Internal, CCO.Diag, CCO.Diag.AG
   hs-source-dirs:   src
 
 executable parse-tdiag
@@ -38,5 +48,6 @@ test-suite type-check
   type:               exitcode-stdio-1.0
   main-is:            TypeCheckTest.hs
   build-depends:      base, QuickCheck ==2.6.*, cco >= 0.0.4
-  other-modules:      Utility, CCO.Diag, Type.AG, Type.Internal
+  other-modules:      Utility, CCO.Diag, CCO.Diag.AG, Type.AG, Type.Internal
   hs-source-dirs:     testsuite, src
+  ghc-options:        -idist/build
