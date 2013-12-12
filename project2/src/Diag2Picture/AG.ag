@@ -27,11 +27,11 @@ attr Diag_ Diag
   syn size :: {Size}
 
 sem Diag_
-  | Program  (lhs.size, lhs.pict) = mkProg @l @p
-{-  | Platform lhs.ty = PlatformT @m
-  | Interpreter lhs.ty = ProgramT @m (InterpreterT @l)
-  | Compiler lhs.ty = ProgramT @m (CompilerT @l1 @l2)
-  | Execute lhs.ty = result @d1.ty
+  | Program  (lhs.size, lhs.pict)    = mkProg @l @p
+  | Platform (lhs.size, lhs.pict)    = mkPlat @m
+  | Interpreter (lhs.size, lhs.pict) = mkIntp @m @l @i
+  | Compiler (lhs.size, lhs.pict)    = mkCmpl @m @l1 @l2 @c
+{-  | Execute lhs.ty = result @d1.ty
   | Compile lhs.ty = ProgramT ((to . result) @d2.ty) (result @d1.ty)
 -}
 
@@ -53,5 +53,37 @@ mkProg l n = ((65, 30),
     , Put (0, 30)       (Line (1,0)  65)
     , Put (7.5, 15)     (Makebox (50, 15) n)
     , Put (7.5, 0)      (Makebox (50, 15) l)])
+
+mkPlat :: String -> (Size, [Command])
+mkPlat l = ((50, 30),
+    [ Put (0, 15)       (Line (5,-3)  25)
+    , Put (25, 0)       (Line (5,3)   25)
+    , Put (0, 15)       (Line (0,1)   15)
+    , Put (0, 30)       (Line (1,0)   50)
+    , Put (50, 30)      (Line (0,-1)  15)
+    , Put (0,15)        (Makebox (50,15) l)])
+
+mkIntp :: String -> String -> String ->(Size, [Command])
+mkIntp m l n = ((50, 30),
+    [ Put (0, 0)        (Framebox (50,30) "")
+    , Put (0, 20)       (Makebox (50,10) l)
+    , Put (0, 10)       (Makebox (50,10) n)
+    , Put (0, 0)        (Makebox (50,10) m)])
+
+mkCmpl :: String -> String -> String -> String -> (Size, [Command])
+mkCmpl m l1 l2 n = ((150, 30),
+    [ Put (50, 0)       (Line (0,1) 20)
+    , Put (50, 20)      (Line (-1,0) 50)
+    , Put (0, 20)       (Line (0,1) 10)
+    , Put (0, 30)       (Line (1,0) 150)
+    , Put (150, 30)     (Line (0,-1) 10)
+    , Put (150, 20)     (Line (-1,0) 50)
+    , Put (100, 20)     (Line (0,-1) 20)
+    , Put (100, 0)      (Line (-1,0) 50)
+    , Put (0, 20)       (Makebox (50,10) l1)
+    , Put (50, 20)      (Makebox (50,10) "$\\longrightarrow$")
+    , Put (100, 20)     (Makebox (50,10) l2)
+    , Put (50, 10)      (Makebox (50,10) n)
+    , Put (50, 0)       (Makebox (50,10) m)])
 
 }
