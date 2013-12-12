@@ -25,32 +25,44 @@ sem Diag
 attr Diag_ Diag
   syn pict :: {[Command]}
   syn size :: {Size}
+  -- First element is x offset of left lower connection point, second element is distance from left to right connection point.
+  syn conn :: {Vec2}
 
 sem Diag_
-  | Program  (lhs.size, lhs.pict)    = mkProg @l @p
-  | Platform (lhs.size, lhs.pict)    = mkPlat @m
-  | Interpreter (lhs.size, lhs.pict) = mkIntp @m @l @i
-  | Compiler (lhs.size, lhs.pict)    = mkCmpl @m @l1 @l2 @c
-  | Execute  (lhs.size, lhs.pict)    = mkExec @d1.pict @d1.size @d2.pict @d2.size
-{-  | Compile lhs.ty = ProgramT ((to . result) @d2.ty) (result @d1.ty)
--}
-
+  | Program  (lhs.size, lhs.conn, lhs.pict)    = mkProg @l @p @lhs
+  | Platform (lhs.size, lhs.conn, lhs.pict)    = mkPlat @m
+  | Interpreter (lhs.size, lhs.conn, lhs.pict) = mkIntp @m @l @i
+  | Compiler (lhs.size, lhs.conn, lhs.pict)    = mkCmpl @m @l1 @l2 @c
+  | Execute  (lhs.size, lhs.conn, lhs.pict)    = mkExec @d1.pict @d1.conn @d1.size @d2.pict @d2.conn @d2.size
+  | Compile  (lhs.size, lhs.conn, lhs.pict)    = mkCmple @d1.pict @d1.conn @d1.size @d2.pict @d2.conn @d2.size
+             
 {
 
+
+chLang (Program p l) ln        = (Program p ln)
+chLang (Compiler c l1 l2 m) mn = (Compiler c l1 l2 ln
+chLang (Interpreter i l m) mn  = (Interpreter i l mn)
 
 translate :: Vec2 -> [Command] -> [Command]
 translate (dx, dy) cs = map f cs
   where f (Put (x, y) a) = Put (x + dx, y + dy) a
 translate' d (a, cs) = (a, translate d cs)
 
--- does x1 >= x2 always hold?
-mkExec p1 (x1, y1) p2 (x2, y2) | x1 >= x2 = ((x1, y1 + y2),
-    (translate (0, y2) p1) ++ (translate (dx2, 0) p2))
-    where
-          dx2 = (x1 - x2) / 2
+-- for the time being, we assume that d1 is either a Program, Interpreter or Compiler
+mkCmple :: [Command] -> Vec2 -> Size -> [Command] -> Vec2 -> Size -> (Size, Vec2, [Command])
+mkCmple p1 (ca1, cb1) (x1, y1) p2 (ca2, cb2) (x2, y2) =
+    ((cb1 + cb1 + x1, y1 + y2 - ovlp), (ca1 + cb1 + ca2, cb2),
+    (translate (0, y2 - ovlp) p1) ++ (translate (ca1 + cb1, 0) p2))
+    where ovlp = 10
+          
 
-mkProg :: String -> String -> (Size, [Command])
-mkProg l n = ((65, 30),
+mkExec :: [Command] -> Vec2 -> Size -> [Command] -> Vec2 -> Size -> (Size, Vec2, [Command])
+mkExec p1 (ca1, cb1) (x1, y1) p2 (ca2, cb2) (x2, y2) = 
+    ((max x1 x2, y1 + y2), (ca1 - ca2, cb2),
+    (translate (0, y2) p1) ++ (translate (ca1, 0) p2))
+
+mkProg :: String -> String -> (Size, Vec2, [Command])
+mkProg l n = ((65, 30), (7.5, 50),
     [ Put (7.5, 0)      (Line (1,0)  50)
     , Put (7.5, 0)      (Line (0,1)  15)
     , Put (7.5, 15)     (Line (-1,2) 7.5)
@@ -60,8 +72,8 @@ mkProg l n = ((65, 30),
     , Put (7.5, 15)     (Makebox (50, 15) n)
     , Put (7.5, 0)      (Makebox (50, 15) l)])
 
-mkPlat :: String -> (Size, [Command])
-mkPlat l = ((50, 30),
+mkPlat :: String -> (Size, Vec2, [Command])
+mkPlat l = ((50, 30), (0, 0),
     [ Put (0, 15)       (Line (5,-3)  25)
     , Put (25, 0)       (Line (5,3)   25)
     , Put (0, 15)       (Line (0,1)   15)
@@ -69,15 +81,15 @@ mkPlat l = ((50, 30),
     , Put (50, 30)      (Line (0,-1)  15)
     , Put (0,15)        (Makebox (50,15) l)])
 
-mkIntp :: String -> String -> String ->(Size, [Command])
-mkIntp m l n = ((50, 30),
+mkIntp :: String -> String -> String ->(Size, Vec2, [Command])
+mkIntp m l n = ((50, 30), (0, 30),
     [ Put (0, 0)        (Framebox (50,30) "")
     , Put (0, 20)       (Makebox (50,10) l)
     , Put (0, 10)       (Makebox (50,10) n)
     , Put (0, 0)        (Makebox (50,10) m)])
 
-mkCmpl :: String -> String -> String -> String -> (Size, [Command])
-mkCmpl m l1 l2 n = ((150, 30),
+mkCmpl :: String -> String -> String -> String -> (Size, Vec2, [Command])
+mkCmpl m l1 l2 n = ((150, 30), (50, 50),
     [ Put (50, 0)       (Line (0,1) 20)
     , Put (50, 20)      (Line (-1,0) 50)
     , Put (0, 20)       (Line (0,1) 10)
