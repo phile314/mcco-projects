@@ -31,8 +31,8 @@ sem Diag_
   | Platform (lhs.size, lhs.pict)    = mkPlat @m
   | Interpreter (lhs.size, lhs.pict) = mkIntp @m @l @i
   | Compiler (lhs.size, lhs.pict)    = mkCmpl @m @l1 @l2 @c
-{-  | Execute lhs.ty = result @d1.ty
-  | Compile lhs.ty = ProgramT ((to . result) @d2.ty) (result @d1.ty)
+  | Execute  (lhs.size, lhs.pict)    = mkExec @d1.pict @d1.size @d2.pict @d2.size
+{-  | Compile lhs.ty = ProgramT ((to . result) @d2.ty) (result @d1.ty)
 -}
 
 {
@@ -42,6 +42,12 @@ translate :: Vec2 -> [Command] -> [Command]
 translate (dx, dy) cs = map f cs
   where f (Put (x, y) a) = Put (x + dx, y + dy) a
 translate' d (a, cs) = (a, translate d cs)
+
+-- does x1 >= x2 always hold?
+mkExec p1 (x1, y1) p2 (x2, y2) | x1 >= x2 = ((x1, y1 + y2),
+    (translate (0, y2) p1) ++ (translate (dx2, 0) p2))
+    where
+          dx2 = (x1 - x2) / 2
 
 mkProg :: String -> String -> (Size, [Command])
 mkProg l n = ((65, 30),
