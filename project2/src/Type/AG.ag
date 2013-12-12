@@ -25,8 +25,14 @@ sem Diag_
   | Platform lhs.ty = PlatformT @m
   | Interpreter lhs.ty = ProgramT @m (InterpreterT @l)
   | Compiler lhs.ty = ProgramT @m (CompilerT @l1 @l2)
-  | Execute lhs.ty = result @d1.ty
-  | Compile lhs.ty = ProgramT ((to . result) @d2.ty) (result @d1.ty)
+  | Execute lhs.ty = 
+      if matchLanguage @d1.ty @d2.ty 
+        then result @d1.ty      -- ERROR two different results based on d2 type
+        else ErrorT
+  | Compile lhs.ty = 
+      if matchCompiler @d1.ty @d2.ty
+        then ProgramT ((to . result) @d2.ty) (result @d1.ty)
+        else ErrorT
 
 {
 -- | @'matchLanguage' d1 d2@ is true if @d1@ is a 'ProgramT' implemented 
@@ -35,13 +41,14 @@ sem Diag_
 -- platform takes place here.
 matchLanguage :: Type -> Type -> Bool
 matchLanguage (ProgramT l _) (PlatformT l') = l == l'
-matchLanguage (ProgramT l _) (InterpreterT l') = l == l'
+matchLanguage (ProgramT l _) (ProgramT _ (InterpreterT l')) = l == l'
 matchLanguage _ _ = False
 
 -- | @'matchCompiler' d1 d2@ is true if @d1@ is a 'ProgramT' 
 -- implemented in some language, which is the input language
 -- of the 'CompilerT' @d2@.
 matchCompiler :: Type -> Type -> Bool
-matchCompiler (ProgramT l _) (CompilerT l1 _) = l == l1
+matchCompiler (ProgramT l _) (ProgramT _ (CompilerT l1 _)) = l == l1
 matchCompiler _ _ = False
 }
+
