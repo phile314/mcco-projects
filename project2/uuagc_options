@@ -1,8 +1,11 @@
 file : "src/CCO/Diag/AG.ag"
-options : data, semfuns, catas, wrappers, signatures, haskellsyntax, module "CCO.Diag.AG"
+options : data, semfuns, catas, wrappers, signatures, haskellsyntax
 
 file : "src/CCO/Picture/AG.ag"
 options : data, semfuns, catas, wrappers, signatures, haskellsyntax
 
 file : "src/Type/AG.ag"
+options : haskellsyntax, semfuns, catas, signatures, wrappers
+
+file : "src/Diag2Picture/AG.ag"
 options : haskellsyntax, semfuns, catas, signatures, wrappers
