@@ -2,12 +2,24 @@
 
 module {Type.AG}{}{
 import Type.Internal
+import Control.Monad ((>>))
 import CCO.Diag (Diag(..), Diag_(..))
+import CCO.Feedback (Message(..), messages, Feedback)
+import CCO.Printing 
+import CCO.SourcePos (SourcePos(..), Pos(..), Source(..))
 }
 
 include "../CCO/Diag/AG.ag"
 
--- | Makes available the position in order for error messages.
+{
+-- | Typechecks the given 'Diag', if it is well-typed it is returned,
+-- otherwise the 'Feedback' monad fails with some type error.
+typeCheck :: Diag -> Feedback Diag
+typeCheck d = messages msgs >> return d
+  where msgs = msgs_Syn_Diag $ wrap_Diag (sem_Diag d) (Inh_Diag {})
+}
+
+-- | Makes available the position for the error messages.
 attr Diag_ inh pos :: {SourcePos}
 attr Diag syn pos :: {SourcePos}
 
@@ -15,33 +27,69 @@ sem Diag
   | Diag d.pos = @pos
          lhs.pos = @pos
 
--- | The type of a t-diagram.
--- The type returned is correct only if no error massage is raised.
 attr Diag_ Diag
-  syn ty :: {Type}
+  syn ty :: {Type} -- ^ The type returned is 'ErrorT' if a t-diagram is ill-typed.
+  syn msgs use {++} {[]} :: {[Message]}  -- ^ Error messages
 
 sem Diag_
   | Program  lhs.ty = ProgramT @l UnitT
   | Platform lhs.ty = PlatformT @m
   | Interpreter lhs.ty = ProgramT @m (InterpreterT @l)
   | Compiler lhs.ty = ProgramT @m (CompilerT @l1 @l2)
-  | Execute lhs.ty = result @d1.ty
-  | Compile lhs.ty = ProgramT ((to . result) @d2.ty) (result @d1.ty)
+  | Execute loc .executeRes = execute @d1.ty @d2.ty
+            lhs.ty = onTypeError @loc.executeRes
+            lhs.msgs = errorOf @lhs.pos @loc.executeRes 
+  | Compile loc .compileRes = compile @d1.ty @d2.ty
+            lhs.ty = onTypeError @loc.compileRes
+            lhs.msgs = errorOf @lhs.pos @loc.compileRes
 
 {
--- | @'matchLanguage' d1 d2@ is true if @d1@ is a 'ProgramT' implemented 
--- in some language, which is the accepted language of the 'InterpreterT' 
--- or 'PlatformT' @d2@, false otherwise. Coercion of 'InterpreterT' to 
--- platform takes place here.
-matchLanguage :: Type -> Type -> Bool
-matchLanguage (ProgramT l _) (PlatformT l') = l == l'
-matchLanguage (ProgramT l _) (InterpreterT l') = l == l'
-matchLanguage _ _ = False
 
--- | @'matchCompiler' d1 d2@ is true if @d1@ is a 'ProgramT' 
+-- | Represent a type error. The first type is the actual given type.
+-- The second is a list containing expected types.
+data TypeError = TypeError Type [Type]
+  deriving (Show, Eq)
+
+instance Printable TypeError where
+  pp (TypeError actual expected) = indent 4 msg 
+    where msg = text "Type Error: " >-< exp >-< act
+          exp = text "Expected: " >|< sepBy (map showable expected) comma
+          act = text "Actual: " >|< showable actual
+
+instance Printable SourcePos where
+  pp (SourcePos f p) = text $ format f ++ ":" ++ format' p
+    where format Stdin = ""
+          format (File f) = f
+          format' EOF = "end of file"
+          format' (Pos l c) = show l ++ ":" ++ show c ++ ":"
+
+-- | If a type error has been raised returns 'ErrorT', the original type otherwise.
+onTypeError :: Either TypeError Type -> Type
+onTypeError = either (const ErrorT) id
+
+-- | @'errorOf' p t@ produces an error message at position @p@ if @t@ is 'TypeError'.
+-- Otherwise returns an empty list. 
+errorOf :: SourcePos -> Either TypeError Type -> [Message]
+errorOf p = either errorMessage (const [])
+  where errorMessage e = [Error (pp p >-< pp e) ] 
+
+-- | TODO special cases for handling ErrorT types
+
+-- | @'execute' d1 d2@ succeds if @d1@ is a 'ProgramT' implemented 
+-- in some language, which is the accepted language of the 'InterpreterT' 
+-- or 'PlatformT' @d2@, fails otherwise. Coercion of 'InterpreterT' to 
+-- platform takes place here.
+execute :: Type -> Type -> Either TypeError Type
+execute (ProgramT l r) (PlatformT l') | l == l' = Right r
+execute (ProgramT l r) (ProgramT m (InterpreterT l')) | l == l' = Right $ ProgramT m r
+execute (ProgramT l r) t2 = Left $ TypeError t2 [PlatformT l, InterpreterT l]
+execute t1 _ = Left $ TypeError t1 [ProgramT "<l>" UnitT]   -- TODO could be anything not only UnitT
+
+-- | @'compile' d1 d2@ succeds if @d1@ is a 'ProgramT' 
 -- implemented in some language, which is the input language
--- of the 'CompilerT' @d2@.
-matchCompiler :: Type -> Type -> Bool
-matchCompiler (ProgramT l _) (CompilerT l1 _) = l == l1
-matchCompiler _ _ = False
+-- of the 'CompilerT' @d2@, fails otherwise.
+compile :: Type -> Type -> Either TypeError Type
+compile (ProgramT l r) (ProgramT m (CompilerT l1 l2)) | l == l1 = Right $ ProgramT l2 r
+compile (ProgramT l r) t2 = Left $ TypeError t2 [CompilerT l "<l2>"]
+compile t1 _ = Left $ TypeError t1 [ProgramT "<l>" UnitT]   -- TODO could be anything not only UnitT
 }

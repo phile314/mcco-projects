@@ -15,4 +15,6 @@ data Type
                 to :: String } -- ^ the target language,
   -- | A dummy type used for t-diagram that are completely executed.
   | UnitT
+  -- | A type used to encode ill-typed t-diagrams.
+  | ErrorT
   deriving (Eq, Show)
