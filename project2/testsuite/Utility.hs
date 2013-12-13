@@ -1,10 +1,12 @@
 -- | This module defines convenience functions and instances for testing.
 
-module Utility where
+module Utility ( arbitrary ) where
 
 import CCO.SourcePos (SourcePos(..), Source(..), Pos(..))
 import CCO.Diag (Diag_(..), Diag(..))
-import Control.Monad (liftM)
+import Control.Monad (liftM, liftM2)
+import qualified Type.Internal as T (Type(..))
+import Type.Internal (Type)
 import Test.QuickCheck.Gen (Gen, elements, suchThat, oneof)
 import Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 
@@ -71,3 +73,31 @@ compile = do
 -- field contains a fixed value.
 diag :: Diag_ -> Diag
 diag d = Diag (SourcePos Stdin (Pos 0 0)) d
+
+-------------------------------------------------------------------------------
+-- Type Generator
+-------------------------------------------------------------------------------
+
+instance Arbitrary Type where
+  arbitrary = oneof [simple, complex]
+
+complex :: Gen Type
+complex = complex' 10
+  where complex' 0 = simple
+        complex' n = oneof [liftM2 T.ProgramT language (complex' (n/2)), simple]
+
+simple :: Gen Type
+simple = oneof [basic, platformT, interpreterT, compilerT]
+  where basic = elements [T.UnitT, T.ErrorT]
+  
+platformT :: Gen Type
+platformT = elements platforms >>= return . T.PlatformT
+
+interpreterT :: Gen Type
+interpreterT = language >>= return . T.InterpreterT
+
+compilerT :: Gen Type
+compilerT = do
+  l1 <- elements highLanguages
+  l2 <- elements platforms
+  return (T.CompilerT l1 l2)

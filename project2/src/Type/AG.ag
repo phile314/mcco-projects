@@ -36,8 +36,9 @@ sem Diag_
 
 {
 
--- Temporary definition
-data TypeError = TypeError
+-- | Represent a type error. The first type is the actual given type.
+-- The second is a list containing expected types.
+data TypeError = TypeError Type [Type]
   deriving (Show, Eq)
 
 -- | If a type error has been raised returns 'ErrorT', the original type otherwise.
@@ -59,12 +60,14 @@ errorOf p = either errorMessage (const [])
 execute :: Type -> Type -> Either TypeError Type
 execute (ProgramT l r) (PlatformT l') | l == l' = Right r
 execute (ProgramT l r) (ProgramT m (InterpreterT l')) | l == l' = Right $ ProgramT m r
-execute d1 d2 = (error . unwords . (map show)) [d1, d2]     -- TODO Produce correct type error
+execute (ProgramT l r) t2 = Left $ TypeError t2 [PlatformT l, InterpreterT l]
+execute t1 _ = Left $ TypeError t1 [ProgramT "<l>" UnitT]   -- TODO could be anything not only UnitT
 
 -- | @'compile' d1 d2@ succeds if @d1@ is a 'ProgramT' 
 -- implemented in some language, which is the input language
 -- of the 'CompilerT' @d2@, fails otherwise.
 compile :: Type -> Type -> Either TypeError Type
 compile (ProgramT l r) (ProgramT m (CompilerT l1 l2)) | l == l1 = Right $ ProgramT l2 r
-compile d1 d2 = (error . unwords . (map show)) [d1, d2] -- TODO Produce correct type error
+compile (ProgramT l r) t2 = Left $ TypeError t2 [CompilerT l "<l2>"]
+compile t1 _ = Left $ TypeError t1 [ProgramT "<l>" UnitT]   -- TODO could be anything not only UnitT
 }
