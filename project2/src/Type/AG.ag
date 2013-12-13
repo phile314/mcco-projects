@@ -25,30 +25,31 @@ sem Diag_
   | Platform lhs.ty = PlatformT @m
   | Interpreter lhs.ty = ProgramT @m (InterpreterT @l)
   | Compiler lhs.ty = ProgramT @m (CompilerT @l1 @l2)
-  | Execute lhs.ty = 
-      if matchLanguage @d1.ty @d2.ty 
-        then result @d1.ty      -- ERROR two different results based on d2 type
-        else ErrorT
-  | Compile lhs.ty = 
-      if matchCompiler @d1.ty @d2.ty
-        then ProgramT ((to . result) @d2.ty) (result @d1.ty)
-        else ErrorT
+  | Execute lhs.ty = onTypeError (execute @d1.ty @d2.ty)
+  | Compile lhs.ty = onTypeError (compile @d1.ty @d2.ty)
 
 {
--- | @'matchLanguage' d1 d2@ is true if @d1@ is a 'ProgramT' implemented 
+
+-- Temporary definition
+data TypeError = TypeError
+
+-- | If a type error has been raised returns 'ErrorT', the original type otherwise.
+onTypeError :: Either TypeError Type -> Type
+onTypeError = either (const ErrorT) id
+
+-- | @'execute' d1 d2@ succeds if @d1@ is a 'ProgramT' implemented 
 -- in some language, which is the accepted language of the 'InterpreterT' 
--- or 'PlatformT' @d2@, false otherwise. Coercion of 'InterpreterT' to 
+-- or 'PlatformT' @d2@, fails otherwise. Coercion of 'InterpreterT' to 
 -- platform takes place here.
-matchLanguage :: Type -> Type -> Bool
-matchLanguage (ProgramT l _) (PlatformT l') = l == l'
-matchLanguage (ProgramT l _) (ProgramT _ (InterpreterT l')) = l == l'
-matchLanguage _ _ = False
+execute :: Type -> Type -> Either TypeError Type
+execute (ProgramT l r) (PlatformT l') | l == l' = Right r
+execute (ProgramT l r) (ProgramT m (InterpreterT l')) | l == l' = Right $ ProgramT m r
+execute d1 d2 = (error . unwords . (map show)) [d1, d2]     -- TODO Produce correct type error
 
--- | @'matchCompiler' d1 d2@ is true if @d1@ is a 'ProgramT' 
+-- | @'compile' d1 d2@ succeds if @d1@ is a 'ProgramT' 
 -- implemented in some language, which is the input language
--- of the 'CompilerT' @d2@.
-matchCompiler :: Type -> Type -> Bool
-matchCompiler (ProgramT l _) (ProgramT _ (CompilerT l1 _)) = l == l1
-matchCompiler _ _ = False
+-- of the 'CompilerT' @d2@, fails otherwise.
+compile :: Type -> Type -> Either TypeError Type
+compile (ProgramT l r) (ProgramT m (CompilerT l1 l2)) | l == l1 = Right $ ProgramT l2 r
+compile d1 d2 = (error . unwords . (map show)) [d1, d2] -- TODO Produce correct type error
 }
-
