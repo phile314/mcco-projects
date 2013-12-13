@@ -3,6 +3,8 @@
 module {Type.AG}{}{
 import Type.Internal
 import CCO.Diag (Diag(..), Diag_(..))
+import CCO.Feedback (Message(..))
+import CCO.Printing (text)
 }
 
 include "../CCO/Diag/AG.ag"
@@ -15,27 +17,40 @@ sem Diag
   | Diag d.pos = @pos
          lhs.pos = @pos
 
--- | The type of a t-diagram.
--- The type returned is correct only if no error massage is raised.
 attr Diag_ Diag
-  syn ty :: {Type}
+  syn ty :: {Type} -- ^ The type returned is 'ErrorT' if a t-diagram is ill-typed.
+  syn msgs use {++} {[]} :: {[Message]}  -- ^ Error messages
+--  syn result :: {Either TypeError Type}  -- ^ The result of the type check
 
 sem Diag_
   | Program  lhs.ty = ProgramT @l UnitT
   | Platform lhs.ty = PlatformT @m
   | Interpreter lhs.ty = ProgramT @m (InterpreterT @l)
   | Compiler lhs.ty = ProgramT @m (CompilerT @l1 @l2)
-  | Execute lhs.ty = onTypeError (execute @d1.ty @d2.ty)
-  | Compile lhs.ty = onTypeError (compile @d1.ty @d2.ty)
+  | Execute loc .executeRes = execute @d1.ty @d2.ty
+            lhs.ty = onTypeError @loc.executeRes
+            lhs.msgs = errorOf @lhs.pos @loc.executeRes 
+  | Compile loc .compileRes = compile @d1.ty @d2.ty
+            lhs.ty = onTypeError @loc.compileRes
+            lhs.msgs = errorOf @lhs.pos @loc.compileRes
 
 {
 
 -- Temporary definition
 data TypeError = TypeError
+  deriving (Show, Eq)
 
 -- | If a type error has been raised returns 'ErrorT', the original type otherwise.
 onTypeError :: Either TypeError Type -> Type
 onTypeError = either (const ErrorT) id
+
+-- | @'errorOf' p t@ produces an error message at position @p@ if @t@ is 'TypeError'.
+-- Otherwise returns an empty list. 
+errorOf :: SourcePos -> Either TypeError Type -> [Message]
+errorOf p = either errorMessage (const [])
+  where errorMessage e = [Error $ text (show p ++ show e)] -- TODO add proper description
+
+-- | TODO special cases for handling ErrorT types
 
 -- | @'execute' d1 d2@ succeds if @d1@ is a 'ProgramT' implemented 
 -- in some language, which is the accepted language of the 'InterpreterT' 
