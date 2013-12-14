@@ -3,8 +3,9 @@ TODO
 ====
 PH  - Translate formal specification to latex
 MV  - Sync AG with specification
-    - Use type T as returning type for errors
-    - Get rid of coercion, use specific type rules
+MV  - Improve error messages
+        Do not expose internal representation of types.
+        First, Second argument in compile/execute
 
     - AST to latex transformation
     - Example files

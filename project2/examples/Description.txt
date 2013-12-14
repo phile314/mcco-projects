@@ -1,0 +1,36 @@
+This file contains a descprition of the examples included in this directory.
+
+Well-typed examples:
+  b-compiler.tdiag
+  b-interpreter.tdiag
+  b-platform.tdiag
+  b-program.tdiag
+  basic.tdiag
+  basic-nested-left.tdiag
+
+Ill-typed examples:
+  basic2.tdiag : 
+    The implementation language of the program does not match the platform (Haskell - i686-windows)
+
+TODO ?
+basic-nested-right.tdiag throws an error because of the right nesting.
+The specific reason about why this does not work is that given this tree (all the languages match) is:
+1 execute
+    program
+  2 excute
+      interpreter
+    3 execute 
+      interpreter
+      platform
+    
+The result of the third nested tree (3) is InterpreterT (not wrapped in ProgramT). 
+Then 2 produces an error because the second element of execute must be either 
+a PlatformT or an ProgramT m (InterpreterT l).
+Since on the online slides http://www.cs.uu.nl/foswiki/pub/Cco/CourseSchedule/cco-lab-02-tdiagram-2x2.pdf
+it is said that interpreters are programs as well and it should be possible to execute them
+I believe this program should be accepted.
+One possible approach would be to modify the type of an (Interpreter :: Diag_):
+  from ProgramT m (InterpreterT l) to ProgramT m (PlatformT l).
+
+Since InterpreterT is not something used directly but always pattern matched inside ProgramT,
+the new change would make this kind of programs valid, without changing much of the current code.
