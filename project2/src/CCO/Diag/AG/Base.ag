@@ -18,6 +18,8 @@ data Diag_
   | Compiler     c  :: {Ident}  l1 :: {Ident}  l2 :: {Ident}  m :: {Ident}
   | Execute      d1 :: Diag     d2 :: Diag
   | Compile      d1 :: Diag     d2 :: Diag
+{- internal type, used to explicitly add right hand side of a compile to the tree -}
+  | CompileI     d1 :: Diag     d2 :: Diag    d3 :: Diag
 deriving Diag_ : Show
 
 data Diag
