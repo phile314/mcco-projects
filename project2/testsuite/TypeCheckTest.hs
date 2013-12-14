@@ -30,15 +30,19 @@ correctType d@(Diag p td) = (expected td) == (typeOf d)
 -- | Tests that ill-typed expression combined with compile return a 'TypeError',
 wrongCompile :: Type -> Type -> Bool
 wrongCompile (ProgramT l r) (ProgramT m (CompilerT l1 l2)) | l == l1 = True
+wrongCompile t1@(ProgramT _ _) t2@ErrorT = compile t1 t2 == Right ErrorT
 wrongCompile t1@(ProgramT l r) t2 = compile t1 t2 == (Left $ TypeError t2 [ProgramT "<m>" (CompilerT l "<l2>")])
+wrongCompile t1@ErrorT t2 = compile t1 t2 == Right ErrorT
 wrongCompile t1 t2 = compile t1 t2 == (Left $ TypeError t1 [ProgramT "<l>" UnitT])
 
 -- | Tests that ill-typed expression combined with execute return a 'TypeError',
 wrongExecute :: Type -> Type -> Bool
 wrongExecute (ProgramT l r) (PlatformT l') | l == l' = True
 wrongExecute (ProgramT l r) (ProgramT m (PlatformT l')) | l == l' = True
+wrongExecute t1@(ProgramT _ _) t2@ErrorT = execute t1 t2 == Right ErrorT
 wrongExecute t1@(ProgramT l r) t2 = 
   execute t1 t2 == (Left $ TypeError t2 [PlatformT l])
+wrongExecute t1@ErrorT t2 = execute t1 t2 == Right ErrorT
 wrongExecute t1 t2 = execute t1 t2 == (Left $ TypeError t1 [ProgramT "<l>" UnitT])
 
 -- | The entry point of the testsuite

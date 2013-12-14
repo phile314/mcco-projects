@@ -82,7 +82,9 @@ errorOf p = either errorMessage (const [])
 execute :: Type -> Type -> Either TypeError Type
 execute (ProgramT l r) (PlatformT l') | l == l' = Right r
 execute (ProgramT l r) (ProgramT m (PlatformT l')) | l == l' = Right $ ProgramT m r
+execute (ProgramT _ _) ErrorT = Right ErrorT
 execute (ProgramT l r) t2 = Left $ TypeError t2 [PlatformT l]
+execute ErrorT _ = Right ErrorT
 execute t1 _ = Left $ TypeError t1 [ProgramT "<l>" UnitT]   -- TODO could be anything not only UnitT
 
 -- | @'compile' d1 d2@ succeds if @d1@ is a 'ProgramT' 
@@ -90,6 +92,8 @@ execute t1 _ = Left $ TypeError t1 [ProgramT "<l>" UnitT]   -- TODO could be any
 -- of the 'CompilerT' @d2@, fails otherwise.
 compile :: Type -> Type -> Either TypeError Type
 compile (ProgramT l r) (ProgramT m (CompilerT l1 l2)) | l == l1 = Right $ ProgramT l2 r
+compile (ProgramT _ _) ErrorT = Right ErrorT
 compile (ProgramT l r) t2 = Left $ TypeError t2 [ProgramT "<m>" (CompilerT l "<l2>")]
+compile ErrorT _ = Right ErrorT
 compile t1 _ = Left $ TypeError t1 [ProgramT "<l>" UnitT]   -- TODO could be anything not only UnitT
 }
