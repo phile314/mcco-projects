@@ -3,6 +3,7 @@
 module {Diag2Picture.AG}{}{
 import CCO.Diag (Diag(..), Diag_(..))
 import CCO.Picture
+import Debug.Trace
 }
 
 {
@@ -28,20 +29,31 @@ attr Diag_ Diag
   -- First element is x offset of left lower connection point, second element is distance from left to right connection point.
   syn conn :: {Vec2}
 
+  -- tree transformation attributes
+  syn ndiag :: self
+  chn nlng :: String
+  syn nchld :: self
+
+-- Add right hand side element of Compile element (becomes CompileI)
 sem Diag_
-  | Program  (lhs.size, lhs.conn, lhs.pict)    = mkProg @l @p @lhs
+  | Program  lhs.nchld = Program @p @lhs.nlng
+  | Interpreter lhs.nchld = Interpreter @i @l @lhs.nlng
+  | Compiler lhs.nchld = Compiler @c @l1 @l2 @lhs.nlng
+  | Compiler lhs.nlng = @l2
+  | Compile  d1.nlng   = @d2.nlng 
+             lhs.ndiag = (CompileI @d1.ndiag @d2.ndiag @d1.nchld)
+  
+
+sem Diag_
+  | Program   (lhs.size, lhs.conn, lhs.pict)    = mkProg @l @p
   | Platform (lhs.size, lhs.conn, lhs.pict)    = mkPlat @m
   | Interpreter (lhs.size, lhs.conn, lhs.pict) = mkIntp @m @l @i
   | Compiler (lhs.size, lhs.conn, lhs.pict)    = mkCmpl @m @l1 @l2 @c
   | Execute  (lhs.size, lhs.conn, lhs.pict)    = mkExec @d1.pict @d1.conn @d1.size @d2.pict @d2.conn @d2.size
-  | Compile  (lhs.size, lhs.conn, lhs.pict)    = mkCmple @d1.pict @d1.conn @d1.size @d2.pict @d2.conn @d2.size
-             
-{
+  | CompileI  (lhs.size, lhs.conn, lhs.pict)    = mkCmple @d1.pict @d1.conn @d1.size @d2.pict @d2.conn @d2.size @d3.pict @d3.conn @d3.size
 
+{           
 
-chLang (Program p l) ln        = (Program p ln)
-chLang (Compiler c l1 l2 m) mn = (Compiler c l1 l2 ln
-chLang (Interpreter i l m) mn  = (Interpreter i l mn)
 
 translate :: Vec2 -> [Command] -> [Command]
 translate (dx, dy) cs = map f cs
@@ -49,11 +61,12 @@ translate (dx, dy) cs = map f cs
 translate' d (a, cs) = (a, translate d cs)
 
 -- for the time being, we assume that d1 is either a Program, Interpreter or Compiler
-mkCmple :: [Command] -> Vec2 -> Size -> [Command] -> Vec2 -> Size -> (Size, Vec2, [Command])
-mkCmple p1 (ca1, cb1) (x1, y1) p2 (ca2, cb2) (x2, y2) =
-    ((cb1 + cb1 + x1, y1 + y2 - ovlp), (ca1 + cb1 + ca2, cb2),
-    (translate (0, y2 - ovlp) p1) ++ (translate (ca1 + cb1, 0) p2))
+--mkCmple :: [Command] -> Vec2 -> Size -> [Command] -> Vec2 -> Size -> (Size, Vec2, [Command])
+mkCmple p1 (ca1, cb1) (x1, y1) p2 (ca2, cb2) (x2, y2) p3 (cc1, cc2) (x3, y3) =
+    (ns, (ca1 + cb1 + ca2, cb2),
+    (translate (0, y2 - ovlp) p1) ++ (translate (ca1 + cb1, 0) p2) ++ (translate (ca1 + cb1 + x2 - cc1, y2 - ovlp) p3))
     where ovlp = 10
+          ns = (ca1 + cb1 + x2 + (x3 - cc1), y2 + (max y1 y3) - ovlp)
           
 
 mkExec :: [Command] -> Vec2 -> Size -> [Command] -> Vec2 -> Size -> (Size, Vec2, [Command])
@@ -104,4 +117,9 @@ mkCmpl m l1 l2 n = ((150, 30), (50, 50),
     , Put (50, 10)      (Makebox (50,10) n)
     , Put (50, 0)       (Makebox (50,10) m)])
 
+foldTree :: Diag -> Picture
+foldTree d = let fstRun = ndiag_Syn_Diag $ wrap_Diag (sem_Diag d) inh
+                 sndRun = wrap_Diag (sem_Diag fstRun) inh
+             in Picture (size_Syn_Diag sndRun) (pict_Syn_Diag sndRun)
+    where inh = Inh_Diag undefined
 }
