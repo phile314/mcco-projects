@@ -20,8 +20,8 @@ module CCO.Diag.Parser (
 import CCO.Component                 (Component)
 import qualified CCO.Component as C  (parser)
 import CCO.Diag.Base                 (Diag (Diag), Diag_ (..))
-import CCO.Diag.Lexer                (Token, lexer, keyword, ident)
-import CCO.Parsing                   (Parser, eof, sourcePos, (<!>))
+import CCO.Diag.Lexer                (Token, lexer, keyword, ident, pComma, pEq)
+import CCO.Parsing                   (Parser, eof, sourcePos, (<!>), someSepBy)
 import Control.Applicative
 
 -------------------------------------------------------------------------------
@@ -46,7 +46,7 @@ pDiag = Diag <$> sourcePos <*> pDiag_
 -- | Parses a 'Diag_'.
 pDiag_ :: TokenParser Diag_
 pDiag_ = pProgram <|> pPlatform <|> pInterpreter <|> pCompiler <|>
-         pExecute <|> pCompile <!>
+         pExecute <|> pCompile <|> pVarAccess <|> pLet <!>
          "diagram"
 
 -- | Parses a 'Program'.
@@ -82,3 +82,18 @@ pCompile :: TokenParser Diag_
 pCompile = Compile <$ keyword "compile" <*> pDiag <*
                       keyword "with"    <*> pDiag <*
                       keyword "end"
+
+pVarAccess :: TokenParser Diag_
+pVarAccess = VarAccess <$> ident
+
+pLet :: TokenParser Diag_
+pLet = Let <$ keyword "let" <*> pDecls <*
+              keyword "in"  <*> pDiag  <*
+              keyword "end"
+
+pDecls :: TokenParser [(String, Diag)]
+pDecls = someSepBy (pComma) pDecl
+
+pDecl :: TokenParser (String, Diag)
+pDecl = (,) <$> ident <* pEq <*> pDiag
+

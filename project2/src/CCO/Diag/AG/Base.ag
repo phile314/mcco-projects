@@ -12,6 +12,8 @@ type Ident = String
 }
 
 data Diag_
+  | VarAccess    v  :: String
+  | Let          d  :: {[(String, Diag)]}      in :: Diag
   | Program      p  :: {Ident}  l  :: {Ident}
   | Platform     m  :: {Ident}
   | Interpreter  i  :: {Ident}  l  :: {Ident}  m  :: {Ident}
