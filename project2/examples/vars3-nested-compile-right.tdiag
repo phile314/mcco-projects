@@ -1,0 +1,20 @@
+let haskToAsm = compile
+        compiler GHC from Haskell to i686-linux in Haskell
+    with
+        compiler GHC-1 from Haskell to i686-linux in i686-linux
+    end
+in
+    compile
+        compile
+            program test in UUAG
+        with
+            compile
+                compiler UUAGC from UUAG to Haskell in Haskell
+            with
+                haskToAsm
+            end
+        end
+    with
+        haskToAsm
+    end
+end

@@ -17,10 +17,12 @@ module CCO.Diag (
     Ident
   , Diag (Diag)    -- instances: Tree
   , Diag_ (..)     -- instances: Tree
+  , DeclS
+  , Decl
 
     -- * Parser
   , parser         -- :: Component String Diag
 ) where
 
-import CCO.Diag.Base      (Ident, Diag (Diag), Diag_ (..))
+import CCO.Diag.Base      (Ident, Diag (Diag), Diag_ (..), DeclS, Decl)
 import CCO.Diag.Parser    (parser)

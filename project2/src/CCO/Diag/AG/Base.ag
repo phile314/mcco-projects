@@ -11,9 +11,12 @@ import CCO.SourcePos        (SourcePos)
 type Ident = String
 }
 
+type DeclS = [Decl]
+type Decl = (String, Diag)
+
 data Diag_
   | VarAccess    v  :: String
-  | Let          d  :: {[(String, Diag)]}      in :: Diag
+  | Let          d  :: DeclS    in :: Diag
   | Program      p  :: {Ident}  l  :: {Ident}
   | Platform     m  :: {Ident}
   | Interpreter  i  :: {Ident}  l  :: {Ident}  m  :: {Ident}

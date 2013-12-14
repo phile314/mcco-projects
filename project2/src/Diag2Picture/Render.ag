@@ -1,7 +1,7 @@
 -- | Attribute grammar for type checking t-diagrams
 
 module {Diag2Picture.Render}{}{
-import CCO.Diag (Diag(..), Diag_(..))
+import CCO.Diag (Diag(..), Diag_(..), DeclS, Decl)
 import CCO.Picture
 import Debug.Trace
 }

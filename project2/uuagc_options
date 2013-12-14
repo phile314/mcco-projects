@@ -12,3 +12,7 @@ options : haskellsyntax, semfuns, catas, signatures, wrappers
 
 file : "src/Diag2Picture/Render.ag"
 options : haskellsyntax, semfuns, catas, signatures, wrappers
+
+file : "src/Diag2Picture/Inline.ag"
+options : haskellsyntax, semfuns, catas, signatures, wrappers
+

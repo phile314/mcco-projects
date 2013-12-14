@@ -1,0 +1,24 @@
+let hugs = interpreter hugs for Haskell in Python,
+    py = interpreter CPython for Python in amd64-linux
+in
+    execute
+        hugs
+    on
+        let vm = interpreter vm for amd64-linux in Haskell
+        in
+            execute py
+            on
+                execute vm
+                on
+                    execute hugs
+                    on
+                        execute py
+                        on
+                            vm
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
