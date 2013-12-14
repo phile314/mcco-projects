@@ -90,6 +90,6 @@ execute t1 _ = Left $ TypeError t1 [ProgramT "<l>" UnitT]   -- TODO could be any
 -- of the 'CompilerT' @d2@, fails otherwise.
 compile :: Type -> Type -> Either TypeError Type
 compile (ProgramT l r) (ProgramT m (CompilerT l1 l2)) | l == l1 = Right $ ProgramT l2 r
-compile (ProgramT l r) t2 = Left $ TypeError t2 [CompilerT l "<l2>"]
+compile (ProgramT l r) t2 = Left $ TypeError t2 [ProgramT "<m>" (CompilerT l "<l2>")]
 compile t1 _ = Left $ TypeError t1 [ProgramT "<l>" UnitT]   -- TODO could be anything not only UnitT
 }
