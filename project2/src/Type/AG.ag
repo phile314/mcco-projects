@@ -29,9 +29,11 @@ sem Diag
   | Diag d.pos = @pos
          lhs.pos = @pos
 
-attr Diag_ Diag DeclS Decl
+attr Diag_ Diag
   syn ty :: {Type} -- ^ The type returned is 'ErrorT' if a t-diagram is ill-typed.
   syn msgs use {++} {[]} :: {[Message]}  -- ^ Error messages (they are produced in depth-first order)
+
+attr Diag_ Diag DeclS Decl
   chn env :: {Map String Type}
 
 sem Diag_
