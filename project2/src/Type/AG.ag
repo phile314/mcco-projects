@@ -1,6 +1,7 @@
 -- | Attribute grammar for type checking t-diagrams
 
 module {Type.AG}{}{
+import Data.Maybe (catMaybes)
 import Type.Internal
 import Type.Error
 import Control.Monad ((>>))
@@ -36,41 +37,51 @@ sem Diag_
   | Platform lhs.ty = PlatformT @m
   | Interpreter lhs.ty = ProgramT @m (PlatformT @l)
   | Compiler lhs.ty = ProgramT @m (CompilerT @l1 @l2)
-  | Execute loc .executeRes = execute @d1.ty @d2.ty
-            lhs.ty = onTypeError @loc.executeRes
-            lhs.msgs = @d1.msgs ++ @d2.msgs ++ errorOf @lhs.pos @loc.executeRes
-  | Compile loc .compileRes = compile @d1.ty @d2.ty
-            lhs.ty = onTypeError @loc.compileRes
-            lhs.msgs = @d1.msgs ++ @d2.msgs ++ errorOf @lhs.pos @loc.compileRes
+  | Execute 
+    loc .executeError = 
+      catMaybes [matchProgram @d1.ty, matchPlatform @d2.ty, matchLanguage @d1.ty @d2.ty]
+    lhs.ty = case (@loc.executeError, @d2.ty) of
+                  ([], PlatformT _) -> result @d1.ty
+                  ([], _)           -> ProgramT ((language . result) @d2.ty) (result @d1.ty)
+                  (_ , _)           -> ErrorT 
+    lhs.msgs = @d1.msgs ++ @d2.msgs ++ map (errorMessage @lhs.pos) @loc.executeError
+  | Compile 
+    loc .compileError = 
+      catMaybes [matchProgram @d1.ty, matchCompiler @d2.ty, matchLanguage @d1.ty @d2.ty]
+    lhs.ty = case @loc.compileError of
+                  [] -> ProgramT ((to . result) @d2.ty) (result @d1.ty)
+                  _ -> ErrorT 
+    lhs.msgs = @d1.msgs ++ @d2.msgs ++ map (errorMessage @lhs.pos) @loc.compileError
 
 {
--- | If a type error has been raised returns 'ErrorT', the original type otherwise.
-onTypeError :: Either TypeError Type -> Type
-onTypeError = either (const ErrorT) id
+-- | @'matchProgram' t@ returns a 'TypeError' if @t@ is not a 'ProgramT'.
+-- 'ErrorT' does not yield a 'TypeError'.
+matchProgram :: Type -> Maybe TypeError
+matchProgram (ProgramT _ _) = Nothing
+matchProgram ErrorT = Nothing
+matchProgram t = Just $ ProgramError t
 
--- | @'errorOf' p t@ produces an error message at position @p@ if @t@ is 'TypeError'.
--- Otherwise returns an empty list. 
-errorOf :: SourcePos -> Either TypeError Type -> [Message]
-errorOf p = either errorMessage (const [])
-  where errorMessage e = [Error (pp p >-< pp e) ] 
+-- | @'matchPlatform' t@ returns a 'TypeError' if @t@ is not a 'PlatformT' or an interpreter
+-- (@'ProgramT' ('PlatformT')@).
+-- 'ErrorT' does not yield a 'TypeError'.
+matchPlatform :: Type -> Maybe TypeError
+matchPlatform (PlatformT _) = Nothing
+matchPlatform (ProgramT _ (PlatformT _)) = Nothing
+matchPlatform ErrorT = Nothing
+matchPlatform t = Just $ PlatformError t
 
--- | @'execute' d1 d2@ succeds if @d1@ is a 'ProgramT' implemented 
--- in some language, which is the accepted language of 'PlatformT' @d2@, 
--- fails otherwise. Coercion of 'Interpreter' (type @'ProgramT' ('PlatformT')@) to 
--- @'PlatformT'@ takes place here.
-execute :: Type -> Type -> Either TypeError Type
-execute (ProgramT l r) (PlatformT l') | l == l' = Right r
-execute (ProgramT l r) (ProgramT m (PlatformT l')) | l == l' = Right $ ProgramT m r
-execute (ProgramT _ _) ErrorT = Right ErrorT
-execute ErrorT _ = Right ErrorT
-execute t1 t2 = Left $ executeError t1 t2
+-- | @'matchLang' t1 t2@ returns a 'TypeError' if the two given types can be properly combined through
+-- 'Compile' or 'Execute' but their languages do not match, 'Nothing' otherwise.
+matchLanguage p1@(ProgramT l r) p2@(PlatformT l') | l /= l' = Just $ LangError p1 p2
+matchLanguage p1@(ProgramT l r) p2@(ProgramT m (PlatformT l')) | l /= l' = Just $ LangError p1 p2
+matchLanguage p1@(ProgramT l r) p2@(ProgramT m (CompilerT l1 l2)) | l /= l1 = Just $ LangError p1 p2
+matchLanguage _ _ = Nothing
 
--- | @'compile' d1 d2@ succeds if @d1@ is a 'ProgramT' 
--- implemented in some language, which is the input language
--- of the 'CompilerT' @d2@, fails otherwise.
-compile :: Type -> Type -> Either TypeError Type
-compile (ProgramT l r) (ProgramT m (CompilerT l1 l2)) | l == l1 = Right $ ProgramT l2 r
-compile (ProgramT _ _) ErrorT = Right ErrorT
-compile ErrorT _ = Right ErrorT
-compile t1 t2 = Left $ compileError t1 t2
+matchCompiler (ProgramT _ (CompilerT _ _)) = Nothing
+matchCompiler ErrorT = Nothing
+matchCompiler t = Just $ CompilerError t
+
+-- | @'errorMessage' p t@ produces an error message at position @p@ for the 'TypeError' @t@.
+errorMessage :: SourcePos -> TypeError -> Message
+errorMessage p e = Error (pp p >-< pp e)
 }
