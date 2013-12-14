@@ -58,7 +58,7 @@ instance Printable TypeError where
 
 instance Printable SourcePos where
   pp (SourcePos f p) = text $ format f ++ ":" ++ format' p
-    where format Stdin = ""
+    where format Stdin = "stdin"
           format (File f) = f
           format' EOF = "end of file"
           format' (Pos l c) = show l ++ ":" ++ show c ++ ":"
