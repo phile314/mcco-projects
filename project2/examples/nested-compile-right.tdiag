@@ -1,13 +1,13 @@
 compile
-    compiler GHC from Haskell to i686-linux in Haskell-1
+    compiler GHC from Haskell to i686-linux in Haskell-2
 with
     compile
-        compiler GHC-1 from Haskell-1 to i686-linux in Haskell-2
+        compiler GHC-2 from Haskell-2 to i686-linux in Haskell-1
     with
         compile
-            compiler GHC-2 from Haskell-2 to i686-linux in Haskell-3
+            compiler GHC-1 from Haskell-1 to i686-linux in Haskell-0
         with
-            compiler GHC-fst from Haskell-3 to i686-linux in i686-linux
+            compiler GHC-0 from Haskell-0 to i686-linux in i686-linux
         end
     end
 end

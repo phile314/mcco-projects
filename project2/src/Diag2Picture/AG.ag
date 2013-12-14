@@ -9,6 +9,8 @@ import Debug.Trace
 {
 type Vec2 = (Double, Double)
 type Size = Vec2
+
+ovlp = 10
 }
 
 include "../CCO/Diag/AG.ag"
@@ -27,12 +29,13 @@ attr Diag_ Diag
   syn pict :: {[Command]}
   syn size :: {Size}
   -- First element is x offset of left lower connection point, second element is distance from left to right connection point.
-  syn conn :: {Vec2}
+  syn conns :: {(Maybe Vec2, Maybe Vec2)}
 
   -- tree transformation attributes
   syn ndiag :: self
   chn nlng :: String
   syn nchld :: self
+
 
 -- Add right hand side element of Compile element (becomes CompileI)
 sem Diag_
@@ -45,21 +48,58 @@ sem Diag_
   
 
 sem Diag_
-  | Program   (lhs.size, lhs.conn, lhs.pict)    = mkProg @l @p
-  | Platform (lhs.size, lhs.conn, lhs.pict)    = mkPlat @m
-  | Interpreter (lhs.size, lhs.conn, lhs.pict) = mkIntp @m @l @i
-  | Compiler (lhs.size, lhs.conn, lhs.pict)    = mkCmpl @m @l1 @l2 @c
-  | Execute  (lhs.size, lhs.conn, lhs.pict)    = mkExec @d1.pict @d1.conn @d1.size @d2.pict @d2.conn @d2.size
-  | CompileI  (lhs.size, lhs.conn, lhs.pict)    = mkCmple @d1.pict @d1.conn @d1.size @d2.pict @d2.conn @d2.size @d3.pict @d3.conn @d3.size
+  | Program lhs.conns = (Nothing, Just (7.5, 50))
+            lhs.size  = (65, 30)
+            lhs.pict  = mkProg @l @p
+  | Platform lhs.conns = (Just (0, 50), Nothing)
+             lhs.size  = (50, 30)
+             lhs.pict  = mkPlat @m
+  | Interpreter lhs.conns = (Just (0, 50), Just(0, 50))
+                lhs.size  = (50, 30)
+                lhs.pict  = mkIntp @m @l @i
+  | Compiler lhs.conns = (Just (0, 150), Just(50, 50))
+             lhs.size  = (150, 30)
+             lhs.pict  = mkCmpl @m @l1 @l2 @c
+
+  | Execute  (lhs.conns, lhs.size, lhs.pict) = 
+                         { let (x1, y1) = @d1.size
+                               (x2, y2) = @d2.size
+                               (c1, Just (cc1, cd1)) = @d1.conns
+                               (Just (ca2, cb2), c2) = @d2.conns
+                               p1 = (0, y2)
+                               p2 = (cc1, 0)
+                           in ((translateC p1 c1, translateC p2 c2),
+                               (x1, y1 + y2),
+                               (translate p1 @d1.pict) ++ (translate p2 @d2.pict))
+                         }
+--  | CompileI  (lhs.size, lhs.conn, lhs.pict)    = mkCmple @d1.pict @d1.conn @d1.size @d2.pict @d2.conn @d2.size @d3.pict @d3.conn @d3.size
+  | CompileI (lhs.conns, lhs.size, lhs.pict) =
+                        { let (x1, y1) = @d1.size
+                              (x2, y2) = @d2.size
+                              (x3, y3) = @d3.size
+                              (_, Just (cc1, cd1))  = @d1.conns
+                              (Just (ca2, cb2), c2) = @d2.conns
+                              (c3, Just (cc3, cd3)) = @d3.conns
+                              p1 = (max (ca2 - cc1 - cd1) 0, y2 - ovlp)
+                              p2@(p2x, _) = (max (cc1 + cd1 - ca2) 0, 0)
+                              p3 = (p2x + ca2 + cb2 - cc3, y2 - ovlp)
+                          in ((translateC p3 c3, translateC p2 c2),
+                              (cc1 + cd1 + cb2 + (x3 - cc3), y2 + (max y1 y3) - ovlp),
+                              (translate p1 @d1.pict) ++ (translate p2 @d2.pict) ++ (translate p3 @d3.pict))
+                        }
 
 {           
+
+
+translateC :: Vec2 -> Maybe Vec2 -> Maybe Vec2
+translateC _ Nothing = Nothing
+translateC (dx, _) (Just (a, b)) = Just (a + dx, b)
 
 
 translate :: Vec2 -> [Command] -> [Command]
 translate (dx, dy) cs = map f cs
   where f (Put (x, y) a) = Put (x + dx, y + dy) a
-translate' d (a, cs) = (a, translate d cs)
-
+{-
 -- for the time being, we assume that d1 is either a Program, Interpreter or Compiler
 --mkCmple :: [Command] -> Vec2 -> Size -> [Command] -> Vec2 -> Size -> (Size, Vec2, [Command])
 mkCmple p1 (ca1, cb1) (x1, y1) p2 (ca2, cb2) (x2, y2) p3 (cc1, cc2) (x3, y3) =
@@ -67,15 +107,16 @@ mkCmple p1 (ca1, cb1) (x1, y1) p2 (ca2, cb2) (x2, y2) p3 (cc1, cc2) (x3, y3) =
     (translate (0, y2 - ovlp) p1) ++ (translate (ca1 + cb1, 0) p2) ++ (translate (ca1 + cb1 + x2 - cc1, y2 - ovlp) p3))
     where ovlp = 10
           ns = (ca1 + cb1 + x2 + (x3 - cc1), y2 + (max y1 y3) - ovlp)
-          
+-}
 
-mkExec :: [Command] -> Vec2 -> Size -> [Command] -> Vec2 -> Size -> (Size, Vec2, [Command])
+{-mkExec :: [Command] -> Vec2 -> Size -> [Command] -> Vec2 -> Size -> (Size, Vec2, [Command])
 mkExec p1 (ca1, cb1) (x1, y1) p2 (ca2, cb2) (x2, y2) = 
-    ((max x1 x2, y1 + y2), (ca1 - ca2, cb2),
+    ((max x1 x2, y1 + y2), ((ca1 - ca2, cb2), ()),
     (translate (0, y2) p1) ++ (translate (ca1, 0) p2))
+-}
 
-mkProg :: String -> String -> (Size, Vec2, [Command])
-mkProg l n = ((65, 30), (7.5, 50),
+mkProg :: String -> String -> [Command]
+mkProg l n =
     [ Put (7.5, 0)      (Line (1,0)  50)
     , Put (7.5, 0)      (Line (0,1)  15)
     , Put (7.5, 15)     (Line (-1,2) 7.5)
@@ -83,26 +124,26 @@ mkProg l n = ((65, 30), (7.5, 50),
     , Put (57.5, 0)     (Line (0,1)  15)
     , Put (0, 30)       (Line (1,0)  65)
     , Put (7.5, 15)     (Makebox (50, 15) n)
-    , Put (7.5, 0)      (Makebox (50, 15) l)])
+    , Put (7.5, 0)      (Makebox (50, 15) l)]
 
-mkPlat :: String -> (Size, Vec2, [Command])
-mkPlat l = ((50, 30), (0, 0),
+mkPlat :: String -> [Command]
+mkPlat l =
     [ Put (0, 15)       (Line (5,-3)  25)
     , Put (25, 0)       (Line (5,3)   25)
     , Put (0, 15)       (Line (0,1)   15)
     , Put (0, 30)       (Line (1,0)   50)
     , Put (50, 30)      (Line (0,-1)  15)
-    , Put (0,15)        (Makebox (50,15) l)])
+    , Put (0,15)        (Makebox (50,15) l)]
 
-mkIntp :: String -> String -> String ->(Size, Vec2, [Command])
-mkIntp m l n = ((50, 30), (0, 50),
+mkIntp :: String -> String -> String -> [Command]
+mkIntp m l n =
     [ Put (0, 0)        (Framebox (50,30) "")
     , Put (0, 20)       (Makebox (50,10) l)
     , Put (0, 10)       (Makebox (50,10) n)
-    , Put (0, 0)        (Makebox (50,10) m)])
+    , Put (0, 0)        (Makebox (50,10) m)]
 
-mkCmpl :: String -> String -> String -> String -> (Size, Vec2, [Command])
-mkCmpl m l1 l2 n = ((150, 30), (50, 50),
+mkCmpl :: String -> String -> String -> String -> [Command]
+mkCmpl m l1 l2 n =
     [ Put (50, 0)       (Line (0,1) 20)
     , Put (50, 20)      (Line (-1,0) 50)
     , Put (0, 20)       (Line (0,1) 10)
@@ -115,7 +156,7 @@ mkCmpl m l1 l2 n = ((150, 30), (50, 50),
     , Put (50, 20)      (Makebox (50,10) "$\\longrightarrow$")
     , Put (100, 20)     (Makebox (50,10) l2)
     , Put (50, 10)      (Makebox (50,10) n)
-    , Put (50, 0)       (Makebox (50,10) m)])
+    , Put (50, 0)       (Makebox (50,10) m)]
 
 foldTree :: Diag -> Picture
 foldTree d = let fstRun = ndiag_Syn_Diag $ wrap_Diag (sem_Diag d) inh
