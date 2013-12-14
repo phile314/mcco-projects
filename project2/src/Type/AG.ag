@@ -29,7 +29,7 @@ sem Diag
 
 attr Diag_ Diag
   syn ty :: {Type} -- ^ The type returned is 'ErrorT' if a t-diagram is ill-typed.
-  syn msgs use {++} {[]} :: {[Message]}  -- ^ Error messages
+  syn msgs use {++} {[]} :: {[Message]}  -- ^ Error messages (they are produced in depth-first order)
 
 sem Diag_
   | Program  lhs.ty = ProgramT @l UnitT
@@ -38,10 +38,10 @@ sem Diag_
   | Compiler lhs.ty = ProgramT @m (CompilerT @l1 @l2)
   | Execute loc .executeRes = execute @d1.ty @d2.ty
             lhs.ty = onTypeError @loc.executeRes
-            lhs.msgs = errorOf @lhs.pos @loc.executeRes 
+            lhs.msgs = @d1.msgs ++ @d2.msgs ++ errorOf @lhs.pos @loc.executeRes
   | Compile loc .compileRes = compile @d1.ty @d2.ty
             lhs.ty = onTypeError @loc.compileRes
-            lhs.msgs = errorOf @lhs.pos @loc.compileRes
+            lhs.msgs = @d1.msgs ++ @d2.msgs ++ errorOf @lhs.pos @loc.compileRes
 
 {
 
