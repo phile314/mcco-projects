@@ -1,6 +1,6 @@
 -- | Attribute grammar for type checking t-diagrams
 
-module {Diag2Picture.AG}{}{
+module {Diag2Picture.Render}{}{
 import CCO.Diag (Diag(..), Diag_(..))
 import CCO.Picture
 import Debug.Trace
@@ -23,29 +23,12 @@ sem Diag
   | Diag d.pos = @pos
          lhs.pos = @pos
 
--- | The type of a t-diagram.
--- The type returned is correct only if no error massage is raised.
 attr Diag_ Diag
   syn pict :: {[Command]}
   syn size :: {Size}
-  -- First element is x offset of left lower connection point, second element is distance from left to right connection point.
+  -- First element is x offset of left lower connection point, second element is distance from left to right connection point OUTDATED.
   syn conns :: {(Maybe Vec2, Maybe Vec2)}
 
-  -- tree transformation attributes
-  syn ndiag :: self
-  chn nlng :: String
-  syn nchld :: self
-
-
--- Add right hand side element of Compile element (becomes CompileI)
-sem Diag_
-  | Program  lhs.nchld = Program @p @lhs.nlng
-  | Interpreter lhs.nchld = Interpreter @i @l @lhs.nlng
-  | Compiler lhs.nchld = Compiler @c @l1 @l2 @lhs.nlng
-  | Compiler lhs.nlng = @l2
-  | Compile  d1.nlng   = @d2.nlng 
-             lhs.ndiag = (CompileI @d1.ndiag @d2.ndiag @d1.nchld)
-  
 
 sem Diag_
   | Program lhs.conns = (Nothing, Just (7.5, 50))
@@ -72,7 +55,6 @@ sem Diag_
                                (x1, y1 + y2),
                                (translate p1 @d1.pict) ++ (translate p2 @d2.pict))
                          }
---  | CompileI  (lhs.size, lhs.conn, lhs.pict)    = mkCmple @d1.pict @d1.conn @d1.size @d2.pict @d2.conn @d2.size @d3.pict @d3.conn @d3.size
   | CompileI (lhs.conns, lhs.size, lhs.pict) =
                         { let (x1, y1) = @d1.size
                               (x2, y2) = @d2.size
@@ -99,21 +81,6 @@ translateC (dx, _) (Just (a, b)) = Just (a + dx, b)
 translate :: Vec2 -> [Command] -> [Command]
 translate (dx, dy) cs = map f cs
   where f (Put (x, y) a) = Put (x + dx, y + dy) a
-{-
--- for the time being, we assume that d1 is either a Program, Interpreter or Compiler
---mkCmple :: [Command] -> Vec2 -> Size -> [Command] -> Vec2 -> Size -> (Size, Vec2, [Command])
-mkCmple p1 (ca1, cb1) (x1, y1) p2 (ca2, cb2) (x2, y2) p3 (cc1, cc2) (x3, y3) =
-    (ns, (ca1 + cb1 + ca2, cb2),
-    (translate (0, y2 - ovlp) p1) ++ (translate (ca1 + cb1, 0) p2) ++ (translate (ca1 + cb1 + x2 - cc1, y2 - ovlp) p3))
-    where ovlp = 10
-          ns = (ca1 + cb1 + x2 + (x3 - cc1), y2 + (max y1 y3) - ovlp)
--}
-
-{-mkExec :: [Command] -> Vec2 -> Size -> [Command] -> Vec2 -> Size -> (Size, Vec2, [Command])
-mkExec p1 (ca1, cb1) (x1, y1) p2 (ca2, cb2) (x2, y2) = 
-    ((max x1 x2, y1 + y2), ((ca1 - ca2, cb2), ()),
-    (translate (0, y2) p1) ++ (translate (ca1, 0) p2))
--}
 
 mkProg :: String -> String -> [Command]
 mkProg l n =
@@ -159,8 +126,7 @@ mkCmpl m l1 l2 n =
     , Put (50, 0)       (Makebox (50,10) m)]
 
 foldTree :: Diag -> Picture
-foldTree d = let fstRun = ndiag_Syn_Diag $ wrap_Diag (sem_Diag d) inh
-                 sndRun = wrap_Diag (sem_Diag fstRun) inh
-             in Picture (size_Syn_Diag sndRun) (pict_Syn_Diag sndRun)
-    where inh = Inh_Diag undefined
+foldTree d = Picture (size_Syn_Diag run) (pict_Syn_Diag run)
+    where run = wrap_Diag (sem_Diag d) inh
+          inh = Inh_Diag
 }

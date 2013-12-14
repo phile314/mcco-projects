@@ -23,7 +23,8 @@ cabal-version:       >=1.8
 extra-source-files:    Makefile, src/CCO/Diag/AG.ag,
                        src/CCO/Diag/AG/Base.ag, src/CCO/Picture/AG.ag,
                        src/CCO/Picture/AG/Base.ag, 
-                       src/CCO/Picture/AG/Printing.ag, src/Type/AG.ag
+                       src/CCO/Picture/AG/Printing.ag, src/Type/AG.ag,
+                       src/Diag2Picture/Expand.ag, src/Diag2Picture/Render.ag
 
 executable parse-tdiag
   main-is:             ParseTDiag.hs
@@ -40,8 +41,8 @@ executable tc-tdiag
 
 executable tdiag2picture
   main-is:          TDiag2Picture.hs
-  build-depends:    base >=4.5, cco >= 0.0.4, Vec >= 1.0
-  other-modules:    CCO.Diag, CCO.Picture, CCO.Picture.AG, Diag2Picture.AG, CCO.Diag.AG
+  build-depends:    base >=4.5, cco >= 0.0.4
+  other-modules:    CCO.Diag, CCO.Picture, CCO.Picture.AG, Diag2Picture.Expand, Diag2Picture.Render, CCO.Diag.AG
   hs-source-dirs:   src
 
 

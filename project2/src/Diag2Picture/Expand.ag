@@ -1,0 +1,39 @@
+-- | Attribute grammar for type checking t-diagrams
+
+module {Diag2Picture.Expand}{}{
+import CCO.Diag (Diag(..), Diag_(..))
+}
+
+include "../CCO/Diag/AG.ag"
+
+-- | Makes available the position in order for error messages.
+attr Diag_ inh pos :: {SourcePos}
+attr Diag syn pos :: {SourcePos}
+
+sem Diag
+  | Diag d.pos = @pos
+         lhs.pos = @pos
+
+-- | The type of a t-diagram.
+-- The type returned is correct only if no error massage is raised.
+attr Diag_ Diag
+
+  syn ndiag :: self
+  chn nlng :: String
+  syn nchld :: self
+
+
+-- Add right hand side element of Compile element (becomes CompileI)
+sem Diag_
+  | Program  lhs.nchld = Program @p @lhs.nlng
+  | Interpreter lhs.nchld = Interpreter @i @l @lhs.nlng
+  | Compiler lhs.nchld = Compiler @c @l1 @l2 @lhs.nlng
+  | Compiler lhs.nlng = @l2
+  | Compile  d1.nlng   = @d2.nlng 
+             lhs.ndiag = (CompileI @d1.ndiag @d2.ndiag @d1.nchld)
+
+{
+foldTree :: Diag -> Diag
+foldTree d = ndiag_Syn_Diag $ wrap_Diag (sem_Diag d) inh
+    where inh = Inh_Diag undefined
+}
