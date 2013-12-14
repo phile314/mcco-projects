@@ -34,7 +34,7 @@ attr Diag_ Diag
 sem Diag_
   | Program  lhs.ty = ProgramT @l UnitT
   | Platform lhs.ty = PlatformT @m
-  | Interpreter lhs.ty = ProgramT @m (InterpreterT @l)
+  | Interpreter lhs.ty = ProgramT @m (PlatformT @l)
   | Compiler lhs.ty = ProgramT @m (CompilerT @l1 @l2)
   | Execute loc .executeRes = execute @d1.ty @d2.ty
             lhs.ty = onTypeError @loc.executeRes
@@ -58,7 +58,7 @@ instance Printable TypeError where
 
 instance Printable SourcePos where
   pp (SourcePos f p) = text $ format f ++ ":" ++ format' p
-    where format Stdin = ""
+    where format Stdin = "stdin"
           format (File f) = f
           format' EOF = "end of file"
           format' (Pos l c) = show l ++ ":" ++ show c ++ ":"
@@ -76,13 +76,13 @@ errorOf p = either errorMessage (const [])
 -- | TODO special cases for handling ErrorT types
 
 -- | @'execute' d1 d2@ succeds if @d1@ is a 'ProgramT' implemented 
--- in some language, which is the accepted language of the 'InterpreterT' 
--- or 'PlatformT' @d2@, fails otherwise. Coercion of 'InterpreterT' to 
--- platform takes place here.
+-- in some language, which is the accepted language of 'PlatformT' @d2@, 
+-- fails otherwise. Coercion of 'Interpreter' (type @'ProgramT' ('PlatformT')@) to 
+-- @'PlatformT'@ takes place here.
 execute :: Type -> Type -> Either TypeError Type
 execute (ProgramT l r) (PlatformT l') | l == l' = Right r
-execute (ProgramT l r) (ProgramT m (InterpreterT l')) | l == l' = Right $ ProgramT m r
-execute (ProgramT l r) t2 = Left $ TypeError t2 [PlatformT l, InterpreterT l]
+execute (ProgramT l r) (ProgramT m (PlatformT l')) | l == l' = Right $ ProgramT m r
+execute (ProgramT l r) t2 = Left $ TypeError t2 [PlatformT l]
 execute t1 _ = Left $ TypeError t1 [ProgramT "<l>" UnitT]   -- TODO could be anything not only UnitT
 
 -- | @'compile' d1 d2@ succeds if @d1@ is a 'ProgramT' 
