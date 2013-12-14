@@ -5,9 +5,11 @@ import Data.Maybe (catMaybes)
 import Type.Internal
 import Type.Error
 import Control.Monad ((>>))
-import CCO.Diag (Diag(..), Diag_(..))
+import CCO.Diag (Diag(..), Diag_(..), DeclS, Decl)
 import CCO.Feedback (Message(..), messages, Feedback)
-import CCO.Printing 
+import CCO.Printing hiding (empty) 
+import Data.Map (insert, empty, Map)
+import qualified Data.Map as M
 }
 
 include "../CCO/Diag/AG.ag"
@@ -17,7 +19,7 @@ include "../CCO/Diag/AG.ag"
 -- otherwise the 'Feedback' monad fails with some type error.
 typeCheck :: Diag -> Feedback Diag
 typeCheck d = messages msgs >> return d
-  where msgs = msgs_Syn_Diag $ wrap_Diag (sem_Diag d) (Inh_Diag {})
+  where msgs = msgs_Syn_Diag $ wrap_Diag (sem_Diag d) (Inh_Diag {env_Inh_Diag = empty})
 }
 
 -- | Makes available the position for the error messages.
@@ -31,6 +33,9 @@ sem Diag
 attr Diag_ Diag
   syn ty :: {Type} -- ^ The type returned is 'ErrorT' if a t-diagram is ill-typed.
   syn msgs use {++} {[]} :: {[Message]}  -- ^ Error messages (they are produced in depth-first order)
+
+attr Diag_ Diag DeclS Decl
+  chn env :: {Map String Type}
 
 sem Diag_
   | Program  lhs.ty = ProgramT @l UnitT
@@ -52,6 +57,9 @@ sem Diag_
                   [] -> ProgramT ((to . result) @d2.ty) (result @d1.ty)
                   _ -> ErrorT 
     lhs.msgs = @d1.msgs ++ @d2.msgs ++ map (errorMessage @lhs.pos) @loc.compileError
+
+sem Decl
+  | Tuple lhs.env = insert @x1 @x2.ty @lhs.env
 
 {
 -- | @'matchProgram' t@ returns a 'TypeError' if @t@ is not a 'ProgramT'.

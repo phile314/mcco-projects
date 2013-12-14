@@ -1,7 +1,9 @@
 -- | Attribute grammar for type checking t-diagrams
 
-module {Diag2Picture.Expand}{}{
+module {Diag2Picture.Inline}{}{
 import CCO.Diag (Diag(..), Diag_(..), DeclS, Decl)
+import Data.Map (insert, (!), Map, empty)
+import Data.Maybe (fromMaybe)
 }
 
 include "../CCO/Diag/AG.ag"
@@ -19,21 +21,25 @@ sem Diag
 attr Diag_ Diag DeclS Decl
 
   syn ndiag :: self
-  chn nlng  :: String
-  syn nchld :: self
+  chn env :: {Map String Diag}
+  syn repl use {(\_ _ -> Nothing)} {Nothing} :: {Maybe Diag}
+
 
 
 -- Add right hand side element of Compile element (becomes CompileI)
+sem Diag
+  | Diag lhs.ndiag = fromMaybe @ndiag @d.repl
+
 sem Diag_
-  | Program  lhs.nchld = Program @p @lhs.nlng
-  | Interpreter lhs.nchld = Interpreter @i @l @lhs.nlng
-  | Compiler lhs.nchld = Compiler @c @l1 @l2 @lhs.nlng
-  | Compiler lhs.nlng = @l2
-  | Compile  d1.nlng   = @d2.nlng 
-             lhs.ndiag = (CompileI @d1.ndiag @d2.ndiag @d1.nchld)
+  | Let lhs.env = @lhs.env
+        lhs.repl = {Just @in.ndiag}
+  | VarAccess lhs.repl = {Just $ @lhs.env ! @v}
+
+sem Decl
+  | Tuple lhs.env = insert @x1 @x2.ndiag @lhs.env 
 
 {
 foldTree :: Diag -> Diag
 foldTree d = ndiag_Syn_Diag $ wrap_Diag (sem_Diag d) inh
-    where inh = Inh_Diag undefined
+    where inh = Inh_Diag empty
 }

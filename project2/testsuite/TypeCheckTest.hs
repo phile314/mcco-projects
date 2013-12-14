@@ -8,6 +8,7 @@ import System.Exit (exitFailure)
 import Test.QuickCheck.Property (Property, property)
 import Test.QuickCheck.Test (isSuccess, quickCheckResult)
 import Utility (arbitrary)
+import qualified Data.Map as M
 
 -- | The tests that will be run
 tests :: [Property]
@@ -15,7 +16,7 @@ tests = [property correctType]
 
 -- | Returns the type of a 'Diag'.
 typeOf :: Diag -> Type
-typeOf d = ty_Syn_Diag $ wrap_Diag (sem_Diag d) (Inh_Diag {})
+typeOf d = ty_Syn_Diag $ wrap_Diag (sem_Diag d) (Inh_Diag {env_Inh_Diag = M.empty})
 
 -- | Tests that the correct type is returned.
 -- It does *not* test that the t-diagram is well-typed.

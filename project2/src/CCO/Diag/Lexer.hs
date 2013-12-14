@@ -22,12 +22,14 @@ module CCO.Diag.Lexer (
     -- * Token parsers
   , keyword    -- :: String -> Parser Token String
   , ident      -- :: Parser Token Ident
+  , pComma
+  , pEq
   ) where
 
 import CCO.Diag.Base                (Ident)
 import CCO.Lexing hiding (satisfy)
 import CCO.Parsing                  (Symbol (describe), Parser, satisfy, (<!>))
-import Control.Applicative          (Alternative ((<|>)), (<$>), some)
+import Control.Applicative          (Alternative ((<|>)), (<$>), (<$), some)
 
 -------------------------------------------------------------------------------
 -- Tokens
@@ -37,6 +39,9 @@ import Control.Applicative          (Alternative ((<|>)), (<$>), some)
 data Token
   = Keyword { fromKeyword :: String }    -- ^ Keyword.
   | Ident   { fromIdent   :: Ident  }    -- ^ Identifier.
+  | Eq                                   -- ^ Eq Sign
+  | Comma                                -- ^ Comma sign
+  deriving (Eq)
 
 instance Symbol Token where
   describe (Keyword _) lexeme = "keyword "    ++ lexeme
@@ -67,15 +72,22 @@ keyword_ = fmap Keyword $ string "compiler" <|> string "compile" <|>
                           string "for" <|> string "from" <|> string "in" <|>
                           string "interpreter" <|> string "on" <|>
                           string "platform" <|> string "program" <|>
-                          string "to" <|> string "with"
+                          string "to" <|> string "with" <|>
+                          string "let" <|> string "in"
 
 -- | A 'Lexer' that recognises 'Ident' tokens.
 ident_ :: Lexer Token
-ident_ = Ident <$> some (anyCharBut " \n\t")
+ident_ = Ident <$> some (anyCharBut ",= \n\t")
+
+eq :: Lexer Token
+eq = Eq <$ char '='
+
+comma :: Lexer Token
+comma = Comma <$ char ','
 
 -- | A 'Lexer' for 'Diag's.
 lexer :: Lexer Token
-lexer = layout_ <|> keyword_ <|> ident_
+lexer = layout_ <|> keyword_ <|> ident_ <|> eq <|> comma
 
 -------------------------------------------------------------------------------
 -- Token parsers
@@ -90,3 +102,9 @@ keyword key = fromKeyword <$>
 -- | A 'Parser' that recognises an identifier.
 ident :: Parser Token Ident
 ident = fromIdent <$> satisfy isIdent <!> "identifier"
+
+pComma :: Parser Token ()
+pComma = () <$ satisfy (==Comma)
+
+pEq :: Parser Token ()
+pEq = () <$ satisfy (==Eq)

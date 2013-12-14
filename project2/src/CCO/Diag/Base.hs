@@ -17,6 +17,8 @@ module CCO.Diag.Base (
     Ident
   , Diag (Diag)    -- instances: Tree, Show
   , Diag_ (..)     -- instances: Tree, Show
+  , DeclS
+  , Decl
 ) where
 
 import CCO.Diag.AG
@@ -41,6 +43,8 @@ instance Tree Diag_ where
     App "Compiler" [fromTree c, fromTree l1, fromTree l2, fromTree m]
   fromTree (Execute d1 d2)      = App "Execute" [fromTree d1, fromTree d2]
   fromTree (Compile d1 d2)      = App "Compile" [fromTree d1, fromTree d2]
+  fromTree (VarAccess v)        = App "VarAccess" [fromTree v]
+  fromTree (Let e d)            = App "Let"     [fromTree e, fromTree d]
 
   toTree = parseTree 
              [ app "Program"     (Program     <$> arg <*> arg                )
@@ -49,4 +53,6 @@ instance Tree Diag_ where
              , app "Compiler"    (Compiler    <$> arg <*> arg <*> arg <*> arg)
              , app "Execute"     (Execute     <$> arg <*> arg                )
              , app "Compile"     (Compile     <$> arg <*> arg                )
+             , app "VarAccess"   (VarAccess   <$> arg                        )
+             , app "Let"         (Let         <$> arg <*> arg                )
              ]

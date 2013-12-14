@@ -35,14 +35,14 @@ executable parse-tdiag
 
 executable tc-tdiag
   main-is:          TcTDiag.hs
-  build-depends:    base >=4.5, cco >= 0.0.4
+  build-depends:    base >=4.5, cco >= 0.0.4, containers >= 0.4
   other-modules:    Type, Type.AG, Type.Internal, Type.Error, CCO.Diag, CCO.Diag.AG
   hs-source-dirs:   src
 
 executable tdiag2picture
   main-is:          TDiag2Picture.hs
-  build-depends:    base >=4.5, cco >= 0.0.4
-  other-modules:    CCO.Diag, CCO.Picture, CCO.Picture.AG, Diag2Picture.Expand, Diag2Picture.Render, CCO.Diag.AG
+  build-depends:    base >=4.5, cco >= 0.0.4, containers >= 0.4
+  other-modules:    CCO.Diag, CCO.Picture, CCO.Picture.AG, Diag2Picture.Expand, Diag2Picture.Render, Diag2Picture.Inline, CCO.Diag.AG
   hs-source-dirs:   src
 
 
@@ -55,7 +55,7 @@ executable pp-picture
 test-suite type-check
   type:               exitcode-stdio-1.0
   main-is:            TypeCheckTest.hs
-  build-depends:      base, QuickCheck ==2.6.*, cco >= 0.0.4
+  build-depends:      base, QuickCheck ==2.6.*, cco >= 0.0.4, containers >= 0.4
   other-modules:      Utility, CCO.Diag, CCO.Diag.AG, Type.AG, Type.Internal
   hs-source-dirs:     testsuite, src
   ghc-options:        -idist/build
