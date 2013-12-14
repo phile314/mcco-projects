@@ -2,6 +2,7 @@
 
 import CCO.Diag
 import Type.Internal (Type (..))
+import Type.Error (TypeError(..))
 import Type.AG
 import System.Exit (exitFailure)
 import Test.QuickCheck.Property (Property, property)

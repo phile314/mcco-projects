@@ -2,11 +2,11 @@
 
 module {Type.AG}{}{
 import Type.Internal
+import Type.Error
 import Control.Monad ((>>))
 import CCO.Diag (Diag(..), Diag_(..))
 import CCO.Feedback (Message(..), messages, Feedback)
 import CCO.Printing 
-import CCO.SourcePos (SourcePos(..), Pos(..), Source(..))
 }
 
 include "../CCO/Diag/AG.ag"
@@ -44,25 +44,6 @@ sem Diag_
             lhs.msgs = @d1.msgs ++ @d2.msgs ++ errorOf @lhs.pos @loc.compileRes
 
 {
-
--- | Represent a type error. The first type is the actual given type.
--- The second is a list containing expected types.
-data TypeError = TypeError Type [Type]
-  deriving (Show, Eq)
-
-instance Printable TypeError where
-  pp (TypeError actual expected) = indent 4 msg 
-    where msg = text "Type Error: " >-< exp >-< act
-          exp = text "Expected: " >|< sepBy (map showable expected) comma
-          act = text "Actual: " >|< showable actual
-
-instance Printable SourcePos where
-  pp (SourcePos f p) = text $ format f ++ ":" ++ format' p
-    where format Stdin = "stdin"
-          format (File f) = f
-          format' EOF = "end of file"
-          format' (Pos l c) = show l ++ ":" ++ show c ++ ":"
-
 -- | If a type error has been raised returns 'ErrorT', the original type otherwise.
 onTypeError :: Either TypeError Type -> Type
 onTypeError = either (const ErrorT) id
@@ -73,8 +54,6 @@ errorOf :: SourcePos -> Either TypeError Type -> [Message]
 errorOf p = either errorMessage (const [])
   where errorMessage e = [Error (pp p >-< pp e) ] 
 
--- | TODO special cases for handling ErrorT types
-
 -- | @'execute' d1 d2@ succeds if @d1@ is a 'ProgramT' implemented 
 -- in some language, which is the accepted language of 'PlatformT' @d2@, 
 -- fails otherwise. Coercion of 'Interpreter' (type @'ProgramT' ('PlatformT')@) to 
@@ -83,9 +62,8 @@ execute :: Type -> Type -> Either TypeError Type
 execute (ProgramT l r) (PlatformT l') | l == l' = Right r
 execute (ProgramT l r) (ProgramT m (PlatformT l')) | l == l' = Right $ ProgramT m r
 execute (ProgramT _ _) ErrorT = Right ErrorT
-execute (ProgramT l r) t2 = Left $ TypeError t2 [PlatformT l]
 execute ErrorT _ = Right ErrorT
-execute t1 _ = Left $ TypeError t1 [ProgramT "<l>" UnitT]   -- TODO could be anything not only UnitT
+execute t1 t2 = Left $ executeError t1 t2
 
 -- | @'compile' d1 d2@ succeds if @d1@ is a 'ProgramT' 
 -- implemented in some language, which is the input language
@@ -93,7 +71,6 @@ execute t1 _ = Left $ TypeError t1 [ProgramT "<l>" UnitT]   -- TODO could be any
 compile :: Type -> Type -> Either TypeError Type
 compile (ProgramT l r) (ProgramT m (CompilerT l1 l2)) | l == l1 = Right $ ProgramT l2 r
 compile (ProgramT _ _) ErrorT = Right ErrorT
-compile (ProgramT l r) t2 = Left $ TypeError t2 [ProgramT "<m>" (CompilerT l "<l2>")]
 compile ErrorT _ = Right ErrorT
-compile t1 _ = Left $ TypeError t1 [ProgramT "<l>" UnitT]   -- TODO could be anything not only UnitT
+compile t1 t2 = Left $ compileError t1 t2
 }
