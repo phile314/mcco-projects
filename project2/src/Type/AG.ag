@@ -1,12 +1,13 @@
 -- | Attribute grammar for type checking t-diagrams
 
 module {Type.AG}{}{
+import Data.Maybe (catMaybes)
 import Type.Internal
+import Type.Error
 import Control.Monad ((>>))
 import CCO.Diag (Diag(..), Diag_(..), DeclS, Decl)
 import CCO.Feedback (Message(..), messages, Feedback)
 import CCO.Printing hiding (empty) 
-import CCO.SourcePos (SourcePos(..), Pos(..), Source(..))
 import Data.Map (insert, empty, Map)
 import qualified Data.Map as M
 }
@@ -41,82 +42,54 @@ sem Diag_
   | Platform lhs.ty = PlatformT @m
   | Interpreter lhs.ty = ProgramT @m (PlatformT @l)
   | Compiler lhs.ty = ProgramT @m (CompilerT @l1 @l2)
-  | Execute loc .executeRes = execute @d1.ty @d2.ty
-            lhs.ty = onTypeError @loc.executeRes
-            lhs.msgs = @d1.msgs ++ @d2.msgs ++ errorOf @lhs.pos @loc.executeRes
-  | Compile loc .compileRes = compile @d1.ty @d2.ty
-            lhs.ty = onTypeError @loc.compileRes
-            lhs.msgs = @d1.msgs ++ @d2.msgs ++ errorOf @lhs.pos @loc.compileRes
-  | Let     lhs.ty = @in.ty
-            lhs.env = @lhs.env
-  | VarAccess loc.varRes = lookupVar @v @lhs.env
-              lhs.ty = onTypeError @loc.varRes
-              lhs.msgs = errorOf @lhs.pos @loc.varRes
+  | Execute 
+    loc .executeError = 
+      catMaybes [matchProgram @d1.ty, matchPlatform @d2.ty, matchLanguage @d1.ty @d2.ty]
+    lhs.ty = case (@loc.executeError, @d2.ty) of
+                  ([], PlatformT _) -> result @d1.ty
+                  ([], _)           -> ProgramT ((language . result) @d2.ty) (result @d1.ty)
+                  (_ , _)           -> ErrorT 
+    lhs.msgs = @d1.msgs ++ @d2.msgs ++ map (errorMessage @lhs.pos) @loc.executeError
+  | Compile 
+    loc .compileError = 
+      catMaybes [matchProgram @d1.ty, matchCompiler @d2.ty, matchLanguage @d1.ty @d2.ty]
+    lhs.ty = case @loc.compileError of
+                  [] -> ProgramT ((to . result) @d2.ty) (result @d1.ty)
+                  _ -> ErrorT 
+    lhs.msgs = @d1.msgs ++ @d2.msgs ++ map (errorMessage @lhs.pos) @loc.compileError
 
 sem Decl
   | Tuple lhs.env = insert @x1 @x2.ty @lhs.env
 
 {
+-- | @'matchProgram' t@ returns a 'TypeError' if @t@ is not a 'ProgramT'.
+-- 'ErrorT' does not yield a 'TypeError'.
+matchProgram :: Type -> Maybe TypeError
+matchProgram (ProgramT _ _) = Nothing
+matchProgram ErrorT = Nothing
+matchProgram t = Just $ ProgramError t
 
--- | Represent a type error. The first type is the actual given type.
--- The second is a list containing expected types.
-data Error
-  = TypeError Type [Type]
-  | LookupError String
-  deriving (Show, Eq)
+-- | @'matchPlatform' t@ returns a 'TypeError' if @t@ is not a 'PlatformT' or an interpreter
+-- (@'ProgramT' ('PlatformT')@).
+-- 'ErrorT' does not yield a 'TypeError'.
+matchPlatform :: Type -> Maybe TypeError
+matchPlatform (PlatformT _) = Nothing
+matchPlatform (ProgramT _ (PlatformT _)) = Nothing
+matchPlatform ErrorT = Nothing
+matchPlatform t = Just $ PlatformError t
 
-instance Printable Error where
-  pp (TypeError actual expected) = indent 4 msg 
-    where msg = text "Type Error: " >-< exp >-< act
-          exp = text "Expected: " >|< sepBy (map showable expected) comma
-          act = text "Actual: " >|< showable actual
-  pp (LookupError var) = indent 4 msg
-    where msg = text $ "Undefined variable: " ++ var
+-- | @'matchLang' t1 t2@ returns a 'TypeError' if the two given types can be properly combined through
+-- 'Compile' or 'Execute' but their languages do not match, 'Nothing' otherwise.
+matchLanguage p1@(ProgramT l r) p2@(PlatformT l') | l /= l' = Just $ LangError p1 p2
+matchLanguage p1@(ProgramT l r) p2@(ProgramT m (PlatformT l')) | l /= l' = Just $ LangError p1 p2
+matchLanguage p1@(ProgramT l r) p2@(ProgramT m (CompilerT l1 l2)) | l /= l1 = Just $ LangError p1 p2
+matchLanguage _ _ = Nothing
 
-instance Printable SourcePos where
-  pp (SourcePos f p) = text $ format f ++ ":" ++ format' p
-    where format Stdin = "stdin"
-          format (File f) = f
-          format' EOF = "end of file"
-          format' (Pos l c) = show l ++ ":" ++ show c ++ ":"
+matchCompiler (ProgramT _ (CompilerT _ _)) = Nothing
+matchCompiler ErrorT = Nothing
+matchCompiler t = Just $ CompilerError t
 
--- | If a type error has been raised returns 'ErrorT', the original type otherwise.
-onTypeError :: Either Error Type -> Type
-onTypeError = either (const ErrorT) id
-
--- | @'errorOf' p t@ produces an error message at position @p@ if @t@ is 'TypeError'.
--- Otherwise returns an empty list. 
-errorOf :: SourcePos -> Either Error Type -> [Message]
-errorOf p = either errorMessage (const [])
-  where errorMessage e = [Error (pp p >-< pp e) ] 
-
--- | TODO special cases for handling ErrorT types
-
--- | @'execute' d1 d2@ succeds if @d1@ is a 'ProgramT' implemented 
--- in some language, which is the accepted language of 'PlatformT' @d2@, 
--- fails otherwise. Coercion of 'Interpreter' (type @'ProgramT' ('PlatformT')@) to 
--- @'PlatformT'@ takes place here.
-execute :: Type -> Type -> Either Error Type
-execute (ProgramT l r) (PlatformT l') | l == l' = Right r
-execute (ProgramT l r) (ProgramT m (PlatformT l')) | l == l' = Right $ ProgramT m r
-execute (ProgramT _ _) ErrorT = Right ErrorT
-execute (ProgramT l r) t2 = Left $ TypeError t2 [PlatformT l]
-execute ErrorT _ = Right ErrorT
-execute t1 _ = Left $ TypeError t1 [ProgramT "<l>" UnitT]   -- TODO could be anything not only UnitT
-
--- | @'compile' d1 d2@ succeds if @d1@ is a 'ProgramT' 
--- implemented in some language, which is the input language
--- of the 'CompilerT' @d2@, fails otherwise.
-compile :: Type -> Type -> Either Error Type
-compile (ProgramT l r) (ProgramT m (CompilerT l1 l2)) | l == l1 = Right $ ProgramT l2 r
-compile (ProgramT _ _) ErrorT = Right ErrorT
-compile (ProgramT l r) t2 = Left $ TypeError t2 [ProgramT "<m>" (CompilerT l "<l2>")]
-compile ErrorT _ = Right ErrorT
-compile t1 _ = Left $ TypeError t1 [ProgramT "<l>" UnitT]   -- TODO could be anything not only UnitT
-
-lookupVar :: String -> Map String Type -> Either Error Type
-lookupVar v env = case M.lookup v env of
-  (Just t)  -> Right t
-  (Nothing) -> Left $ LookupError v
-
+-- | @'errorMessage' p t@ produces an error message at position @p@ for the 'TypeError' @t@.
+errorMessage :: SourcePos -> TypeError -> Message
+errorMessage p e = Error (pp p >-< pp e)
 }
