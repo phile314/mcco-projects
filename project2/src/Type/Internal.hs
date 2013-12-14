@@ -8,8 +8,6 @@ data Type
                result :: Type }     -- ^ the resulting type when the program is run
   -- | The type of platform t-diagram. 
   | PlatformT { language :: String } -- ^ the implementation language
-  -- | The type of an interpreter t-diagram.
-  | InterpreterT { language :: String } -- ^ the language being interpreted.
   -- | The typeof a compiler t-diagram.
   | CompilerT { from :: String, -- ^ the source language,
                 to :: String } -- ^ the target language,

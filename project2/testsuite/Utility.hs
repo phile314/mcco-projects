@@ -94,7 +94,9 @@ platformT :: Gen Type
 platformT = elements platforms >>= return . T.PlatformT
 
 interpreterT :: Gen Type
-interpreterT = language >>= return . T.InterpreterT
+interpreterT = do
+  Interpreter _ m l <- interpreter
+  return $ T.ProgramT m (T.PlatformT l)
 
 compilerT :: Gen Type
 compilerT = do
