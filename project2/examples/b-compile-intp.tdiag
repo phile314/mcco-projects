@@ -1,0 +1,5 @@
+compile
+    interpreter HUGS for Haskell in Haskell
+with
+    compiler GHC from Haskell to i686-linux in i686-linux
+end

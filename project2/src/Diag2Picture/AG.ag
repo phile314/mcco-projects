@@ -95,7 +95,7 @@ mkPlat l = ((50, 30), (0, 0),
     , Put (0,15)        (Makebox (50,15) l)])
 
 mkIntp :: String -> String -> String ->(Size, Vec2, [Command])
-mkIntp m l n = ((50, 30), (0, 30),
+mkIntp m l n = ((50, 30), (0, 50),
     [ Put (0, 0)        (Framebox (50,30) "")
     , Put (0, 20)       (Makebox (50,10) l)
     , Put (0, 10)       (Makebox (50,10) n)

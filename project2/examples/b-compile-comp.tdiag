@@ -1,0 +1,5 @@
+compile
+    compiler GHC from Haskell to i686-linux in C++
+with
+    compiler GCC from C++ to i686-linux in i686-windows
+end

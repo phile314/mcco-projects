@@ -10,6 +10,7 @@ cat $1 >> tmp/input.tdiag
 
 cd tmp
 cat input.tdiag | ../dist/build/parse-tdiag/parse-tdiag > input_2.ast
+cat input_2.ast | ../dist/build/tc-tdiag/tc-tdiag
 cat input_2.ast | ../dist/build/tdiag2picture/tdiag2picture > input_3.pict
 
 
