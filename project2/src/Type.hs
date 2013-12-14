@@ -1,5 +1,5 @@
 -- The module that is exported and accessible to the user.
 
-module Type where
+module Type (typeCheck) where
 
-import Type.AG
+import Type.AG (typeCheck)

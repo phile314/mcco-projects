@@ -2,14 +2,24 @@
 
 module {Type.AG}{}{
 import Type.Internal
+import Control.Monad ((>>))
 import CCO.Diag (Diag(..), Diag_(..))
-import CCO.Feedback (Message(..))
-import CCO.Printing (text)
+import CCO.Feedback (Message(..), messages, Feedback)
+import CCO.Printing 
+import CCO.SourcePos (SourcePos(..), Pos(..), Source(..))
 }
 
 include "../CCO/Diag/AG.ag"
 
--- | Makes available the position in order for error messages.
+{
+-- | Typechecks the given 'Diag', if it is well-typed it is returned,
+-- otherwise the 'Feedback' monad fails with some type error.
+typeCheck :: Diag -> Feedback Diag
+typeCheck d = messages msgs >> return d
+  where msgs = msgs_Syn_Diag $ wrap_Diag (sem_Diag d) (Inh_Diag {})
+}
+
+-- | Makes available the position for the error messages.
 attr Diag_ inh pos :: {SourcePos}
 attr Diag syn pos :: {SourcePos}
 
@@ -20,7 +30,6 @@ sem Diag
 attr Diag_ Diag
   syn ty :: {Type} -- ^ The type returned is 'ErrorT' if a t-diagram is ill-typed.
   syn msgs use {++} {[]} :: {[Message]}  -- ^ Error messages
---  syn result :: {Either TypeError Type}  -- ^ The result of the type check
 
 sem Diag_
   | Program  lhs.ty = ProgramT @l UnitT
@@ -41,6 +50,19 @@ sem Diag_
 data TypeError = TypeError Type [Type]
   deriving (Show, Eq)
 
+instance Printable TypeError where
+  pp (TypeError actual expected) = indent 4 msg 
+    where msg = text "Type Error: " >-< exp >-< act
+          exp = text "Expected: " >|< sepBy (map showable expected) comma
+          act = text "Actual: " >|< showable actual
+
+instance Printable SourcePos where
+  pp (SourcePos f p) = text $ format f ++ ":" ++ format' p
+    where format Stdin = ""
+          format (File f) = f
+          format' EOF = "end of file"
+          format' (Pos l c) = show l ++ ":" ++ show c ++ ":"
+
 -- | If a type error has been raised returns 'ErrorT', the original type otherwise.
 onTypeError :: Either TypeError Type -> Type
 onTypeError = either (const ErrorT) id
@@ -49,7 +71,7 @@ onTypeError = either (const ErrorT) id
 -- Otherwise returns an empty list. 
 errorOf :: SourcePos -> Either TypeError Type -> [Message]
 errorOf p = either errorMessage (const [])
-  where errorMessage e = [Error $ text (show p ++ show e)] -- TODO add proper description
+  where errorMessage e = [Error (pp p >-< pp e) ] 
 
 -- | TODO special cases for handling ErrorT types
 
