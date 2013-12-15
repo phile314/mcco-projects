@@ -1,7 +1,7 @@
 -- | Attribute grammar for type checking t-diagrams
 
 module {Type.AG}{}{
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, fromJust)
 import Type.Internal
 import Type.Error
 import Control.Monad ((>>))
@@ -30,12 +30,10 @@ sem Diag
   | Diag d.pos = @pos
          lhs.pos = @pos
 
-attr Diag_ Diag
+attr Diag_ Diag DeclS Decl
   syn ty :: {Type} -- ^ The type returned is 'ErrorT' if a t-diagram is ill-typed.
   syn msgs use {++} {[]} :: {[Message]}  -- ^ Error messages (they are produced in depth-first order)
-
-attr Diag_ Diag DeclS Decl
-  chn env :: {Map String Type}
+  chn env :: {Map String Type}  -- ^ Contains the var identifier-type bindings
 
 sem Diag_
   | Program  lhs.ty = ProgramT @l UnitT
@@ -57,10 +55,18 @@ sem Diag_
                   [] -> ProgramT ((to . result) @d2.ty) (result @d1.ty)
                   _ -> ErrorT 
     lhs.msgs = @d1.msgs ++ @d2.msgs ++ map (errorMessage @lhs.pos) @loc.compileError
+  | VarAccess 
+      loc .diagBound = M.lookup @v @lhs.env
+      lhs.ty = case @loc.diagBound of
+                 Just d -> d
+                 Nothing -> ErrorT
+      lhs.msgs = case @loc.diagBound of
+                  Just d -> []    -- Already generated when declared
+                  Nothing -> error "Variable Undefined" -- TODO add proper error
 
 sem Decl
-  | Tuple lhs.env = insert @x1 @x2.ty @lhs.env
-
+  | Tuple lhs.env = insert @x1 @x2.ty @lhs.env      -- TODO Check whether there is redefinition
+          lhs.msgs = @x2.msgs
 {
 -- | @'matchProgram' t@ returns a 'TypeError' if @t@ is not a 'ProgramT'.
 -- 'ErrorT' does not yield a 'TypeError'.
