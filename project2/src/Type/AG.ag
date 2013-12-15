@@ -10,10 +10,7 @@ import CCO.Feedback (Message(..), messages, Feedback)
 import CCO.Printing hiding (empty) 
 import Data.Map (insert, empty, Map)
 import qualified Data.Map as M
-
-import CCO.SourcePos (SourcePos (..)) -- remove
 }
-
 
 include "../CCO/Diag/AG.ag"
 
@@ -33,8 +30,10 @@ sem Diag
   | Diag d.pos = @pos
          lhs.pos = @pos
 
+attr Diag_ Diag
+  syn ty :: {Type} -- ^ The type returned is 'ErrorT' if a t-diagram is ill-typed. 
+
 attr Diag_ Diag DeclS Decl
-  syn ty :: {Type} -- ^ The type returned is 'ErrorT' if a t-diagram is ill-typed.
   syn msgs use {++} {[]} :: {[Message]}  -- ^ Error messages (they are produced in depth-first order)
   chn env :: {Map String Type}  -- ^ Contains the var identifier-type bindings
 
@@ -62,6 +61,8 @@ sem Diag_
                   [] -> ProgramT ((to . result) @d2.ty) (result @d1.ty)
                   _ -> ErrorT 
     lhs.msgs = @d1.msgs ++ @d2.msgs ++ map (compileError @lhs.pos) @loc.compileErrors
+  | Let lhs.ty = @in.ty
+        lhs.env = @lhs.env
   | VarAccess 
       loc .diagBound = M.lookup @v @lhs.env
       lhs.ty = case @loc.diagBound of

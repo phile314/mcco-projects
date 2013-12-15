@@ -3,10 +3,9 @@ module Diag2Picture (
 ) where
 
 import qualified Diag2Picture.Render as R
-import qualified Diag2Picture.Expand as E
 import qualified Diag2Picture.Inline as I
 import CCO.Picture
 import CCO.Diag
 
 toPicture :: Diag -> Picture
-toPicture = R.foldTree . E.foldTree . I.foldTree
+toPicture = R.render . I.inline

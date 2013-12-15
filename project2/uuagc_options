@@ -7,9 +7,6 @@ options : data, semfuns, catas, wrappers, signatures, haskellsyntax
 file : "src/Type/AG.ag"
 options : haskellsyntax, semfuns, catas, signatures, wrappers
 
-file : "src/Diag2Picture/Expand.ag"
-options : haskellsyntax, semfuns, catas, signatures, wrappers
-
 file : "src/Diag2Picture/Render.ag"
 options : haskellsyntax, semfuns, catas, signatures, wrappers
 
