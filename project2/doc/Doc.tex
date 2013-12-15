@@ -115,7 +115,46 @@ The implementation replicates exactly the specification introduced in \ref{sec:S
 The module \texttt{Type.Error} contains further sub-modules for producing specific errors 
 (\texttt{Type.Error.EType} for type errors and \texttt{Type.Error.EScope} for scoping errors).
 Particular effort has been put in making error messages as readable and informative as possible,
-taking care of actually hiding the internal representation of types and producing precise source
+taking care of hiding the internal representation of types and producing precise source
 position references.
+
+\subsection{Attribute Grammar}
+In the attribute grammar file (\texttt{src/Type/AG.ag}) the abstract syntax tree containing
+\texttt{Diag} and \texttt{Diag\_} is inspected and typed.
+The type rules defined in \ref{sec:Spec} have been extended in order to smartly raise type-error
+only when needed. For this purpose an ad-hoc type \texttt{ErrorT} has been added to the set
+ of supported types. This type is produced when a t-diagram is not well-typed and when
+a t-diagrams is composed with an ill-typed t-diagram.
+Using this type avoids generating superflous type-error messages, but it still allows to collect
+as many non-trivial error messages as possible.
+The following rules formally specifies how this type is generated:
+
+\sproof
+\RightLabel{[ErrorT-base]}
+\AxiomC{\blue{d} is ill-typed}
+\UnaryInfC{\blue{d} : \red{ErrorT}}
+\eproof
+
+\sproof
+\RightLabel{[ErrorT-compile]}
+\AxiomC{\blue{d1} : \red{ErrorT} $\lor$  \blue{d2} : \red{ErrorT}}
+\UnaryInfC{\blue{Compile d1 d2} : \red{ErrorT}}
+\eproof
+
+\sproof
+\RightLabel{[ErrorT-execute]}
+\AxiomC{\blue{d1} : \red{ErrorT} $\lor$  \blue{d2} : \red{ErrorT}}
+\UnaryInfC{\blue{Execute d1 d2} : \red{ErrorT}}
+\eproof
+The attributes of the attribute grammar are:
+\begin{itemize}
+  \item \texttt{pos}
+  \item \texttt{ty}
+  \item \texttt{msgs}
+\end{itemize}
+The attribute \texttt{pos} is a \texttt{SourcePos} object simply passed around and used inside
+error messages.
+The attribute \texttt{ty} is the \texttt{Type} of a \texttt{Diag}.
+The attribute \texttt{msgs} is a list collecting the error messages generated.
 
 \end{document}
