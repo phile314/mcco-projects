@@ -1,4 +1,4 @@
--- | Attribute grammar for type checking t-diagrams
+-- | Attribute grammar for rendering t-diagrams
 
 module {Diag2Picture.Render}{}{
 import CCO.Diag (Diag(..), Diag_(..), DeclS, Decl)
@@ -12,7 +12,7 @@ import Debug.Trace
 type Vec2d = Vec2 Double
 type Size = Vec2d
 
-ovlp = 10
+alwNoth a b = Nothing
 }
 
 include "../CCO/Diag/AG.ag"
@@ -28,20 +28,35 @@ sem Diag
 attr Diag_ Diag
   syn pict :: {[Command]}
   syn size :: {Size}
-  -- First element is x offset of left lower connection point, second element is distance from left to right connection point OUTDATED.
-  syn connStackTop    :: {Maybe Vec2d}
-  syn connSide        :: {(Maybe Vec2d, Maybe Vec2d)}
-  syn compConnSide    :: {Maybe (Vec2d, Vec2d)}
-  syn connStackBottom :: {Maybe Vec2d}
 
-  syn dlng :: String
 
-  syn result :: {String -> Diag}
+  -- Connection points where to dock neighbouring components.
+  -- Connection point for putting smth on top.
+  syn connStackTop use {alwNoth} {Nothing}   :: {Maybe Vec2d}
+
+  -- Connection point for putting something at the left/right side.
+  syn connSide use {(\a b -> (Nothing, Nothing))} {(Nothing, Nothing)} :: {(Maybe Vec2d, Maybe Vec2d)}
+
+  -- Connection points for the input/output of a compiler. Only defined for Compiler.
+  syn compConnSide use {alwNoth} {Nothing} :: {Maybe (Vec2d, Vec2d)}
+
+  -- Connection point for putting smth underneath.
+  syn connStackBottom use {alwNoth} {Nothing} :: {Maybe Vec2d}
+
+
+  -- The target language of the compiler.
+  syn dlng use {const} {(error "BUG. No language set.")} :: String
+
+  -- A function producing a result given a language. Basically changes the language of a block to the given one.
+  syn result use {alwNoth} {Nothing}:: {Maybe (String -> Diag)}
+  -- Returns the name of a subtree.
   syn name use {(\x y -> x ++ " - " ++ y)} {""} :: String
+  -- If set, overrides the name of the blocks returned by the result(_) function.
   inh nameOvr   :: {Maybe String}
 
 attr Diag_
-  syn result_ use {\a b -> Nothing} {Nothing}:: {Maybe (String -> Diag_)}
+  -- Updates the result_ if result is set. Is needed for wrapping in Diag elements.
+  syn result_ use {alwNoth} {Nothing} :: {Maybe (String -> Diag_)}
 
 
 sem Diag_
@@ -98,7 +113,7 @@ sem Diag_
             lhs.size = maxElems [@d1.size + @pos1, @d2.size + @pos2]
 
   | Compile inst.d3 :: Diag
-            inst.d3 = @d1.result @d2.dlng
+            inst.d3 = (fromJust @d1.result) @d2.dlng
             lhs.result = @d3.result
 
             (loc.pos1, loc.pos2, loc.pos3) = 
@@ -122,11 +137,18 @@ sem Diag_
 
             lhs.size = maxElems [@d1.size + @pos1, @d2.size + @pos2, @d3.size + @pos3]
 
-            
-  | VarAccess (lhs.connStackTop, lhs.connSide, lhs.connStackBottom, lhs.size, lhs.pict) = let e = error "Unexpected node VarAccess. Has the Inliner been run?" in (e, e, e, e, e)
+
+-- The following productions are only here to make some uuagc warnings go again            
+-- BEGIN --
+  | VarAccess (lhs.size, lhs.pict, lhs.dlng) = let e = error "Unexpected node VarAccess. Has the Inliner been run?" in (e, e, e)
+
+sem Decl
+  | Tuple x2.nameOvr = Nothing
+
+-- END --
 
 sem Diag
-  | Diag lhs.result = {maybe @d.result (\a r -> Diag @pos (a r)) @d.result_}
+  | Diag lhs.result = {(maybe @d.result (\a -> Just (\r -> Diag @pos (a r))) @d.result_)}
 
 {
 
