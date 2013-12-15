@@ -1,6 +1,8 @@
 -- | This module defines convenience functions and instances for testing.
 
-module Utility ( arbitrary ) where
+module Utility ( 
+    arbitrary
+  , illGenerator ) where
 
 import CCO.SourcePos (SourcePos(..), Source(..), Pos(..))
 import CCO.Diag (Diag_(..), Diag(..))
@@ -74,6 +76,36 @@ compile = do
 diag :: Diag_ -> Diag
 diag d = Diag (SourcePos Stdin (Pos 0 0)) d
 
+-- | A generator for ill-typed t-diagrams.
+-- The values returned include:
+--   * executing a platform
+--   * executing a program, interpreter, or compiler on a program or a compiler
+--   * executing a program, interpreter, or compiler on a nonmatching platform or interpreter;
+--   * compiling a platform;
+--   * compiling a program, interpreter, or compiler with a program, a platform, or an interpreter; and
+--   * compiling a program, interpreter, or compiler with a compiler for an in- compatible source langauge.
+illGenerator :: Gen Diag
+illGenerator = diagOf $ oneof [execIll, compIll, langMism]
+  where execIll = oneof [liftM2 Compile (diagOf platform) arbitrary, 
+                         liftM2 Compile arbitrary (diagOf (oneof [platform, program, interpreter]))]
+        compIll = oneof [liftM2 Execute (diagOf platform) arbitrary,
+                         liftM2 Execute arbitrary (diagOf (oneof [program, compiler]))]
+        langMism = oneof [compMism, execMism]
+        diagOf = liftM diag
+        languageOf (Platform l) = l
+        languageOf (Interpreter _ _ l) = l
+        languageOf (Compiler _ _ _ l) = l
+        languageOf (Program _ l) = l
+        execMism = do 
+            p@(Program n l) <- program
+            l' <- language `suchThat` (/= l)
+            plat <- elements [Interpreter "" l' "", Platform l']
+            return $ Execute (diag p) (diag plat)
+        compMism = do
+            p <- oneof [program, interpreter, compiler]
+            let l = languageOf p
+            l' <- language `suchThat` (/= l)
+            return $ Compile (diag p) (diag (Compiler "" l' "" ""))
 -------------------------------------------------------------------------------
 -- Type Generator
 -------------------------------------------------------------------------------

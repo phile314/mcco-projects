@@ -5,14 +5,14 @@ import Type.Internal (Type (..))
 import Type.Error (TypeError(..))
 import Type.AG
 import System.Exit (exitFailure)
-import Test.QuickCheck.Property (Property, property)
+import Test.QuickCheck.Property (Property, property, forAll)
 import Test.QuickCheck.Test (isSuccess, quickCheckResult)
-import Utility (arbitrary)
+import Utility (arbitrary, illGenerator)
 import qualified Data.Map as M
 
 -- | The tests that will be run
 tests :: [Property]
-tests = [property correctType]
+tests = [property correctType, forAll illGenerator illTyped]
 
 -- | Returns the 'Type' of the given 'Diag'.
 -- If the t-diagram is ill-typed 'typeOf' fails.
@@ -32,6 +32,10 @@ correctType d@(Diag p td) = if (not $ (expected td) == (typeOf d)) then (error .
         expected (Execute d1 (Diag _ (Platform _))) = result $ typeOf d1
         expected (Execute d1 d2) = ProgramT ((language . result . typeOf) d2) ((result . typeOf) d1)
         expected (Compile d1 d2) = ProgramT ((to . result . typeOf) d2) ((result . typeOf) d1)
+
+-- | Checks that invalid compositions of t-diagrams produce an 'ErrorT'.
+illTyped :: Diag -> Bool
+illTyped d = typeOf d == ErrorT
 
 -- | The entry point of the testsuite
 main :: IO ()
