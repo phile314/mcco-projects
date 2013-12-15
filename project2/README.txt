@@ -27,9 +27,12 @@ $ cat <tdiag file> | ./dist/build/PROG/PROG | ....
 where PROG may be one of "parse-tdiag", "tc-tdiag", "tdiag2picture", "pp-picture"
 
 
+
 Render.sh can be used to run all sub-programs, create a latex document and run pdflatex on it.
 All results will be stored in the folder where the script is located in the
 subfolder "tmp". The result will be "tmp/input.pdf".
+This scripts requires bash and pdflatex must be in the path.
+
 $ render.sh <tdiag fike>
 
 
