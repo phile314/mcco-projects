@@ -47,7 +47,7 @@ sem Diag_
       catMaybes [matchProgram @d1.ty, matchPlatform @d2.ty, matchLanguage @d1.ty @d2.ty]
     lhs.ty = case (@loc.executeError, @d2.ty) of
                   ([], PlatformT _) -> result @d1.ty
-                  ([], _)           -> ProgramT ((language . result) @d2.ty) (result @d1.ty)
+                  ([], _)           -> ProgramT (language @d2.ty) (result @d1.ty)
                   (_ , _)           -> ErrorT 
     lhs.msgs = @d1.msgs ++ @d2.msgs ++ map (errorMessage @lhs.pos) @loc.executeError
   | Compile 
