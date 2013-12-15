@@ -1,0 +1,9 @@
+compile
+    execute
+        interpreter Hugs for Haskell in Haskell
+    on
+        interpreter GHCi for Haskell in C++
+    end
+with
+    compiler GCC from C++ to i686-linux in i686-linux
+end
