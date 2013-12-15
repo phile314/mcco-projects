@@ -10,13 +10,13 @@ import CCO.Printing
 import CCO.SourcePos (SourcePos(..), Pos(..), Source(..))
 import Type.Internal
 
--- | Represent a type error. The first type is the actual given type.
--- The second is a list containing expected types.
-data TypeError = PlatformError Type 
-               | ProgramError Type 
-               | CompilerError Type
-               | LangError Type Type
+-- | Represent a type error. 
+data TypeError = PlatformError Type   -- ^ The given type is not a platform
+               | ProgramError Type    -- ^ The given type is not a program
+               | CompilerError Type   -- ^ The given type is not a compiler
+               | LangError Type Type  -- ^ The languages of the types given do not match
 
+-- | Represents a error related to scope.
 data ScopeError = UndefinedVariable String
 
 instance Printable TypeError where
@@ -62,8 +62,8 @@ actual (LangError t1 t2) = readable t2
 
 -- | Returns a 'Doc' containing a user-readable representation of a type.
 -- Fails for types non exposed to the user.
-readable (PlatformT l) = text $ "Platform _ " ++ l
-readable (ProgramT m (PlatformT l)) = text $ unwords ["Interpreter _", m, l]
+readable (PlatformT l) = text $ "Platform " ++ l
+readable (ProgramT m (PlatformT l)) = text $ unwords ["Interpreter _", "for", l, "in", m]
 readable (ProgramT m (CompilerT l1 l2)) = text $ unwords ["Compiler _", l1, l2, m]
-readable (ProgramT l _) = text $ "Program _ " ++ l
+readable (ProgramT l _) = text $ l ++ " Program" 
 readable _ = error "Non-exposed type"

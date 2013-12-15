@@ -1,0 +1,12 @@
+let a = execute 
+          platform i686-linux
+        on
+           program hello in Haskell
+        end
+in
+  compile 
+    a
+  with
+    interpreter HUGS for Haskell in Haskell
+  end
+end 
