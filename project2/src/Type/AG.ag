@@ -20,6 +20,13 @@ include "../CCO/Diag/AG.ag"
 typeCheck :: Diag -> Feedback Diag
 typeCheck d = messages msgs >> return d
   where msgs = msgs_Syn_Diag $ wrap_Diag (sem_Diag d) (Inh_Diag {env_Inh_Diag = empty})
+
+-- | Returns the 'Type' of the given 'Diag'.
+-- If the t-diagram is ill-typed 'typeOf' fails.
+-- The t-diagram cannot contain any variable because this environment information
+-- is not available.
+typeOf :: Diag -> Type
+typeOf d = ty_Syn_Diag $ wrap_Diag (sem_Diag d) (Inh_Diag {env_Inh_Diag = empty})
 }
 
 -- | Makes available the position for the error messages.

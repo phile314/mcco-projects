@@ -14,10 +14,6 @@ import qualified Data.Map as M
 tests :: [Property]
 tests = [property correctType]
 
--- | Returns the type of a 'Diag'.
-typeOf :: Diag -> Type
-typeOf d = ty_Syn_Diag $ wrap_Diag (sem_Diag d) (Inh_Diag {env_Inh_Diag = M.empty})
-
 -- | Tests that the correct type is returned.
 -- It does *not* test that the t-diagram is well-typed.
 correctType :: Diag -> Bool
