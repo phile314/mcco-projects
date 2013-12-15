@@ -24,3 +24,10 @@ Ill-typed examples:
     Since the implementation language of the first (i686-linux) is different from the input language
     of the second (Haskell-2), a type error is raised.
 
+FIX (Crash):
+vars-nested-compile-right.tdiag
+vars2-nested-compile-right.tdiag
+vars3-nested-compile-right.tdiag
+vars-nested-exec-right.tdiag
+  tc-tdiag: missing rule: Diag_.VarAccess.lhs.ty
+
