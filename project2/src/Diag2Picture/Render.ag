@@ -3,7 +3,7 @@
 module {Diag2Picture.Render}{}{
 import CCO.Diag (Diag(..), Diag_(..), DeclS, Decl)
 import CCO.Picture
-import Debug.Trace
+import Data.Maybe
 }
 
 {
@@ -29,18 +29,29 @@ attr Diag_ Diag
   -- First element is x offset of left lower connection point, second element is distance from left to right connection point OUTDATED.
   syn conns :: {(Maybe Vec2, Maybe Vec2)}
 
+  syn dlng :: String
+
+  syn result :: {String -> Diag}
+
+attr Diag_
+  syn result_ use {\a b -> Nothing} {Nothing}:: {Maybe (String -> Diag_)}
+
 
 sem Diag_
-  | Program lhs.conns = (Nothing, Just (7.5, 50))
+  | Program lhs.result_ = {Just $ \r -> Program @p r}
+            lhs.conns = (Nothing, Just (7.5, 50))
             lhs.size  = (65, 30)
             lhs.pict  = mkProg @l @p
   | Platform lhs.conns = (Just (0, 50), Nothing)
              lhs.size  = (50, 30)
              lhs.pict  = mkPlat @m
-  | Interpreter lhs.conns = (Just (0, 50), Just(0, 50))
+  | Interpreter lhs.result_ = {Just $ \r -> Interpreter @i @l r}
+                lhs.conns = (Just (0, 50), Just(0, 50))
                 lhs.size  = (50, 30)
                 lhs.pict  = mkIntp @m @l @i
-  | Compiler lhs.conns = (Just (0, 150), Just(50, 50))
+  | Compiler lhs.result_ = {Just $ \r -> Compiler @c @l1 @l2 r}
+             lhs.dlng  = @l2
+             lhs.conns = (Just (0, 150), Just(50, 50))
              lhs.size  = (150, 30)
              lhs.pict  = mkCmpl @m @l1 @l2 @c
 
@@ -55,7 +66,10 @@ sem Diag_
                                (x1, y1 + y2),
                                (translate p1 @d1.pict) ++ (translate p2 @d2.pict))
                          }
-  | CompileI (lhs.conns, lhs.size, lhs.pict) =
+  | Compile inst.d3 :: Diag
+            inst.d3 = @d1.result @d2.dlng
+            lhs.result = @d3.result
+            (lhs.conns, lhs.size, lhs.pict) =
                         { let (x1, y1) = @d1.size
                               (x2, y2) = @d2.size
                               (x3, y3) = @d3.size
@@ -70,6 +84,9 @@ sem Diag_
                               (translate p1 @d1.pict) ++ (translate p2 @d2.pict) ++ (translate p3 @d3.pict))
                         }
   | VarAccess (lhs.conns, lhs.size, lhs.pict) = let e = error "Unexpected node VarAccess. Has the Inliner been run?" in (e, e, e)
+
+sem Diag
+  | Diag lhs.result = {maybe @d.result (\a r -> Diag @pos (a r)) @d.result_}
 
 {           
 
@@ -126,8 +143,8 @@ mkCmpl m l1 l2 n =
     , Put (50, 10)      (Makebox (50,10) n)
     , Put (50, 0)       (Makebox (50,10) m)]
 
-foldTree :: Diag -> Picture
-foldTree d = Picture (size_Syn_Diag run) (pict_Syn_Diag run)
+render :: Diag -> Picture
+render d = Picture (size_Syn_Diag run) (pict_Syn_Diag run)
     where run = wrap_Diag (sem_Diag d) inh
           inh = Inh_Diag
 }
