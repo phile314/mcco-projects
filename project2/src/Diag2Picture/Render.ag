@@ -55,7 +55,7 @@ attr Diag_ Diag
   inh nameOvr   :: {Maybe String}
 
 attr Diag_
-  -- Updates the result_ if result is set. Is needed for wrapping in Diag elements.
+  -- If set, result of parent will be updated with this value.
   syn result_ use {alwNoth} {Nothing} :: {Maybe (String -> Diag_)}
 
 
@@ -152,7 +152,7 @@ sem Diag
 
 {
 
-
+-- | Returns the extreme values of a vector for each element.
 extreme :: (a -> a -> a) -> [Vec2 a] -> Vec2 a
 extreme f ((a1:.b1:.()):(vs@(_:_))) = (f a1 a2):.(f b1 b2):.()
     where (a2:.b2:.()) = extreme f vs
@@ -161,14 +161,18 @@ extreme _ [a] = a
 minElems = extreme min
 maxElems = extreme max
 
+-- | Translates a vector if it is not `Nothing`.
 translateC :: Maybe Vec2d -> Vec2d -> Maybe Vec2d
 translateC Nothing _ = Nothing
 translateC (Just v) d = Just (v + d)
 
-
+-- | Translates a list of commands.
 translate :: [Command] -> Vec2d -> [Command]
 translate cs (dx:.dy:.()) = map f cs
   where f (Put (x, y) a) = Put (x + dx, y + dy) a
+
+
+-- latex generation functions
 
 mkProg :: String -> String -> [Command]
 mkProg l n =
@@ -213,6 +217,10 @@ mkCmpl m l1 l2 n =
     , Put (50, 10)      (Makebox (50,10) n)
     , Put (50, 0)       (Makebox (50,10) m)]
 
+
+-- | Renders the given diagram. A valid picture is produced
+--   if the input diagram does type check. The diagram
+--   must not contain any `VarAccess` or `Let` nodes.
 render :: Diag -> Picture
 render d = Picture (vec2Tup $ size_Syn_Diag run) (pict_Syn_Diag run)
     where run = wrap_Diag (sem_Diag d) inh

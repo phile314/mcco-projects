@@ -1,4 +1,4 @@
--- | Attribute grammar for type checking t-diagrams
+-- | Attribute grammar for inlining variables.
 
 module {Diag2Picture.Inline}{}{
 import CCO.Diag (Diag(..), Diag_(..), DeclS, Decl)
@@ -16,17 +16,20 @@ sem Diag
   | Diag d.pos = @pos
          lhs.pos = @pos
 
--- | The type of a t-diagram.
--- The type returned is correct only if no error massage is raised.
 attr Diag_ Diag DeclS Decl
 
+  -- the new diagram.
   syn ndiag :: self
+
+  -- the environment.
   chn env :: {Map String Diag}
+
+  -- if set, will be used as replacement value for the current node. we cannot
+  -- directly return is as ndiag, because the Diag/Diag_ types would clash.
   syn repl use {(\_ _ -> Nothing)} {Nothing} :: {Maybe Diag}
 
 
 
--- Add right hand side element of Compile element (becomes CompileI)
 sem Diag
   | Diag lhs.ndiag = fromMaybe @ndiag @d.repl
 
@@ -39,6 +42,9 @@ sem Decl
   | Tuple lhs.env = insert @x1 @x2.ndiag @lhs.env 
 
 {
+-- | Inlines all variables in the given diagram. If the
+--   input diagram did type check, this operation
+--   always succeeds.
 inline :: Diag -> Diag
 inline d = ndiag_Syn_Diag $ wrap_Diag (sem_Diag d) inh
     where inh = Inh_Diag empty
