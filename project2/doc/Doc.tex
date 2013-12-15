@@ -158,4 +158,35 @@ The attribute \texttt{pos} is a \texttt{SourcePos} object simply passed around a
 error messages.
 The attribute \texttt{ty} is the \texttt{Type} of a \texttt{Diag}.
 The attribute \texttt{msgs} is a list collecting the error messages generated.
+
+\section{Rendering}
+This section describes the design and implementation of the program \texttt{tdiag2picutre}.
+
+This program is split into two parts. The first stage inlines all variables, whereas the second stage then converts
+a given diagram into a tree describing the latex commands to generate. The functionality is implemented in the
+following modules:
+\begin{itemize}
+    \item \texttt{Diag2Picture.Inline}
+    \item \texttt{Diag2Picture.Render}
+\end{itemize}
+
+\subsection{Inlining}
+The inliner removes all \texttt{Let} and \texttt{VarAccess} nodes from a given diagram. Doing this can be
+done in a straight-forward way by replacing all \texttt{VarAccess} by the diagram the variables refers to and
+simply dropping all \texttt{Let} nodes afterwards. The implementation can be found in the file \texttt{src/Diag2Picture/Inline.ag}
+and makes use of the following attributes:
+\begin{itemize}
+  \item \texttt{ndiag}
+  \item \texttt{env}
+  \item \texttt{repl}
+\end{itemize}
+
+The attribute \texttt{env} contains the environment. The attributes \texttt{ndiag} and \texttt{repl} contain the new built tree.
+Because the \texttt{Decl} production returns a tuple of type \texttt{(String, Diag)}, the two attributes are required
+to be able to substitute the variable value for the \texttt{VarAccess}, which has type \texttt{Diag\_}.
+
+Please note that the behaviour of this module is undefined if the input diagram is ill-typed.
+
+\subsection{Rendering}
+Oh boy.
 \end{document}
