@@ -33,7 +33,7 @@ All results will be stored in the folder where the script is located in the
 subfolder "tmp". The result will be "tmp/input.pdf".
 This scripts requires bash and pdflatex must be in the path.
 
-$ render.sh <tdiag fike>
+$ render.sh <tdiag file>
 
 
 
@@ -53,8 +53,8 @@ which examples are well-formed and ill-formed.
 DOCUMENTATION
 ==========
 
-See Doc/Doc.pdf for the complete documentation.
-See also the haddock documentation.
+See doc/Doc.pdf for the complete documentation.
+See also the haddock documentation (dist/doc/).
 
 Features:
   - Type checking, including using a bottom-type to collect as many errors as possible
