@@ -55,6 +55,8 @@ sem Diag_
                   [] -> ProgramT ((to . result) @d2.ty) (result @d1.ty)
                   _ -> ErrorT 
     lhs.msgs = @d1.msgs ++ @d2.msgs ++ map (errorMessage @lhs.pos) @loc.compileError
+  | Let lhs.ty = @in.ty
+        lhs.env = @lhs.env
   | VarAccess 
       loc .diagBound = M.lookup @v @lhs.env
       lhs.ty = case @loc.diagBound of
