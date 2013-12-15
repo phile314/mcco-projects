@@ -1,23 +1,28 @@
 This file contains a descprition of the examples included in this directory.
 
 Well-typed examples:
-  b-compiler.tdiag
-  b-interpreter.tdiag
-  b-platform.tdiag
-  b-program.tdiag
-  basic.tdiag
-  nested-exec-left.tdiag
-  nested-exec-right.tdiag
-  b-compile-comp.tdiag
-  b-compile-intp.tdiag
-  b-compile-prog.tdiag
-  nested-compile-right.tdiag
-  nested-compile-left.tdiag
+  NAME                      RENDERING OK WITH COMMIT
+  basic.tdiag               e7aee24acf838caffc3a301936547fb21db33a1f
+  b-compile-comp.tdiag      "
+  b-compile-intp.tdiag      "
+  b-compile-prog.tdiag      "
+  b-compiler.tdiag          "
+  b-interpreter.tdiag       "
+  b-platform.tdiag          "
+  b-program.tdiag           "
+  nested-compile-left.tdiag TO CHECK
+  nested-compile-right.tdiag TO CHECK
+  nested-exec-left.tdiag    e7aee24acf838caffc3a301936547fb21db33a1f
+  nested-exec-right.tdiag   "
+  vars2-nested-compile-right.tdiag TO CHECK
+  vars3-nested-compile-right.tdiag TO CHECK
+  vars-nested-compile-right.tdiag  TO CHECK
+  vars-nested-exec-right.tdiag     TO CHECK
 
 Ill-typed examples:
   basic2.tdiag : 
     The implementation language of the program does not match the platform (Haskell - i686-windows)
-  
+
   nested-compile-left.ill.tdiag :
     The result of the most inner compile block is a Compiler from Haskell-1 to i868-linux in i686-linux
     The compiler used in the second compile block is a Compiler from Haskell-2 to i686-linux in Haskell-3
