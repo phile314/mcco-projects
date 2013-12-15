@@ -22,7 +22,8 @@ if [ $? -ne 0 ]; then
     exit 2
 fi
 
-cat input_2.ast | "${BIN}/tc-tdiag/tc-tdiag"
+# the checker never changes the AST
+cat input_2.ast | "${BIN}/tc-tdiag/tc-tdiag" > /dev/null
 if [ $? -ne 0 ]; then
     echo "Type checking failed, aborting..."
     exit 2

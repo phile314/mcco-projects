@@ -5,7 +5,6 @@ import CCO.Diag (Diag(..), Diag_(..), DeclS, Decl)
 import CCO.Picture
 import Data.Maybe
 import Data.Vec.Base hiding (map)
-import Debug.Trace
 }
 
 {
@@ -17,13 +16,6 @@ alwNoth a b = Nothing
 
 include "../CCO/Diag/AG.ag"
 
--- | Makes available the position in order for error messages.
-attr Diag_ inh pos :: {SourcePos}
-attr Diag syn pos :: {SourcePos}
-
-sem Diag
-  | Diag d.pos = @pos
-         lhs.pos = @pos
 
 attr Diag_ Diag
   syn pict :: {[Command]}
@@ -138,14 +130,16 @@ sem Diag_
             lhs.size = maxElems [@d1.size + @pos1, @d2.size + @pos2, @d3.size + @pos3]
 
 
--- The following productions are only here to make some uuagc warnings go again            
+-- The following productions are only here to make some uuagc warnings go away 
 -- BEGIN --
+
   | VarAccess (lhs.size, lhs.pict, lhs.dlng) = let e = error "Unexpected node VarAccess. Has the Inliner been run?" in (e, e, e)
 
 sem Decl
   | Tuple x2.nameOvr = Nothing
 
 -- END --
+
 
 sem Diag
   | Diag lhs.result = {(maybe @d.result (\a -> Just (\r -> Diag @pos (a r))) @d.result_)}
