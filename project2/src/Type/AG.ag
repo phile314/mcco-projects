@@ -92,13 +92,20 @@ matchPlatform (ProgramT _ (PlatformT _)) _ = Nothing
 matchPlatform ErrorT _ = Nothing
 matchPlatform t p = Just $ PlatformError t p
 
--- | @'matchLang' t1 t2@ returns a 'TypeError' if the two given types can be properly combined through
+-- | @'matchLang' t1 t2 p@ returns a 'TypeError' at 'SourcePos' @p@ 
+-- if the two given types can be properly combined through
 -- 'Compile' or 'Execute' but their languages do not match, 'Nothing' otherwise.
+-- 'ErrorT' does not yield a 'TypeError'.
+matchLanguage :: Type -> Type -> SourcePos -> Maybe TypeError
 matchLanguage p1@(ProgramT l r) p2@(PlatformT l') pos | l /= l' = Just $ LangError p1 p2 pos
 matchLanguage p1@(ProgramT l r) p2@(ProgramT m (PlatformT l')) pos | l /= l' = Just $ LangError p1 p2 pos
 matchLanguage p1@(ProgramT l r) p2@(ProgramT m (CompilerT l1 l2)) pos | l /= l1 = Just $ LangError p1 p2 pos
 matchLanguage _ _ _ = Nothing
 
+-- | @'matchCompiler' t p@ returns a 'TypeError' at 'SourcePos' @p@ if @t@ is not
+-- a compiler type, 'Nothing' otherwise.
+-- 'ErrorT' does not yield a 'TypeError'.
+matchCompiler :: Type -> SourcePos -> Maybe TypeError
 matchCompiler (ProgramT _ (CompilerT _ _)) _ = Nothing
 matchCompiler ErrorT _ = Nothing
 matchCompiler t p = Just $ CompilerError t p
