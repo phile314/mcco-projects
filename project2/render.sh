@@ -33,7 +33,8 @@ cat input_2.ast | "${BIN}/tdiag2picture/tdiag2picture" > input_3.pict
 
 
 cat << "EOF" > input.tex
-\documentclass[10pt, a4paper]{article}
+\documentclass[10pt]{article}
+\usepackage[a3paper,landscape]{geometry}
 \begin{document}
 \begin{footnotesize}
 EOF
