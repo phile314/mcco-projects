@@ -1,7 +1,8 @@
--- | This module contains functions and data types related to type errors.
+-- | This module contains functions and data types related to errors.
 
 module Type.Error (
-    TypeError(..) -- Should be hidden
+    TypeError(..)
+  , ScopeError(..)
   ) where
 
 import CCO.Feedback (Message(..))
@@ -16,11 +17,18 @@ data TypeError = PlatformError Type
                | CompilerError Type
                | LangError Type Type
 
+data ScopeError = UndefinedVariable String
+
 instance Printable TypeError where
   pp e = indent 4 msg 
     where msg = text "Type Error: " >|< describe e >-< exp >-< act
           exp = text "Expected: " >|< expected e
           act = text "Actual: " >|< actual e
+
+instance Printable ScopeError where
+  pp (UndefinedVariable v) = indent 4 msg
+    where msg = text "Scope Error: " >|< what
+          what = text $ "`" ++ v ++ "' is not in scope" 
 
 instance Printable SourcePos where
   pp (SourcePos f p) = text $ format f ++ ":" ++ format' p
@@ -28,7 +36,6 @@ instance Printable SourcePos where
           format (File f) = f
           format' EOF = "end of file"
           format' (Pos l c) = show l ++ ":" ++ show c ++ ":"
-
 
 -- | Returns a 'Doc' containing a general description of each error.
 describe :: TypeError -> Doc

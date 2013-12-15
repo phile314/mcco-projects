@@ -61,8 +61,8 @@ sem Diag_
                  Just d -> d
                  Nothing -> ErrorT
       lhs.msgs = case @loc.diagBound of
-                  Just d -> []    -- Already generated when declared
-                  Nothing -> error "Variable Undefined" -- TODO add proper error
+                  Just d -> []    -- If any they have already been generated when declared
+                  Nothing -> [errorMessage @lhs.pos (UndefinedVariable @v)]
 
 sem Decl
   | Tuple lhs.env = insert @x1 @x2.ty @lhs.env      -- TODO Check whether there is redefinition
@@ -95,7 +95,7 @@ matchCompiler (ProgramT _ (CompilerT _ _)) = Nothing
 matchCompiler ErrorT = Nothing
 matchCompiler t = Just $ CompilerError t
 
--- | @'errorMessage' p t@ produces an error message at position @p@ for the 'TypeError' @t@.
-errorMessage :: SourcePos -> TypeError -> Message
+-- | @'errorMessage' p e@ produces an error message at position @p@ for the 'Printable' datatype @e@.
+errorMessage :: (Printable a) => SourcePos -> a -> Message
 errorMessage p e = Error (pp p >-< pp e)
 }
