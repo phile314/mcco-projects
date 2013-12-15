@@ -20,7 +20,9 @@ cabal-version:       >=1.8
 -- be able to compile with cabal 1.14.
 
 
-extra-source-files:    Makefile, src/CCO/Diag/AG.ag,
+extra-source-files:    README.txt, Makefile, uuagc_options, render.sh, src/CCO/Diag/AG.ag,
+                       examples/Description.txt, examples/*.tdiag, examples/var-decl.ill.tdiag,
+                       examples/nested-compile-left.ill.tdiag,
                        src/CCO/Diag/AG/Base.ag, src/CCO/Picture/AG.ag,
                        src/CCO/Picture/AG/Base.ag, 
                        src/CCO/Picture/AG/Printing.ag, src/Type/AG.ag,
@@ -42,7 +44,7 @@ executable tc-tdiag
 executable tdiag2picture
   main-is:          TDiag2Picture.hs
   build-depends:    base >=4.5, cco >= 0.0.4, containers >= 0.4, Vec >= 1.0
-  other-modules:    CCO.Diag, CCO.Picture, CCO.Picture.AG, Diag2Picture.Render, Diag2Picture.Inline, CCO.Diag.AG
+  other-modules:    CCO.Diag, CCO.Picture, CCO.Picture.AG, Diag2Picture.Render, Diag2Picture.Inline, CCO.Diag.AG, Diag2Picture
   hs-source-dirs:   src
 
 
