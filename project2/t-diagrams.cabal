@@ -22,7 +22,7 @@ cabal-version:       >=1.8
 
 extra-source-files:    README.txt, Makefile, uuagc_options, render.sh, src/CCO/Diag/AG.ag,
                        examples/Description.txt, examples/*.tdiag, examples/var-decl.ill.tdiag,
-                       examples/nested-compile-left.ill.tdiag,
+                       examples/nested-compile-left.ill.tdiag, doc/Doc.pdf, doc/Doc.tex
                        src/CCO/Diag/AG/Base.ag, src/CCO/Picture/AG.ag,
                        src/CCO/Picture/AG/Base.ag, 
                        src/CCO/Picture/AG/Printing.ag, src/Type/AG.ag,
