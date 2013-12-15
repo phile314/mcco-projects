@@ -2,6 +2,7 @@
 \usepackage{hyperref}
 \usepackage{fullpage}
 \usepackage{bussproofs}
+\usepackage{color}
 % font size could be 10pt (default), 11pt or 12 pt
 % paper size coulde be letterpaper (default), legalpaper, executivepaper,
 % a4paper, a5paper or b5paper
@@ -51,6 +52,9 @@
   \eproof
 }
 
+\newcommand{\blue}[1]{\textcolor{blue}{#1} }
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+
 \begin{document}
 \maketitle
 
@@ -59,33 +63,38 @@
 This section formally specifies the type rules used for type-checking a t-diagram.
 A t-diagram is considered well-typed, if there is a top-level type which can be derived
 using the following rules, ill-typed otherwise.
+In the following rules \blue{blue} encodes \blue{values} 
+(\texttt{Diag\_} as defined in module \texttt{CCO.Diag}) 
+and \red{red} encodes t-diagrams \red{types}.
+
+% red for types, blue for constructors
 
 \subsection{Basic values}
-\bcase{Program : Program $l_m$ $()$}{program}
-\bcase{Platform : Platform $l_m$}{platform}
-\bcase{Interpreter : Program $l_m$ (Platform $l_i$)}{interpreter}
-\bcase{Compiler : Program $l_m$ (Compiler $l_i$ $l_o$)}{compiler}
+\bcase{\blue{Program \_ $l$} : \red{Program $l$ $()$}}{[program]}
+\bcase{\blue{Platform $l_m$} : \red{Platform $l_m$}}{[platform]}
+\bcase{\blue{Interpreter \_ $l_i$ $l_m$} : \red{Program $l_m$ (Platform $l_i$)}}{[interpreter]}
+\bcase{\blue{Compiler \_ $l_1$ $l_2$ $l_m$} : \red{Program $l_m$ (Compiler $l_i$ $l_o$)}}{[compiler]}
 
 \subsection{Compositional Cases}
 \sproof
-\RightLabel{execute-plat}
-\AxiomC{p : Program $l$ $r$}
-\AxiomC{d : Platform $l$}
-\BinaryInfC{Execute p d : ()}
+\RightLabel{[execute-on-platform]}
+\AxiomC{\blue{d1} : \red{Program $l$ $r$}}
+\AxiomC{\blue{d2} : \red{Platform $l$}}
+\BinaryInfC{\blue{Execute d1 d2} : \red{$r$}}
 \eproof
 
 \sproof
-\RightLabel{execute-intp}
-\AxiomC{p : Program $l_i$ $r$}
-\AxiomC{i : Program $l_m$ (Platform $l_i$)}
-\BinaryInfC{Execute p i : Program $l_m$ $r$}
+\RightLabel{[execute-on-interpreter]}
+\AxiomC{\blue{d1} : \red{Program $l_i$ $r$}}
+\AxiomC{\blue{d1} : \red{Program $l_m$ (Platform $l_i$)}}
+\BinaryInfC{\blue{Execute d1 d2} : \red{Program $l_m$ $r$}}
 \eproof
 
 \sproof
-\RightLabel{compile}
-\AxiomC{d1 : Program $l_i$ $r$}
-\AxiomC{d2 : Program $l_m$ (Compiler $l_i$ $l_o$)}
-\BinaryInfC{Compile d1 d2 : Program $l_o$ $r$}
+\RightLabel{[compile]}
+\AxiomC{\blue{d1} : \red{Program $l_1$ $r$}}
+\AxiomC{\blue{d2} : \red{Program $l_m$ (Compiler $l_1$ $l_2$)}}
+\BinaryInfC{\blue{Compile d1 d2} : \red{Program $l_2$ $r$}}
 \eproof
 
 \section{Type Checking}
