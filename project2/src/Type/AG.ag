@@ -30,8 +30,10 @@ sem Diag
   | Diag d.pos = @pos
          lhs.pos = @pos
 
+attr Diag_ Diag
+  syn ty :: {Type} -- ^ The type returned is 'ErrorT' if a t-diagram is ill-typed. 
+
 attr Diag_ Diag DeclS Decl
-  syn ty :: {Type} -- ^ The type returned is 'ErrorT' if a t-diagram is ill-typed.
   syn msgs use {++} {[]} :: {[Message]}  -- ^ Error messages (they are produced in depth-first order)
   chn env :: {Map String Type}  -- ^ Contains the var identifier-type bindings
 

@@ -69,6 +69,7 @@ sem Diag_
                               (cc1 + cd1 + cb2 + (x3 - cc3), y2 + (max y1 y3) - ovlp),
                               (translate p1 @d1.pict) ++ (translate p2 @d2.pict) ++ (translate p3 @d3.pict))
                         }
+  | VarAccess (lhs.conns, lhs.size, lhs.pict) = let e = error "Unexpected node VarAccess. Has the Inliner been run?" in (e, e, e)
 
 {           
 
