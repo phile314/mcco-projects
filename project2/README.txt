@@ -16,7 +16,7 @@ Prerequisites (other versions might work too):
 
 
 Building:
-$ make (TODO does make work??)
+$ make
 or
 $ cabal configure --enable-tests
 $ cabal build
@@ -35,7 +35,7 @@ $ render.sh <tdiag fike>
 
 
 Running the tests:
-$ make testi
+$ make test
 or
 $ cabal test
 
@@ -58,6 +58,7 @@ Features:
   - Latex picture generation
   - Interpreting a program yields a new program
   - Variables
+  - Precise and readable error messages
 
 Unsupported features:
   - Only diagrams can be used as variable values, not strings
