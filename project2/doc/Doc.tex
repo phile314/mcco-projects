@@ -188,5 +188,56 @@ to be able to substitute the variable value for the \texttt{VarAccess}, which ha
 Please note that the behaviour of this module is undefined if the input diagram is ill-typed.
 
 \subsection{Rendering}
-Oh boy.
+\label{sec:Inlining}
+The rendering component converts a diagram to a picture tree describing the latex commands to produce. The source code
+of this module can be found in \texttt{src/Diag2Picture/Render.ag}.
+The following attributes are used for rendering:
+\begin{itemize}
+    \item \texttt{pict}
+    \item \texttt{size}
+    \item \texttt{connStackTop}
+    \item \texttt{connSide}
+    \item \texttt{connStackBottom}
+    \item \texttt{compConnSide}
+    \item \texttt{dlng}
+    \item \texttt{result}
+    \item \texttt{result\_}
+    \item \texttt{name}
+    \item \texttt{nameOvr}
+\end{itemize}
+The attribute \texttt{pict} contains the rendered picture, the final output. The attribute \texttt{size} contains
+the size of a given (sub-)tree.
+The \texttt{conn...} nodes contain the coordinates where other components may be docked. Not all connection points
+are defined for all elements, but all combinations which type-check are implemented. The \texttt{compConnSide} is a
+special connection point, only defined for something which is of type \red{\texttt{Program \_ (Compiler \_ \_)}}. It is used to dock
+elements to a compiler.
+
+To produce the right hand side of a \texttt{Compile} node, the remaining attributes are used. The attribute
+\texttt{dlng} contains the target language, and is only defined for nodes with a type of \red{\texttt{Program \_ (Compiler \_ \_)}}.
+The attribute \texttt{result}/\texttt{result\_} contains a function which produces an element of the same type
+as it's defining node with a given language. The expected language of the right hand side of a \texttt{Compile} is 
+passed to this function, thereby producing the right element.
+The two \texttt{results}/\texttt{result\_} are necessary to fix the type signatures, the same way as mentioned
+in the section \ref{sec:Inlining}.
+The attributes \texttt{name} and \texttt{nameOvr} are used to build the name of the right hande side of a \texttt{Compile}.
+This is necessary because else the name of compiling an interpreter, executed on another interpreter, would not be known.
+An example of this case can be seen in \texttt{examples/compile-exec.tdiag}. Further documentation of the
+attributes is available directly in the source code.
+
+Please note that some of the attributes are not well-defined for all productions. As we are not aware of any elegant
+way to express this in an UUAG grammar, this leads to either some warnings or quite a bit of dummy code.
+
+Joining together multiple elements is then simply moving them around so that the chosen connection points
+of the individual elements end up at the same locations. As this might cause the diagram to extend to
+negative coordinates, the joined diagram is shifted by the smallest found coordinates.
+When the final positions have been found, all other position-dependent attributes
+can be computed using the appropriate information from the incorporated elements and translating
+it by the position of the elements.
+
+All coordinates, line slopes etc. have been taken from the assignment and have not been changed.
+
+The precondition of the rendering algorithm is, that the given diagram is well-typed and does not contain
+any \texttt{Let} or \texttt{VarAccess} nodes. If this conditions are fullfilled, the rendering should
+always succeed. 
+
 \end{document}

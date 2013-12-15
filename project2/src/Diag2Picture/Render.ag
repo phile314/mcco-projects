@@ -29,12 +29,11 @@ attr Diag_ Diag
   -- Connection point for putting something at the left/right side.
   syn connSide use {(\a b -> (Nothing, Nothing))} {(Nothing, Nothing)} :: {(Maybe Vec2d, Maybe Vec2d)}
 
-  -- Connection points for the input/output of a compiler. Only defined for Compiler.
-  syn compConnSide use {alwNoth} {Nothing} :: {Maybe (Vec2d, Vec2d)}
-
   -- Connection point for putting smth underneath.
   syn connStackBottom use {alwNoth} {Nothing} :: {Maybe Vec2d}
 
+  -- Connection points for the input/output of a compiler. Only defined for Compiler.
+  syn compConnSide use {alwNoth} {Nothing} :: {Maybe (Vec2d, Vec2d)}
 
   -- The target language of the compiler.
   syn dlng use {const} {(error "BUG. No language set.")} :: String
