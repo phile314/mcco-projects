@@ -37,13 +37,16 @@ attr Diag_ Diag
   syn dlng :: String
 
   syn result :: {String -> Diag}
+  syn name use {(\x y -> x ++ " - " ++ y)} {""} :: String
+  inh nameOvr   :: {Maybe String}
 
 attr Diag_
   syn result_ use {\a b -> Nothing} {Nothing}:: {Maybe (String -> Diag_)}
 
 
 sem Diag_
-  | Program lhs.result_ = {Just $ \r -> Program @p r}
+  | Program lhs.result_ = {Just $ \r -> Program (fromMaybe @p @lhs.nameOvr) r}
+            lhs.name    = @p
             lhs.connStackTop    = Nothing
             lhs.connSide        = (Just (7.5:.0:.()), Just (57.5:.0:.()))
             lhs.connStackBottom = Just (7.5:.0:.())
@@ -56,14 +59,16 @@ sem Diag_
              lhs.size  = (50:.30:.())
              lhs.pict  = mkPlat @m
 
-  | Interpreter lhs.result_ = {Just $ \r -> Interpreter @i @l r}
+  | Interpreter lhs.result_ = {Just $ \r -> Interpreter (fromMaybe @i @lhs.nameOvr) @l r}
+                lhs.name    = @i
                 lhs.connStackTop    = Just (0 :. 30)
                 lhs.connSide        = (Just (0 :. 0), Just (50 :. 0))
                 lhs.connStackBottom = Just (0 :. 0)
                 lhs.size  = (50 :. 30)
                 lhs.pict  = mkIntp @m @l @i
 
-  | Compiler lhs.result_ = {Just $ \r -> Compiler @c @l1 @l2 r}
+  | Compiler lhs.result_ = {Just $ \r -> Compiler (fromMaybe @c @lhs.nameOvr) @l1 @l2 r}
+             lhs.name    = @c
              lhs.dlng  = @l2
 
              lhs.connStackTop    = Nothing
@@ -73,7 +78,9 @@ sem Diag_
              lhs.size  = (150 :. 30)
              lhs.pict  = mkCmpl @m @l1 @l2 @c
 
-    | Execute 
+    | Execute
+            lhs.result  = @d1.result
+            d1.nameOvr  = Just (@d1.name ++ " - " ++ @d2.name)
             (loc.pos1, loc.pos2) =
                 { let (Just c1) = @d1.connStackBottom
                       (Just c2) = @d2.connStackTop
@@ -83,7 +90,7 @@ sem Diag_
                   in (p1 - mins, p2 - mins)
                 }
             lhs.connStackTop    = translateC @d1.connStackTop @pos1
-            lhs.connSide        = (Nothing, Nothing)
+            lhs.connSide        = (translateC (fst @d2.connSide) @pos2, translateC (snd @d2.connSide) @pos2)
             lhs.connStackBottom = translateC @d2.connStackBottom @pos2
 
             lhs.pict = (translate @d1.pict @pos1) ++ (translate @d2.pict @pos2)
@@ -187,6 +194,6 @@ mkCmpl m l1 l2 n =
 render :: Diag -> Picture
 render d = Picture (vec2Tup $ size_Syn_Diag run) (pict_Syn_Diag run)
     where run = wrap_Diag (sem_Diag d) inh
-          inh = Inh_Diag
+          inh = Inh_Diag {nameOvr_Inh_Diag = Nothing}
           vec2Tup (x:.y:.()) = (x,y)
 }
