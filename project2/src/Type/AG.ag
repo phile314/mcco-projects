@@ -1,7 +1,7 @@
 -- | Attribute grammar for type checking t-diagrams
 
 module {Type.AG}{}{
-import Data.Maybe (catMaybes, fromJust)
+import Data.Maybe (catMaybes, fromJust, isJust)
 import Type.Internal
 import Type.Error
 import Control.Monad ((>>))
@@ -10,7 +10,10 @@ import CCO.Feedback (Message(..), messages, Feedback)
 import CCO.Printing hiding (empty) 
 import Data.Map (insert, empty, Map)
 import qualified Data.Map as M
+
+import CCO.SourcePos (SourcePos (..)) -- remove
 }
+
 
 include "../CCO/Diag/AG.ag"
 
@@ -40,21 +43,25 @@ sem Diag_
   | Platform lhs.ty = PlatformT @m
   | Interpreter lhs.ty = ProgramT @m (PlatformT @l)
   | Compiler lhs.ty = ProgramT @m (CompilerT @l1 @l2)
-  | Execute 
-    loc .executeError = 
-      catMaybes [matchProgram @d1.ty, matchPlatform @d2.ty, matchLanguage @d1.ty @d2.ty]
+  | Execute
+    loc .mp = matchProgram @d1.ty @d1.pos
+    loc .mPlat = matchPlatform @d2.ty @d2.pos
+    loc .ml = matchLanguage @d1.ty @d2.ty @lhs.pos
+    loc .executeError = catMaybes [@loc.mp, @loc.mPlat, @loc.ml]
     lhs.ty = case (@loc.executeError, @d2.ty) of
                   ([], PlatformT _) -> result @d1.ty
                   ([], _)           -> ProgramT (language @d2.ty) (result @d1.ty)
                   (_ , _)           -> ErrorT 
-    lhs.msgs = @d1.msgs ++ @d2.msgs ++ map (errorMessage @lhs.pos) @loc.executeError
+    lhs.msgs = @d1.msgs ++ @d2.msgs ++ map (executeError @lhs.pos) @loc.executeError
   | Compile 
-    loc .compileError = 
-      catMaybes [matchProgram @d1.ty, matchCompiler @d2.ty, matchLanguage @d1.ty @d2.ty]
-    lhs.ty = case @loc.compileError of
+    loc .mp = matchProgram @d1.ty @d1.pos
+    loc .mc = matchCompiler @d2.ty @d2.pos
+    loc .ml = matchLanguage @d1.ty @d2.ty @lhs.pos
+    loc .compileErrors = catMaybes [@loc.mp, @loc.mc, @loc.ml]
+    lhs.ty = case @loc.compileErrors of
                   [] -> ProgramT ((to . result) @d2.ty) (result @d1.ty)
                   _ -> ErrorT 
-    lhs.msgs = @d1.msgs ++ @d2.msgs ++ map (errorMessage @lhs.pos) @loc.compileError
+    lhs.msgs = @d1.msgs ++ @d2.msgs ++ map (compileError @lhs.pos) @loc.compileErrors
   | VarAccess 
       loc .diagBound = M.lookup @v @lhs.env
       lhs.ty = case @loc.diagBound of
@@ -62,7 +69,7 @@ sem Diag_
                  Nothing -> ErrorT
       lhs.msgs = case @loc.diagBound of
                   Just d -> []    -- If any they have already been generated when declared
-                  Nothing -> [errorMessage @lhs.pos (UndefinedVariable @v)]
+                  Nothing -> [scopeError (UndefinedVariable @v @lhs.pos)]
 
 sem Decl
   | Tuple lhs.env = insert @x1 @x2.ty @lhs.env      -- TODO Check whether there is redefinition
@@ -70,32 +77,28 @@ sem Decl
 {
 -- | @'matchProgram' t@ returns a 'TypeError' if @t@ is not a 'ProgramT'.
 -- 'ErrorT' does not yield a 'TypeError'.
-matchProgram :: Type -> Maybe TypeError
-matchProgram (ProgramT _ _) = Nothing
-matchProgram ErrorT = Nothing
-matchProgram t = Just $ ProgramError t
+matchProgram :: Type -> SourcePos -> Maybe TypeError
+matchProgram (ProgramT _ _) _ = Nothing
+matchProgram ErrorT _ = Nothing
+matchProgram t p = Just $ ProgramError t p
 
 -- | @'matchPlatform' t@ returns a 'TypeError' if @t@ is not a 'PlatformT' or an interpreter
 -- (@'ProgramT' ('PlatformT')@).
 -- 'ErrorT' does not yield a 'TypeError'.
-matchPlatform :: Type -> Maybe TypeError
-matchPlatform (PlatformT _) = Nothing
-matchPlatform (ProgramT _ (PlatformT _)) = Nothing
-matchPlatform ErrorT = Nothing
-matchPlatform t = Just $ PlatformError t
+matchPlatform :: Type -> SourcePos -> Maybe TypeError
+matchPlatform (PlatformT _) _ = Nothing
+matchPlatform (ProgramT _ (PlatformT _)) _ = Nothing
+matchPlatform ErrorT _ = Nothing
+matchPlatform t p = Just $ PlatformError t p
 
 -- | @'matchLang' t1 t2@ returns a 'TypeError' if the two given types can be properly combined through
 -- 'Compile' or 'Execute' but their languages do not match, 'Nothing' otherwise.
-matchLanguage p1@(ProgramT l r) p2@(PlatformT l') | l /= l' = Just $ LangError p1 p2
-matchLanguage p1@(ProgramT l r) p2@(ProgramT m (PlatformT l')) | l /= l' = Just $ LangError p1 p2
-matchLanguage p1@(ProgramT l r) p2@(ProgramT m (CompilerT l1 l2)) | l /= l1 = Just $ LangError p1 p2
-matchLanguage _ _ = Nothing
+matchLanguage p1@(ProgramT l r) p2@(PlatformT l') pos | l /= l' = Just $ LangError p1 p2 pos
+matchLanguage p1@(ProgramT l r) p2@(ProgramT m (PlatformT l')) pos | l /= l' = Just $ LangError p1 p2 pos
+matchLanguage p1@(ProgramT l r) p2@(ProgramT m (CompilerT l1 l2)) pos | l /= l1 = Just $ LangError p1 p2 pos
+matchLanguage _ _ _ = Nothing
 
-matchCompiler (ProgramT _ (CompilerT _ _)) = Nothing
-matchCompiler ErrorT = Nothing
-matchCompiler t = Just $ CompilerError t
-
--- | @'errorMessage' p e@ produces an error message at position @p@ for the 'Printable' datatype @e@.
-errorMessage :: (Printable a) => SourcePos -> a -> Message
-errorMessage p e = Error (pp p >-< pp e)
+matchCompiler (ProgramT _ (CompilerT _ _)) _ = Nothing
+matchCompiler ErrorT _ = Nothing
+matchCompiler t p = Just $ CompilerError t p
 }
