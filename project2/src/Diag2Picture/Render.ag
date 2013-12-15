@@ -4,11 +4,13 @@ module {Diag2Picture.Render}{}{
 import CCO.Diag (Diag(..), Diag_(..), DeclS, Decl)
 import CCO.Picture
 import Data.Maybe
+import Data.Vec.Base hiding (map)
+import Debug.Trace
 }
 
 {
-type Vec2 = (Double, Double)
-type Size = Vec2
+type Vec2d = Vec2 Double
+type Size = Vec2d
 
 ovlp = 10
 }
@@ -27,7 +29,10 @@ attr Diag_ Diag
   syn pict :: {[Command]}
   syn size :: {Size}
   -- First element is x offset of left lower connection point, second element is distance from left to right connection point OUTDATED.
-  syn conns :: {(Maybe Vec2, Maybe Vec2)}
+  syn connStackTop    :: {Maybe Vec2d}
+  syn connSide        :: {(Maybe Vec2d, Maybe Vec2d)}
+  syn compConnSide    :: {Maybe (Vec2d, Vec2d)}
+  syn connStackBottom :: {Maybe Vec2d}
 
   syn dlng :: String
 
@@ -39,65 +44,101 @@ attr Diag_
 
 sem Diag_
   | Program lhs.result_ = {Just $ \r -> Program @p r}
-            lhs.conns = (Nothing, Just (7.5, 50))
-            lhs.size  = (65, 30)
+            lhs.connStackTop    = Nothing
+            lhs.connSide        = (Just (7.5:.0:.()), Just (57.5:.0:.()))
+            lhs.connStackBottom = Just (7.5:.0:.())
+            lhs.size  = (65:.30:.())
             lhs.pict  = mkProg @l @p
-  | Platform lhs.conns = (Just (0, 50), Nothing)
-             lhs.size  = (50, 30)
+
+  | Platform lhs.connStackTop    = Just (0:.30:.())
+             lhs.connSide        = (Nothing, Nothing)
+             lhs.connStackBottom = Nothing
+             lhs.size  = (50:.30:.())
              lhs.pict  = mkPlat @m
+
   | Interpreter lhs.result_ = {Just $ \r -> Interpreter @i @l r}
-                lhs.conns = (Just (0, 50), Just(0, 50))
-                lhs.size  = (50, 30)
+                lhs.connStackTop    = Just (0 :. 30)
+                lhs.connSide        = (Just (0 :. 0), Just (50 :. 0))
+                lhs.connStackBottom = Just (0 :. 0)
+                lhs.size  = (50 :. 30)
                 lhs.pict  = mkIntp @m @l @i
+
   | Compiler lhs.result_ = {Just $ \r -> Compiler @c @l1 @l2 r}
              lhs.dlng  = @l2
-             lhs.conns = (Just (0, 150), Just(50, 50))
-             lhs.size  = (150, 30)
+
+             lhs.connStackTop    = Nothing
+             lhs.connSide        = (Just (50 :. 0), Just(100 :. 0))
+             lhs.compConnSide    = Just (0:.20:.(), 150:.20:.())
+             lhs.connStackBottom = Just (50 :. 0)
+             lhs.size  = (150 :. 30)
              lhs.pict  = mkCmpl @m @l1 @l2 @c
 
-  | Execute  (lhs.conns, lhs.size, lhs.pict) = 
-                         { let (x1, y1) = @d1.size
-                               (x2, y2) = @d2.size
-                               (c1, Just (cc1, cd1)) = @d1.conns
-                               (Just (ca2, cb2), c2) = @d2.conns
-                               p1 = (0, y2)
-                               p2 = (cc1, 0)
-                           in ((translateC p1 c1, translateC p2 c2),
-                               (x1, y1 + y2),
-                               (translate p1 @d1.pict) ++ (translate p2 @d2.pict))
-                         }
+    | Execute 
+            (loc.pos1, loc.pos2) =
+                { let (Just c1) = @d1.connStackBottom
+                      (Just c2) = @d2.connStackTop
+                      p1        = (0:.0)
+                      p2        = c1 - c2
+                      mins      = minElems [p1, p2]
+                  in (p1 - mins, p2 - mins)
+                }
+            lhs.connStackTop    = translateC @d1.connStackTop @pos1
+            lhs.connSide        = (Nothing, Nothing)
+            lhs.connStackBottom = translateC @d2.connStackBottom @pos2
+
+            lhs.pict = (translate @d1.pict @pos1) ++ (translate @d2.pict @pos2)
+
+            lhs.size = maxElems [@d1.size + @pos1, @d2.size + @pos2]
+
   | Compile inst.d3 :: Diag
             inst.d3 = @d1.result @d2.dlng
             lhs.result = @d3.result
-            (lhs.conns, lhs.size, lhs.pict) =
-                        { let (x1, y1) = @d1.size
-                              (x2, y2) = @d2.size
-                              (x3, y3) = @d3.size
-                              (_, Just (cc1, cd1))  = @d1.conns
-                              (Just (ca2, cb2), c2) = @d2.conns
-                              (c3, Just (cc3, cd3)) = @d3.conns
-                              p1 = (max (ca2 - cc1 - cd1) 0, y2 - ovlp)
-                              p2@(p2x, _) = (max (cc1 + cd1 - ca2) 0, 0)
-                              p3 = (p2x + ca2 + cb2 - cc3, y2 - ovlp)
-                          in ((translateC p3 c3, translateC p2 c2),
-                              (cc1 + cd1 + cb2 + (x3 - cc3), y2 + (max y1 y3) - ovlp),
-                              (translate p1 @d1.pict) ++ (translate p2 @d2.pict) ++ (translate p3 @d3.pict))
-                        }
-  | VarAccess (lhs.conns, lhs.size, lhs.pict) = let e = error "Unexpected node VarAccess. Has the Inliner been run?" in (e, e, e)
+
+            (loc.pos1, loc.pos2, loc.pos3) = 
+                { let (_, Just c12)        = @d1.connSide
+                      (Just (c21, c22))    = @d2.compConnSide
+                      (Just c31, _)        = @d3.connSide
+                      p1                   = (0 :. 0)
+                      p2                   = c12 - c21
+                      p3                   = p2 + c22 - c31
+                      mins                 = minElems [p1, p2, p3]
+                  in (p1 - mins, p2 - mins, p3 - mins)
+                }
+                                             
+
+            lhs.connStackTop    = Nothing
+            lhs.connSide        = (translateC (fst @d1.connSide) @pos1, translateC (snd @d3.connSide) @pos3)
+            lhs.compConnSide    = maybe Nothing (\(a,b) -> Just (a + @pos3, b + @pos3)) @d3.compConnSide
+            lhs.connStackBottom = translateC @d2.connStackBottom @pos2
+
+            lhs.pict = (translate @d1.pict @pos1) ++ (translate @d2.pict @pos2) ++ (translate @d3.pict @pos3)
+
+            lhs.size = maxElems [@d1.size + @pos1, @d2.size + @pos2, @d3.size + @pos3]
+
+            
+  | VarAccess (lhs.connStackTop, lhs.connSide, lhs.connStackBottom, lhs.size, lhs.pict) = let e = error "Unexpected node VarAccess. Has the Inliner been run?" in (e, e, e, e, e)
 
 sem Diag
   | Diag lhs.result = {maybe @d.result (\a r -> Diag @pos (a r)) @d.result_}
 
-{           
+{
 
 
-translateC :: Vec2 -> Maybe Vec2 -> Maybe Vec2
-translateC _ Nothing = Nothing
-translateC (dx, _) (Just (a, b)) = Just (a + dx, b)
+extreme :: (a -> a -> a) -> [Vec2 a] -> Vec2 a
+extreme f ((a1:.b1:.()):(vs@(_:_))) = (f a1 a2):.(f b1 b2):.()
+    where (a2:.b2:.()) = extreme f vs
+extreme _ [a] = a
+
+minElems = extreme min
+maxElems = extreme max
+
+translateC :: Maybe Vec2d -> Vec2d -> Maybe Vec2d
+translateC Nothing _ = Nothing
+translateC (Just v) d = Just (v + d)
 
 
-translate :: Vec2 -> [Command] -> [Command]
-translate (dx, dy) cs = map f cs
+translate :: [Command] -> Vec2d -> [Command]
+translate cs (dx:.dy:.()) = map f cs
   where f (Put (x, y) a) = Put (x + dx, y + dy) a
 
 mkProg :: String -> String -> [Command]
@@ -144,7 +185,8 @@ mkCmpl m l1 l2 n =
     , Put (50, 0)       (Makebox (50,10) m)]
 
 render :: Diag -> Picture
-render d = Picture (size_Syn_Diag run) (pict_Syn_Diag run)
+render d = Picture (vec2Tup $ size_Syn_Diag run) (pict_Syn_Diag run)
     where run = wrap_Diag (sem_Diag d) inh
           inh = Inh_Diag
+          vec2Tup (x:.y:.()) = (x,y)
 }

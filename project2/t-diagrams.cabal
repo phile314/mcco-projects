@@ -41,7 +41,7 @@ executable tc-tdiag
 
 executable tdiag2picture
   main-is:          TDiag2Picture.hs
-  build-depends:    base >=4.5, cco >= 0.0.4, containers >= 0.4
+  build-depends:    base >=4.5, cco >= 0.0.4, containers >= 0.4, Vec >= 1.0
   other-modules:    CCO.Diag, CCO.Picture, CCO.Picture.AG, Diag2Picture.Render, Diag2Picture.Inline, CCO.Diag.AG
   hs-source-dirs:   src
 
