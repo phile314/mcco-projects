@@ -10,6 +10,7 @@ Well-typed examples:
   b-interpreter.tdiag       "
   b-platform.tdiag          "
   b-program.tdiag           "
+  compile-exec.tdiag        ????????????????? is it a valid program?
   nested-compile-left.tdiag TO CHECK
   nested-compile-right.tdiag TO CHECK
   nested-exec-left.tdiag    e7aee24acf838caffc3a301936547fb21db33a1f
